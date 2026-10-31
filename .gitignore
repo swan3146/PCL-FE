@@ -342,3 +342,6 @@ ASALocalRun/
 healthchecksdb
 
 MaskFiles/
+
+# 本地备份目录
+_backup_*/
