@@ -1,4 +1,4 @@
-Imports System.IO
+﻿Imports System.IO
 Imports System.Text
 
 ''' <summary>
@@ -238,7 +238,7 @@ Public Module ModFirewall
     Private Function TryAddRules(Apps As List(Of String)) As Boolean
         Dim AllOk As Boolean = True
         For Each App As String In Apps
-            Dim RuleName As String = "PCL Pro - 陶瓦联机 - " & IO.Path.GetFileName(App)
+            Dim RuleName As String = "PCL  FE - 陶瓦联机 - " & IO.Path.GetFileName(App)
             Dim Args As String = $"advfirewall firewall add rule name=""{RuleName}"" dir=in action=allow program=""{App}"" enable=yes profile=private"
             If Not RunNetsh(Args) Then AllOk = False
         Next

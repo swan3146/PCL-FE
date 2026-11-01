@@ -32,6 +32,8 @@ Public Module ModModpack
         Logger.Info($"整合包安装请求：{If(File, "null")}")
         Dim Archive As ZipArchive = Nothing
         Dim ArchiveBaseFolder As String = ""
+        '没指定版本名时按压缩包文件名自动生成，省去手动输入与新建文件夹
+        If String.IsNullOrEmpty(InstanceName) Then InstanceName = GetModpackInstanceName(File)
         Try
             '字符校验
             Dim TargetFolder As String = $"{McFolderSelected}versions\{InstanceName}\"
@@ -112,6 +114,31 @@ Public Module ModModpack
         Finally
             If Archive IsNot Nothing Then Archive.Dispose()
         End Try
+    End Function
+
+    ''' <summary>
+    ''' 为整合包自动生成一个不冲突的实例文件夹名，避免每次导入都要手动建文件夹。
+    ''' </summary>
+    Private Function GetModpackInstanceName(File As String) As String
+        Dim Name As String = If(File, "").Replace("/", "\")
+        Name = IO.Path.GetFileNameWithoutExtension(Name)
+        For Each Ch As Char In IO.Path.GetInvalidFileNameChars()
+            Name = Name.Replace(Ch.ToString, "")
+        Next
+        Name = Name.Trim()
+        If Name.Length > 40 Then Name = Name.Substring(0, 40).Trim()
+        '名字不合法（例如以点开头、为空）时退回通用名称
+        Dim Validate As New ValidateFolderName(McFolderSelected & "versions")
+        If Name = "" OrElse Validate.Validate(Name) <> "" Then Name = "整合包"
+        '与已有实例重名时自动加序号
+        Dim Base As String = Name
+        Dim Index As Integer = 2
+        While IO.Directory.Exists(IO.Path.Combine(McFolderSelected, "versions", Name))
+            Name = $"{Base} ({Index})"
+            Index += 1
+        End While
+        Logger.Info($"整合包未指定版本名，自动使用：{Name}")
+        Return Name
     End Function
 
     Private Sub ExtractModpackFiles(InstallTemp As String, FileAddress As String, Optional c As CancellationToken = Nothing, Optional p As ProgressProvider = Nothing)

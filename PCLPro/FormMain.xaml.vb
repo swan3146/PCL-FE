@@ -13,6 +13,15 @@ Public Class FormMain
         Dim FeatureList As New List(Of KeyValuePair(Of Integer, String))
         '统计更新日志条目
         If BuildType = BuildTypes.Release Then
+            If LastVersion < 432 Then 'Release 1.3.3
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "更名：启动器应遵循PCL开源协议更名为 Plain Craft Launcher Fork Enhanced 简称 PCL  FE"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "图标：换用新的蓝色六边形图标 窗口 任务栏与关于页头像统一"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "合规：关于页首位署名原作者龙腾猫跃 并加入赞助原作者入口"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "协议：继续沿用 PCL 存储库合理使用指南 不再自称 AGPL-3.0"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "联机：陶瓦联机模块已内嵌进启动器 不用 再额外下载了"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "更新：检查更新时先测速 由你选择最快的下载源"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "整合包：导入整合包自动创建实例 不再需要手动新建文件夹"))
+            End If
             If LastVersion < 431 Then 'Release 1.3.2
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "修复：版本选择页无法显示版本卡片、导入压缩包时报「无法创建未知类型 MyCard」"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "修复：更新后启动时窗口变暗且无法点击，更新日志弹窗不再卡住界面"))
@@ -319,12 +328,12 @@ Public Class FormMain
         End If
         Dim Content As String = "· " & ContentList.Join(vbCrLf & "· ")
         '每次更新日志都固定强调这不是官方版本，避免有人把它当成 PCL2 官方版
-        Content &= vbCrLf & vbCrLf & "注意：PCL Pro 是第三方基于 PCL2 开发的非官方分支 并非 PCL2 官方发布 请注意辨别"
+        Content &= vbCrLf & vbCrLf & "注意：PCL  FE 是第三方基于 PCL2 开发的非官方分支 并非 PCL2 官方发布 请注意辨别"
         '输出更新日志
         '必须在窗口加载完成后由 UI 线程弹出：等待帧在启动阶段卡住会让整个窗口无响应
         Dim ShowLog As Action =
             Sub()
-                If MyMsgBox(Content, "PCL Pro 已更新至 " & VersionBaseName, "确定", "完整更新日志") = 2 Then
+                If MyMsgBox(Content, "PCL  FE 已更新至 " & VersionBaseName, "确定", "完整更新日志") = 2 Then
                     OpenWebsite("https://meloong.com/afd/a/LTCat?tab=feed")
                 End If
             End Sub
@@ -372,7 +381,7 @@ Public Class FormMain
                 Logger.Info("从老 PCL 升级，但此前未调整版本隔离，使用老的版本隔离默认值")
                 Settings.Set("LaunchArgumentIndieV2", Settings.GetDefault("LaunchArgumentIndie"))
             Else
-                Logger.Info("全新的 PCL Pro，使用新的版本隔离默认值")
+                Logger.Info("全新的 PCL  FE，使用新的版本隔离默认值")
                 Settings.Set("LaunchArgumentIndieV2", Settings.GetDefault("LaunchArgumentIndieV2"))
             End If
         End If
@@ -512,7 +521,7 @@ Public Class FormMain
                 Try
                     If Settings.Get(Of Boolean)("UiUiStyleChosen") Then Return
                     Settings.Set("UiUiStyleChosen", True)
-                    Dim Result As Integer = MyMsgBox("欢迎使用 PCL Pro！" & vbCrLf &
+                    Dim Result As Integer = MyMsgBox("欢迎使用 PCL  FE！" & vbCrLf &
                                                      "先选一个喜欢的界面风格，之后可以在 设置 → 个性化 → 基础 里随时切换。" & vbCrLf & vbCrLf &
                                                      "简洁版：白色卡片，清爽直接。" & vbCrLf &
                                                      "毛玻璃版：半透明磨砂卡片，壁纸会透出来。",
@@ -952,7 +961,7 @@ Public Class FormMain
                     FrmSetupUI.PanLogoText.Visibility = Visibility.Collapsed
                     FrmSetupUI.PanLogoChange.Visibility = Visibility.Collapsed
                 End If
-            Case 1 '默认：PCL Pro 文本
+            Case 1 '默认：PCL  FE 文本
                 ShapeTitleLogo.Visibility = Visibility.Collapsed
                 LabTitleLogo.Visibility = Visibility.Visible
                 ImageTitleLogo.Visibility = Visibility.Collapsed
@@ -988,7 +997,7 @@ Public Class FormMain
         End Select
         FrmSetupUI?.CardLogo.TriggerForceResize()
         '标题栏文本
-        LabTitleLogo.Text = If(Settings.Get(Of String)("UiLogoText") = "", "PCL Pro", Settings.Get(Of String)("UiLogoText"))
+        LabTitleLogo.Text = If(Settings.Get(Of String)("UiLogoText") = "", "PCL  FE", Settings.Get(Of String)("UiLogoText"))
         '标题栏文本是否居左
         PanTitleMain.ColumnDefinitions(0).Width = New GridLength(If(Settings.Get(Of Boolean)("UiLogoLeft") AndAlso Settings.Get(Of Integer)("UiLogoType") = 0, 0, 1), GridUnitType.Star)
     End Sub

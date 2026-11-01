@@ -1,4 +1,4 @@
-Public Class ExportOption
+﻿Public Class ExportOption
     Public Property Title As String
     Public Property Description As String
     Public Property Rules As String
@@ -333,7 +333,7 @@ Public Class PageInstanceExport
             ConfigLines.Add($"# 当版本设置中选择了 {vbLQ}使用版本文件夹中的 Java{vbRQ} 时，是否打包版本文件夹中的 Java。")
             ConfigLines.Add("IncludeJava:" & CheckOptionsJava.Checked)
             ConfigLines.Add("")
-            ConfigLines.Add("# 是否打包正式版 PCL Pro，以便没有启动器的玩家安装整合包。")
+            ConfigLines.Add("# 是否打包正式版 PCL  FE，以便没有启动器的玩家安装整合包。")
             ConfigLines.Add("IncludeLauncher:" & CheckOptionsPcl.Checked)
             ConfigLines.Add("")
             ConfigLines.Add("# 是否打包 PCL 个性化内容，例如功能隐藏设置、主页、背景音乐和图片等。")

@@ -1,4 +1,4 @@
-Public Module ModMinecraft
+﻿Public Module ModMinecraft
 
 #Region "文件夹"
 
@@ -1059,7 +1059,7 @@ OnLoaded:
                         Instance.Logo = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "Logo", Instance.Logo)
                         '兼容旧版 PCL2 写入的程序集名，避免老版本图标指向 Plain Craft Launcher 2 导致加载失败
                         If Instance.Logo IsNot Nothing AndAlso Instance.Logo.StartsWith("pack://application:,,,/Plain Craft Launcher 2;") Then
-                            Instance.Logo = Instance.Logo.Replace("pack://application:,,,/Plain Craft Launcher 2;", "pack://application:,,,/Plain Craft Launcher Pro;")
+                            Instance.Logo = Instance.Logo.Replace("pack://application:,,,/Plain Craft Launcher 2;", "pack://application:,,,/Plain Craft Launcher Fork Enhanced;")
                         End If
                         Instance.State = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "State", Instance.State)
                         Instance.IsStar = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "IsStar", False)

@@ -1,4 +1,4 @@
-Imports NAudio.Wave
+﻿Imports NAudio.Wave
 
 Public Module ModMusic
 
@@ -313,7 +313,7 @@ Public Module ModMusic
         Catch ex As Exception
             Logger.Warn(ex, $"播放音乐出现内部错误（{MusicCurrent}）")
             If TypeOf ex Is NAudio.MmException AndAlso ex.Message.Contains("AlreadyAllocated") Then
-                Hint("你的音频设备正被其他程序占用。请在关闭占用的程序后重启 PCL Pro，才能恢复音乐播放功能！", HintType.Red)
+                Hint("你的音频设备正被其他程序占用。请在关闭占用的程序后重启 PCL  FE，才能恢复音乐播放功能！", HintType.Red)
                 Thread.Sleep(1000000000)
             End If
             If TypeOf ex Is NAudio.MmException AndAlso (ex.Message.Contains("NoDriver") OrElse ex.Message.Contains("BadDeviceId")) Then

@@ -1,8 +1,8 @@
-# PCL Pro（Plain Craft Launcher Pro）
+﻿# PCL  FE（Plain Craft Launcher Fork Enhanced）
 
-PCL Pro 是基于 [PCL2（Plain Craft Launcher 2）](https://github.com/Meloong-Git/PCL) 二次开发的 Minecraft 启动器修改版，作者：paopao340。
+PCL  FE 是基于 [PCL2（Plain Craft Launcher 2）](https://github.com/Meloong-Git/PCL) 二次开发的 Minecraft 启动器修改版，作者：paopao340。
 
-> 本项目为个人修改版，非 PCL 官方仓库。PCL 版权归原作者 Meloong（龙腾猫跃）所有，遵循上游协议（AGPL-3.0），本项目同样以 AGPL-3.0 开源。
+> 本项目为第三方修改版，非 PCL 官方仓库。PCL 及其相关知识产权归原作者龙腾猫跃所有，本项目继续沿用上游的[《PCL 存储库合理使用指南》](https://github.com/Meloong-Git/PCL/blob/main/LICENCE)，并以同一份指南作为使用协议。
 
 ## 相比上游的主要改动
 
@@ -31,11 +31,17 @@ msbuild PCLPro.sln -t:Restore -p:Configuration=Release
 msbuild PCLPro\PCLPro.vbproj -p:Configuration=Release
 ```
 
-输出位于 `PCLPro\bin\Plain Craft Launcher Pro.exe`。
+输出位于 `PCLPro\bin\Plain Craft Launcher Fork Enhanced.exe`。
 
 ## 分发
 
 与 PCL2 一致，只发布单个 exe：直接运行即为便携版，不使用独立的安装器或补丁机制（避免杀软误报）。
+
+## 许可
+
+- 本项目基于 PCL 二次创作，继续沿用上游的[《PCL 存储库合理使用指南》](https://github.com/Meloong-Git/PCL/blob/main/LICENCE)，不附加额外条款。
+- `MeloongCore/` 为上游以 Apache-2.0 许可发布的组件，许可证全文见 [MeloongCore/LICENSE.txt](MeloongCore/LICENSE.txt)。
+- 本项目公开源代码，未经授权不得以软件本体作为收费主体进行分发。
 
 ## 说明
 

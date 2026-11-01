@@ -1,4 +1,4 @@
-<local:MyPageRight
+﻿<local:MyPageRight
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -14,7 +14,7 @@
                                    Foreground="{StaticResource ColorBrushGray3}" />
                     </StackPanel>
                     <TextBlock Margin="0,10,0,0" LineHeight="24" TextWrapping="Wrap"
-                               Text="PCL Pro 修改版的作者，长期维护本版本的联机、界面与各类实用功能。&#xa;本版本所有的改动、适配与功能设计均由作者本人完成，如果你的使用体验有什么不顺，直接找作者本人吐槽最有效。" />
+                               Text="PCL  FE 修改版的作者，长期维护本版本的联机、界面与各类实用功能。&#xa;本版本所有的改动、适配与功能设计均由作者本人完成，如果你的使用体验有什么不顺，直接找作者本人吐槽最有效。" />
                     <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
                         <TextBlock Text="swan3146" FontSize="16" FontWeight="Bold" VerticalAlignment="Center" />
                         <TextBlock Text="（GitHub）" FontSize="12.5" VerticalAlignment="Center" Margin="6,2,0,0"

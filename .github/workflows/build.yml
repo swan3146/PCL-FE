@@ -1,4 +1,4 @@
-name: Build
+﻿name: Build
 on:
   push:
     paths:
@@ -46,4 +46,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.configuration }} ${{ env.describe }}
-        path: PCLPro\bin\Plain Craft Launcher Pro.exe
+        path: PCLPro\bin\Plain Craft Launcher Fork Enhanced.exe

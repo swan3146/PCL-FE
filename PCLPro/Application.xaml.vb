@@ -1,14 +1,64 @@
-Imports System.Reflection
+﻿Imports System.Reflection
 Imports System.Windows.Threading
 
 Public Class Application
 
-    '开始
+    ''' <summary>
+    ''' 从旧版本升级上来时 exe 仍叫旧文件名。复制自身为当前程序集名并重启一次，让文件名与本版本一致。
+    ''' 若同目录已有当前程序名的文件，则直接把旧文件名的入口转交给它，保证旧快捷方式打开的也是新版本。
+    ''' 任何失败（如所在目录不可写）都直接忽略，按旧文件名继续正常运行。
+    ''' </summary>
+    Private Shared Sub EnsureExecutableName()
+        Try
+            Dim SelfPath As String = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName
+            Dim Expected As String = Assembly.GetEntryAssembly().GetName().Name & ".exe"
+            If String.Equals(System.IO.Path.GetFileName(SelfPath), Expected, StringComparison.OrdinalIgnoreCase) Then Return
+            Dim Target As String = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(SelfPath), Expected)
+            If System.IO.File.Exists(Target) Then
+                '已有当前程序名的文件：只要它不比自身旧，就转交给它启动，避免旧快捷方式点到旧版本
+                Try
+                    If Reflection.AssemblyName.GetAssemblyName(Target).Version >= Assembly.GetEntryAssembly().GetName().Version Then
+                        SyncExecutableConfig(SelfPath, Target)
+                        System.Diagnostics.Process.Start(Target)
+                        Environment.Exit(ProcessReturnValues.TaskDone)
+                    End If
+                Catch
+                    '目标文件不是可识别的程序集时保持原样，继续用旧文件名运行
+                End Try
+                Return
+            End If
+            System.IO.File.Copy(SelfPath, Target)
+            SyncExecutableConfig(SelfPath, Target)
+            System.Diagnostics.Process.Start(Target)
+            Environment.Exit(ProcessReturnValues.TaskDone)
+        Catch
+            '忽略即可
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' 改名时把同名的 .exe.config 一起带过去，否则新文件名下会缺少程序集绑定重定向。
+    ''' </summary>
+    Private Shared Sub SyncExecutableConfig(SelfPath As String, TargetPath As String)
+        Try
+            Dim SourceConfig As String = SelfPath & ".config"
+            Dim TargetConfig As String = TargetPath & ".config"
+            If System.IO.File.Exists(SourceConfig) AndAlso Not System.IO.File.Exists(TargetConfig) Then
+                System.IO.File.Copy(SourceConfig, TargetConfig)
+            End If
+        Catch
+            '忽略即可
+        End Try
+    End Sub
+
+
     Private Sub Application_Startup(sender As Object, e As StartupEventArgs) Handles Me.Startup
         Try
             '核心初始化
             MeloongCore.Main.Init("PCL")
             MeloongCore.Wpf.Main.Init()
+            '兼容旧文件名升级：必须在获取单例锁之前执行，否则新进程会被误判为已有实例
+            If e.Args.Length = 0 Then EnsureExecutableName()
             If Not (e.Args.Contains("--update") OrElse e.Args.Contains("--gpu") OrElse e.Args.Contains("--memory")) Then '若是通过命令行调用，则不检查单例、不轮换日志（#9137）
                 WaitingMutex(e)
                 Logger.Instance = New PclLogger With {.logFolder = Paths.BaseThenName, .MinLevel = If(ModeDebug, LogLevel.Trace, LogLevel.Info)}
@@ -165,9 +215,9 @@ RetryCacheCheck:
                 End Try
             End If
             '将已有的 PCL 窗口拖出来
-            '注意：主窗口标题是 "Plain Craft Launcher Pro　"，旧版这里误用了 "PCL Pro　"，导致永远找不到窗口，
+            '注意：主窗口标题是 "Plain Craft Launcher Fork Enhanced　"，旧版这里误用了 "PCL  FE　"，导致永远找不到窗口，
             '表现为双击图标没反应（自更新重启后卡死时尤其明显）。
-            Dim WindowHwnd As IntPtr = FindWindow(Nothing, "Plain Craft Launcher Pro　")
+            Dim WindowHwnd As IntPtr = FindWindow(Nothing, "Plain Craft Launcher Fork Enhanced　")
             If WindowHwnd = IntPtr.Zero Then WindowHwnd = FindPclWindowHwnd()
             If WindowHwnd <> IntPtr.Zero Then
                 '已有实例的窗口可能是被隐藏创建的，必须先让 Win32 窗口真正显示，再置顶
@@ -188,7 +238,7 @@ RetryCacheCheck:
     ''' </summary>
     Private Shared Function FindPclWindowHwnd() As IntPtr
         Try
-            For Each Proc As Diagnostics.Process In Diagnostics.Process.GetProcessesByName("Plain Craft Launcher Pro")
+            For Each Proc As Diagnostics.Process In Diagnostics.Process.GetProcessesByName("Plain Craft Launcher Fork Enhanced")
                 Try
                     Dim Hwnd As IntPtr = Proc.MainWindowHandle
                     If Hwnd <> IntPtr.Zero Then Return Hwnd

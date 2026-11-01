@@ -88,7 +88,7 @@ Public Class PageLinkMain
             Value = Value * 34 + Digits(i)
         Next
         If Value Mod 7 = 0 Then Return TcFormat(Value)
-        '兼容旧版 PCL Pro 低位在前的房间码（房主升级前创建的房间仍能被新版本加入）
+        '兼容旧版 PCL  FE 低位在前的房间码（房主升级前创建的房间仍能被新版本加入）
         Value = BigInteger.Zero
         Dim Power As BigInteger = BigInteger.One
         For i = 0 To 15
@@ -96,7 +96,7 @@ Public Class PageLinkMain
             Power *= 34
         Next
         If Value Mod 7 = 0 Then
-            Logger.Info("检测到旧版 PCL Pro 生成的房间码（低位在前），已按旧格式解析")
+            Logger.Info("检测到旧版 PCL  FE 生成的房间码（低位在前），已按旧格式解析")
             Return TcFormatLegacy(Value)
         End If
         Return Nothing
@@ -495,7 +495,7 @@ Public Class PageLinkMain
 
     '复制房间码
     Private Sub Copy() Handles BtnFinishCopy.Click
-        Dim CodeText As String = $"在 PCL 启动器中输入房间码【{GetInviteCode()}】，即可加入联机房间！"
+        Dim CodeText As String = $"在 Plain Craft Launcher Fork Enhanced 启动器中输入房间码【{GetInviteCode()}】，即可加入联机房间！"
         ClipboardSet(CodeText, False)
         Settings.Set("LinkLastAutoJoinInviteCode", CodeText)
         Hint("已复制房间码！", HintType.Green)
@@ -651,6 +651,42 @@ Public Class PageLinkMain
         If Not String.IsNullOrEmpty(DisableReason) Then Throw New Exception("$" & DisableReason)
     End Sub
 
+    ''' <summary>
+    ''' 从 exe 内嵌的 Terracotta_Module.zip 释放陶瓦联机模块，没有网络也能用。
+    ''' </summary>
+    Private Shared Function ExtractEmbeddedTerracotta(TargetFolder As String) As Boolean
+        Try
+            Dim Asm As Reflection.Assembly = Reflection.Assembly.GetExecutingAssembly()
+            Dim ResName As String = Nothing
+            For Each Name As String In Asm.GetManifestResourceNames()
+                If Name.EndsWith("Terracotta_Module.zip", StringComparison.OrdinalIgnoreCase) Then
+                    ResName = Name
+                    Exit For
+                End If
+            Next
+            If ResName Is Nothing Then Return False
+            IO.Directory.CreateDirectory(TargetFolder)
+            Using Stream As IO.Stream = Asm.GetManifestResourceStream(ResName)
+                Using Zip As New IO.Compression.ZipArchive(Stream, IO.Compression.ZipArchiveMode.Read)
+                    For Each Entry As IO.Compression.ZipArchiveEntry In Zip.Entries
+                        Dim Dest As String = IO.Path.Combine(TargetFolder, Entry.FullName)
+                        IO.Directory.CreateDirectory(IO.Path.GetDirectoryName(Dest))
+                        Using EntryStream As IO.Stream = Entry.Open()
+                            Using Out As IO.FileStream = IO.File.Create(Dest)
+                                EntryStream.CopyTo(Out)
+                            End Using
+                        End Using
+                    Next
+                End Using
+            End Using
+            Logger.Info($"已从内嵌资源释放陶瓦联机模块：{TargetFolder}")
+            Return True
+        Catch ex As Exception
+            Logger.Warn(ex, "释放内嵌陶瓦联机模块失败")
+            Return False
+        End Try
+    End Function
+
     '2. 准备陶瓦联机模块
     Private Sub InitPrepare(Task As LoaderTask(Of Integer, Integer))
         UpdateLoadingPage("正在准备陶瓦联机模块……", "准备联机模块")
@@ -665,7 +701,14 @@ Public Class PageLinkMain
                 End If
             Next
             If Source Is Nothing Then
-                '随包未附带时，从 GitHub Release 下载联机模块
+                '随包未附带时，优先从 exe 内嵌的压缩包释放，保证没网也能用
+                UpdateLoadingPage("正在准备陶瓦联机模块……", "解压联机模块")
+                If ExtractEmbeddedTerracotta(PathTerracotta) Then
+                    Source = Target
+                End If
+            End If
+            If Source Is Nothing Then
+                '内嵌资源缺失时（例如从很旧的版本升级上来），再从 GitHub Release 下载
                 UpdateLoadingPage("正在下载陶瓦联机模块……", "下载联机模块")
                 If DownloadTerracottaModule(Paths.Base & "Terracotta\") Then
                     Source = Paths.Base & "Terracotta\" & TcExeName
@@ -673,8 +716,10 @@ Public Class PageLinkMain
                     Throw New Exception($"$找不到陶瓦联机模块（{TcExeName}），自动下载也失败了。{vbCrLf}请检查网络后重试，或手动把 terracotta.exe 放到：{vbCrLf}{PathTerracotta}")
                 End If
             End If
-            FileUtils.Copy(Source, Target)
-            Logger.Info($"已复制陶瓦联机模块：{Source} -> {Target}")
+            If Not FileUtils.Exists(Target) Then
+                FileUtils.Copy(Source, Target)
+                Logger.Info($"已复制陶瓦联机模块：{Source} -> {Target}")
+            End If
         End If
         '陶瓦依赖 VC++ 运行库，若随包附带则一并就位
         For Each DllName As String In {"VCRUNTIME140.dll", "MSVCP140.dll"}

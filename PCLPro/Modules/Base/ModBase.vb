@@ -6,12 +6,12 @@ Public Module ModBase
 #Region "声明"
 
     '下列版本信息由更新器自动修改
-    Public Const VersionBaseName As String = "1.3.2" '显示用版本名
+    Public Const VersionBaseName As String = "1.3.3" '显示用版本名
     Public Const CommitHash As String = "" 'Commit Hash，由 GitHub Workflow 自动替换
 #If RELEASE Then
-    Public Const VersionCode As Integer = 431 '正式版
+    Public Const VersionCode As Integer = 432 '正式版
 #Else
-    Public Const VersionCode As Integer = 431 '快照版
+    Public Const VersionCode As Integer = 432 '快照版
 #End If
 
     '版本信息
@@ -43,7 +43,7 @@ Public Module ModBase
     ''' <summary>
     ''' 程序内嵌图片文件夹路径，以 / 结尾。
     ''' </summary>
-    Public PathImage As String = "pack://application:,,,/Plain Craft Launcher Pro;component/Images/"
+    Public PathImage As String = "pack://application:,,,/Plain Craft Launcher Fork Enhanced;component/Images/"
     ''' <summary>
     ''' 程序的缓存文件夹路径，以 \ 结尾。
     ''' </summary>
@@ -1391,7 +1391,7 @@ Public Module ModBase
     Private Function FilterUpdateChangelog(Body As String) As String
         If String.IsNullOrWhiteSpace(Body) Then Return ""
         Dim Lines = Body.Replace(vbCrLf, vbLf).Split(ControlChars.Lf).
-            Where(Function(l) Not String.IsNullOrWhiteSpace(l) AndAlso Not l.StartsWith("PCL Pro（")).ToArray
+            Where(Function(l) Not String.IsNullOrWhiteSpace(l) AndAlso Not l.StartsWith("PCL  FE（")).ToArray
         Return String.Join(vbCrLf, Lines.Take(8))
     End Function
 
@@ -1406,8 +1406,9 @@ Public Module ModBase
             Return
         End If
         Dim SizeText As String = If(Release.AssetSize > 0, $"（约 {Math.Round(Release.AssetSize / 1048576.0, 1)} MB）", "")
-        If MyMsgBox($"即将从 GitHub 下载更新{SizeText}。" & vbCrLf & "网络不佳时会自动切换加速镜像；全部失败可稍后重试或手动前往 Releases 下载。",
-                    "开始更新", "开始下载", "取消") <> 1 Then Return
+        '先测速并把各源延迟展示出来，由用户决定用哪个下载
+        Dim ChosenPrefix As String = SelectUpdateMirror(SizeText)
+        If ChosenPrefix Is Nothing Then Return
         RunInNewThread(
         Sub()
             Try
@@ -1415,7 +1416,7 @@ Public Module ModBase
                 Dim Dir As String = IO.Path.Combine(PathTemp, "Update")
                 IO.Directory.CreateDirectory(Dir)
                 Dim Target As String = IO.Path.Combine(Dir, Release.AssetName)
-                If Not UpdateDownloadFile(Release.AssetUrl, Target) Then Throw New Exception("直连与所有镜像均下载失败")
+                If Not UpdateDownloadFile(Release.AssetUrl, Target, ChosenPrefix) Then Throw New Exception("选定下载源与备用镜像均下载失败")
                 UpdateProgressSet(100, "下载完成")
                 '校验下载结果：镜像偶尔会返回网页而不是真正的程序文件
                 Dim Info As New IO.FileInfo(Target)
@@ -1489,6 +1490,8 @@ Public Module ModBase
 
     ''' <summary>按实测延迟排序的下载源前缀缓存，最快在前。</summary>
     Private UpdatePrefixOrderCache As String() = Nothing
+    ''' <summary>上一次测速得到的每个下载源延迟，供界面展示与手动选择。</summary>
+    Private UpdateCostCache As New Dictionary(Of String, Long)
 
     ''' <summary>
     ''' 对每个下载源并行做一次 HEAD 测速，按响应时间升序返回；不通的源排在最后。
@@ -1527,6 +1530,7 @@ Public Module ModBase
         For i As Integer = 0 To Prefixes.Length - 1
             Measured.Add(Tuple.Create(Costs(i), Prefixes(i)))
         Next
+        UpdateCostCache = Measured.ToDictionary(Function(t) t.Item2, Function(t) t.Item1)
         UpdatePrefixOrderCache = Measured.OrderBy(Function(t) t.Item1).Select(Function(t) t.Item2).ToArray()
         Logger.Info("下载源测速结果：" & String.Join(" → ", Measured.OrderBy(Function(t) t.Item1).
             Select(Function(t) If(String.IsNullOrEmpty(t.Item2), "直连", t.Item2.TrimEnd("/"c)) & "(" & If(t.Item1 = Long.MaxValue, "不可用", t.Item1 & "ms") & ")")))
@@ -1585,9 +1589,57 @@ Public Module ModBase
                 End Sub)
     End Sub
 
+    ''' <summary>
+    ''' 展示各下载源的测速结果，并让用户选择用哪一个下载。返回选中的前缀（空串代表直连），Nothing 表示取消。
+    ''' </summary>
+    Private Function SelectUpdateMirror(SizeText As String) As String
+        Dim Ordered As String() = UpdatePrefixOrder()
+        Dim Lines As New List(Of String)
+        Dim Best As String = Nothing
+        Dim BestCost As Long = Long.MaxValue
+        For Each Prefix As String In Ordered
+            Dim Cost As Long = Long.MaxValue
+            If UpdateCostCache.TryGetValue(Prefix, Cost) AndAlso Cost < BestCost Then
+                BestCost = Cost
+                Best = Prefix
+            End If
+            Lines.Add("· " & UpdateMirrorName(Prefix) & "：" & If(Cost = Long.MaxValue, "无法连接", Cost & " ms"))
+        Next
+        Logger.Info("更新下载源测速：" & String.Join("，", Lines))
+        If Best Is Nothing Then
+            If MyMsgBox("所有下载源都无法连接。" & vbCrLf & "是否仍然尝试直接从 GitHub 下载？",
+                        "选择下载源", "仍然尝试", "取消", IsWarn:=True) = 1 Then Return ""
+            Return Nothing
+        End If
+        Dim Text As String = $"即将下载更新{SizeText}。" & vbCrLf & vbCrLf &
+                             "各下载源测速结果（数字越小越快）：" & vbCrLf &
+                             String.Join(vbCrLf, Lines) & vbCrLf & vbCrLf &
+                             $"推荐使用「{UpdateMirrorName(Best)}」。"
+        Select Case MyMsgBox(Text, "选择下载源", $"使用{UpdateMirrorName(Best)}", "使用直连", "取消")
+            Case 1
+                Return Best
+            Case 2
+                Return ""
+            Case Else
+                Return Nothing
+        End Select
+    End Function
+
+    ''' <summary>下载源的显示名。</summary>
+    Private Function UpdateMirrorName(Prefix As String) As String
+        If String.IsNullOrEmpty(Prefix) Then Return "直连"
+        Return Prefix.Replace("https://", "").Replace("http://", "").TrimEnd("/"c)
+    End Function
+
     '下载文件，按测速结果从最快源开始尝试
-    Private Function UpdateDownloadFile(Url As String, Target As String) As Boolean
-        For Each Prefix As String In UpdatePrefixOrder()
+    Private Function UpdateDownloadFile(Url As String, Target As String, Optional PreferredPrefix As String = Nothing) As Boolean
+        Dim Prefixes As String() = UpdatePrefixOrder()
+        If PreferredPrefix IsNot Nothing Then
+            '把用户选中的下载源提到最前，其它源仍然保留作为兜底
+            Dim Rest As String() = Prefixes.Where(Function(p) p <> PreferredPrefix).ToArray()
+            Prefixes = New String() {PreferredPrefix}.Concat(Rest).ToArray()
+        End If
+        For Each Prefix As String In Prefixes
             Dim TempFile As String = Target & ".part"
             Dim SourceText As String = If(String.IsNullOrEmpty(Prefix), "直连", Prefix.TrimEnd("/"c))
             Try
