@@ -202,6 +202,63 @@ Friend Module ModSecret
     End Sub
 
     ''' <summary>
+    ''' 由临时副本进程执行的自我替换：等待旧进程退出后覆盖程序文件并重启。
+    ''' 路径全部通过环境变量传递，不经过命令行或批处理解析，因此能兼容中文、空格与各种特殊符号。
+    ''' </summary>
+    Public Sub UpdateReplaceFromEnvironment()
+        Dim OldPath As String = Environment.GetEnvironmentVariable("PCL_UPDATE_OLD")
+        Dim NewPath As String = Environment.GetEnvironmentVariable("PCL_UPDATE_NEW")
+        Dim OldPid As String = Environment.GetEnvironmentVariable("PCL_UPDATE_PID")
+        Dim SelfPath As String = Environment.GetEnvironmentVariable("PCL_UPDATE_SELF")
+        Dim Restart As Boolean = Environment.GetEnvironmentVariable("PCL_UPDATE_RESTART") = "1"
+        If String.IsNullOrEmpty(OldPath) OrElse String.IsNullOrEmpty(NewPath) Then
+            Environment.Exit(1)
+        End If
+        '等待旧进程彻底退出
+        Try
+            Dim OldProcess As Diagnostics.Process = Diagnostics.Process.GetProcessById(CInt(OldPid))
+            OldProcess.WaitForExit(120 * 1000)
+        Catch
+        End Try
+        '文件句柄释放可能比进程退出略晚，重试覆盖
+        Dim Replaced As Boolean = False
+        If IO.File.Exists(NewPath) Then
+            For i = 1 To 60
+                Try
+                    IO.File.Copy(NewPath, OldPath, True)
+                    Replaced = True
+                    Exit For
+                Catch ex As Exception
+                    Threading.Thread.Sleep(250)
+                End Try
+            Next
+        End If
+        '替换失败时保留旧版本可用，避免用户点完更新后启动器彻底打不开
+        If Restart AndAlso IO.File.Exists(OldPath) Then
+            Try
+                Diagnostics.Process.Start(New Diagnostics.ProcessStartInfo(OldPath) With {
+                    .UseShellExecute = True,
+                    .WorkingDirectory = IO.Path.GetDirectoryName(OldPath)})
+            Catch
+            End Try
+        End If
+        '清理
+        If Replaced Then
+            Try
+                IO.File.Delete(NewPath)
+            Catch
+            End Try
+        End If
+        If Not String.IsNullOrEmpty(SelfPath) AndAlso Not String.Equals(SelfPath, OldPath, StringComparison.OrdinalIgnoreCase) Then
+            Try
+                IO.File.Delete(SelfPath)
+            Catch
+            End Try
+        End If
+        Environment.Exit(0)
+    End Sub
+
+    ''' <summary>
     ''' 确保 PathTemp/Latest.exe 是最新正式版的 PCL，它会被用于整合包打包。
     ''' 如果不是，则下载一个。
     ''' </summary>

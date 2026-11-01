@@ -13,6 +13,11 @@ Public Class FormMain
         Dim FeatureList As New List(Of KeyValuePair(Of Integer, String))
         '统计更新日志条目
         If BuildType = BuildTypes.Release Then
+            If LastVersion < 428 Then 'Release 1.2.9
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "调整：内存优化改为实验性功能，执行前会二次确认，并提示可能造成的读盘变慢"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：内存优化会同时清理系统备用内存与文件缓存，释放效果更明显"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "修复：启动器放在中文、空格或含特殊符号的目录时，自动更新会提示「Windows 找不到文件」"))
+            End If
             If LastVersion < 427 Then 'Release 1.2.8
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：更新流程加入下载进度条，实时显示下载源、速度与已完成大小"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：首次启动时可选择简洁版或毛玻璃版界面，之后可在 设置 → 个性化 中随时切换"))

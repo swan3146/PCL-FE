@@ -39,8 +39,8 @@ Public Class Application
             '检查参数调用
             If e.Args.Length > 0 Then
                 If e.Args(0) = "--update" Then
-                    '自动更新
-                    UpdateReplace(e.Args(1), e.Args(2).Trim(""""), e.Args(3).Trim(""""), e.Args(4))
+                    '自动更新：由临时副本进程完成的自我替换
+                    UpdateReplaceFromEnvironment()
                     Environment.Exit(ProcessReturnValues.TaskDone)
                 ElseIf e.Args(0) = "--gpu" Then
                     '调整显卡设置
@@ -94,6 +94,12 @@ RetryCacheCheck:
                 End If
             End Try
             DirectoryUtils.Create(PathTemp & "Cache\")
+            '清理上次自更新留下的替换进程与更新包（替换进程无法删除自身）
+            Try
+                Dim UpdateDir As String = PathTemp & "Update\"
+                If Directory.Exists(UpdateDir) Then Directory.Delete(UpdateDir, True)
+            Catch
+            End Try
             DirectoryUtils.Create(Paths.AppDataThenName)
             '设置 ToolTipService 默认值
             ToolTipService.InitialShowDelayProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(100))

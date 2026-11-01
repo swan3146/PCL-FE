@@ -6,12 +6,12 @@ Public Module ModBase
 #Region "声明"
 
     '下列版本信息由更新器自动修改
-    Public Const VersionBaseName As String = "1.2.8" '显示用版本名
+    Public Const VersionBaseName As String = "1.2.9" '显示用版本名
     Public Const CommitHash As String = "" 'Commit Hash，由 GitHub Workflow 自动替换
 #If RELEASE Then
-    Public Const VersionCode As Integer = 427 '正式版
+    Public Const VersionCode As Integer = 428 '正式版
 #Else
-    Public Const VersionCode As Integer = 427 '快照版
+    Public Const VersionCode As Integer = 428 '快照版
 #End If
 
     '版本信息
@@ -1432,33 +1432,27 @@ Public Module ModBase
         End Sub, "Update Downloader")
     End Sub
 
-    '便携版自替换：改名旧 exe → 写入新 exe → 重启 → 清理
+    '便携版自替换：把“等待旧进程退出 + 覆盖文件 + 重启”交给一个临时副本进程
+    '不写任何批处理脚本，路径只通过环境变量传递，因此中文、空格与特殊符号都不会被解析错
     Private Sub RunSelfUpdate(NewExe As String)
         Try
             Dim CurExe As String = PathExe
-            Dim Script As String = IO.Path.Combine(PathTemp, "PCLProUpdate.cmd")
-            Dim Lines As New List(Of String) From {
-                "@echo off",
-                "chcp 65001 >nul",
-                $"del /Q ""{CurExe}.old"" >nul 2>nul",
-                ":waitlock",
-                $"move /Y ""{CurExe}"" ""{CurExe}.old"" >nul 2>nul",
-                "if errorlevel 1 (ping 127.0.0.1 -n 2 >nul & goto waitlock)",
-                $"move /Y ""{NewExe}"" ""{CurExe}"" >nul 2>nul",
-                "if errorlevel 1 goto restore",
-                $"powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command ""Start-Process -FilePath '{CurExe}' -ArgumentList '--wait' -WindowStyle Normal""",
-                "ping 127.0.0.1 -n 3 >nul",
-                $"del /Q ""{CurExe}.old"" >nul 2>nul",
-                "goto cleanup",
-                ":restore",
-                $"move /Y ""{CurExe}.old"" ""{CurExe}"" >nul 2>nul",
-                ":cleanup",
-                "del /Q ""%~f0"" >nul 2>nul"
-            }
-            IO.File.WriteAllText(Script, String.Join(vbCrLf, Lines), Text.Encoding.Default)
-            Dim Proc As Diagnostics.Process = Diagnostics.Process.Start(New Diagnostics.ProcessStartInfo("cmd.exe", "/c """ & Script & """") With {
-                .CreateNoWindow = True, .UseShellExecute = False, .WindowStyle = Diagnostics.ProcessWindowStyle.Hidden})
-            Logger.Info($"已启动自更新脚本，等待当前进程退出：PID {Proc.Id}")
+            Dim RunnerDir As String = IO.Path.Combine(PathTemp, "Update")
+            IO.Directory.CreateDirectory(RunnerDir)
+            Dim Runner As String = IO.Path.Combine(RunnerDir, "PCLProUpdateRunner.exe")
+            '正在运行的 exe 无法替换自己，先复制一份作为替换器
+            IO.File.Copy(CurExe, Runner, True)
+            Dim Info As New Diagnostics.ProcessStartInfo(Runner, "--update") With {
+                .CreateNoWindow = True,
+                .UseShellExecute = False,
+                .WorkingDirectory = RunnerDir}
+            Info.EnvironmentVariables("PCL_UPDATE_OLD") = CurExe
+            Info.EnvironmentVariables("PCL_UPDATE_NEW") = NewExe
+            Info.EnvironmentVariables("PCL_UPDATE_PID") = Diagnostics.Process.GetCurrentProcess().Id.ToString()
+            Info.EnvironmentVariables("PCL_UPDATE_SELF") = Runner
+            Info.EnvironmentVariables("PCL_UPDATE_RESTART") = "1"
+            Diagnostics.Process.Start(Info)
+            Logger.Info($"已启动自更新替换进程：{Runner}")
             '直接结束当前进程，避免走关闭动画或被“还有下载任务”的确认框卡住，导致进程常驻、单例互斥锁不释放
             FormMain.EndProgramForce()
         Catch ex As Exception

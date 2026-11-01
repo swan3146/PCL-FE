@@ -124,6 +124,78 @@ Public Class PageOtherTest
     Private Const ProcessQueryInformation As Integer = &H400 'PROCESS_QUERY_INFORMATION
     Private Const ProcessSetQuota As Integer = &H100 'PROCESS_SET_QUOTA
 
+    '清理系统内存时需要的特权与 API
+    Private Const TokenAdjustPrivileges As Integer = &H20
+    Private Const TokenQuery As Integer = &H8
+    Private Const SePrivilegeEnabled As Integer = &H2
+    Private Const SystemMemoryListInformation As Integer = 80
+    Private Const MemoryPurgeStandbyList As Integer = 4
+
+    <Runtime.InteropServices.StructLayout(Runtime.InteropServices.LayoutKind.Sequential)>
+    Private Structure TcLuid
+        Public LowPart As Integer
+        Public HighPart As Integer
+    End Structure
+    <Runtime.InteropServices.StructLayout(Runtime.InteropServices.LayoutKind.Sequential)>
+    Private Structure TcTokenPrivileges
+        Public PrivilegeCount As Integer
+        Public Luid As TcLuid
+        Public Attributes As Integer
+    End Structure
+
+    <System.Runtime.InteropServices.DllImport("advapi32.dll", SetLastError:=True, CharSet:=Runtime.InteropServices.CharSet.Unicode)>
+    Private Shared Function OpenProcessToken(ProcessHandle As IntPtr, DesiredAccess As Integer, ByRef TokenHandle As IntPtr) As Boolean
+    End Function
+    <System.Runtime.InteropServices.DllImport("advapi32.dll", SetLastError:=True, CharSet:=Runtime.InteropServices.CharSet.Unicode)>
+    Private Shared Function LookupPrivilegeValue(SystemName As String, Name As String, ByRef Luid As TcLuid) As Boolean
+    End Function
+    <System.Runtime.InteropServices.DllImport("advapi32.dll", SetLastError:=True)>
+    Private Shared Function AdjustTokenPrivileges(TokenHandle As IntPtr, DisableAllPrivileges As Boolean,
+                                                  ByRef NewState As TcTokenPrivileges, BufferLength As Integer,
+                                                  PreviousState As IntPtr, ReturnLength As IntPtr) As Boolean
+    End Function
+    <System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError:=True)>
+    Private Shared Function SetSystemFileCacheSize(MinimumFileCacheSize As IntPtr, MaximumFileCacheSize As IntPtr, Flags As Integer) As Boolean
+    End Function
+    <System.Runtime.InteropServices.DllImport("ntdll.dll")>
+    Private Shared Function NtSetSystemInformation(InfoClass As Integer, Info As IntPtr, Length As Integer) As Integer
+    End Function
+
+    ''' <summary>
+    ''' 在当前进程令牌中启用指定特权；未提权时调用会失败，忽略即可。
+    ''' </summary>
+    Private Shared Function EnablePrivilege(Name As String) As Boolean
+        Dim Token As IntPtr = IntPtr.Zero
+        Try
+            If Not OpenProcessToken(Process.GetCurrentProcess().Handle, TokenAdjustPrivileges Or TokenQuery, Token) Then Return False
+            Dim Luid As New TcLuid
+            If Not LookupPrivilegeValue(Nothing, Name, Luid) Then Return False
+            Dim State As New TcTokenPrivileges With {.PrivilegeCount = 1, .Luid = Luid, .Attributes = SePrivilegeEnabled}
+            Return AdjustTokenPrivileges(Token, False, State, 0, IntPtr.Zero, IntPtr.Zero)
+        Catch
+            Return False
+        Finally
+            If Token <> IntPtr.Zero Then CloseHandle(Token)
+        End Try
+    End Function
+
+    ''' <summary>
+    ''' 清空系统备用内存列表（Standby List）。这部分内存不计入进程占用，但会被系统当作可用内存回收，
+    ''' 是“物理内存占用降低”体感最明显的一步，需要 SeProfileSingleProcessPrivilege。
+    ''' </summary>
+    Private Shared Sub PurgeStandbyList()
+        Try
+            Dim Buffer As IntPtr = Runtime.InteropServices.Marshal.AllocHGlobal(4)
+            Try
+                Runtime.InteropServices.Marshal.WriteInt32(Buffer, MemoryPurgeStandbyList)
+                NtSetSystemInformation(SystemMemoryListInformation, Buffer, 4)
+            Finally
+                Runtime.InteropServices.Marshal.FreeHGlobal(Buffer)
+            End Try
+        Catch
+        End Try
+    End Sub
+
     ''' <summary>
     ''' 执行内存优化。与 PCL2 原版一致：清理的对象是整个系统的物理内存（不仅限于 PCL），
     ''' 这需要管理员权限，所以通过带 UAC 的 --memory 子进程执行；已经以管理员身份运行时直接在本进程执行。
@@ -167,6 +239,17 @@ Public Class PageOtherTest
     ''' </summary>
     Public Shared Sub MemoryOptimizeInternal(ShowHint As Boolean)
         Dim SelfId As Integer = Process.GetCurrentProcess().Id
+        '启用清理所需的系统特权；非管理员时这些调用会直接失败，不影响后续步骤
+        EnablePrivilege("SeDebugPrivilege")
+        EnablePrivilege("SeProfileSingleProcessPrivilege")
+        EnablePrivilege("SeIncreaseQuotaPrivilege")
+        '清空系统备用内存列表与文件缓存，这是物理内存占用下降最明显的一步
+        PurgeStandbyList()
+        Try
+            '两个 -1 表示不限制缓存范围，系统会丢弃现有文件缓存
+            SetSystemFileCacheSize(New IntPtr(-1), New IntPtr(-1), 0)
+        Catch
+        End Try
         For Each Proc As Process In Process.GetProcesses()
             Try
                 If Proc.Id <> SelfId Then
@@ -365,6 +448,15 @@ Public Class PageOtherTest
         LabTestHint.Text = GetRandomHint()
     End Sub
     Private Sub BtnTestMemory_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnTestMemory.Click
+        '内存优化为实验性功能，执行前要求二次确认
+        Dim Choice As Integer = MyMsgBox(
+            "内存优化会清空系统的备用内存与文件缓存，并把各程序的内存换出到页面文件。" & vbCrLf &
+            "· 执行后短时间内程序与游戏读盘会变慢，机械硬盘尤其明显；" & vbCrLf &
+            "· 这是实验性功能，内存充裕的电脑上可能看不出明显效果；" & vbCrLf &
+            "· 需要管理员权限，会弹出 UAC 提示。" & vbCrLf & vbCrLf &
+            "建议在启动游戏前执行。确定继续吗？",
+            "内存优化（实验性）", "继续优化", "取消", IsWarn:=True)
+        If Choice <> 1 Then Return
         RunInThread(
         Sub()
             MemoryOptimize(True)

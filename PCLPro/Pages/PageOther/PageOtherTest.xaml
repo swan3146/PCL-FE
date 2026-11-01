@@ -51,7 +51,7 @@
                             <ColumnDefinition Width="160" />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
-                        <local:MyButton Text="内存优化" Grid.Row="0" Grid.Column="0" Height="30" Padding="13,0" Margin="0,0,12,0" x:Name="BtnTestMemory" />
+                        <local:MyButton Text="内存优化（实验性）" Grid.Row="0" Grid.Column="0" Height="30" Padding="13,0" Margin="0,0,12,0" x:Name="BtnTestMemory" />
                         <local:MyButton Text="垃圾清理" Grid.Row="0" Grid.Column="1" Height="30" Padding="13,0" Margin="0,0,12,0" x:Name="BtnTestClean" />
                         <local:MyButton Text="打开数据目录" Grid.Row="1" Grid.Column="0" Height="30" Padding="13,0" Margin="0,0,12,0" x:Name="BtnTestOpenData" />
                         <local:MyButton Text="查看日志" Grid.Row="1" Grid.Column="1" Height="30" Padding="13,0" Margin="0,0,12,0" x:Name="BtnTestOpenLog" />
