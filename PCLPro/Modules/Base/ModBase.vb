@@ -6,12 +6,12 @@ Public Module ModBase
 #Region "声明"
 
     '下列版本信息由更新器自动修改
-    Public Const VersionBaseName As String = "1.2.9" '显示用版本名
+    Public Const VersionBaseName As String = "1.3.0" '显示用版本名
     Public Const CommitHash As String = "" 'Commit Hash，由 GitHub Workflow 自动替换
 #If RELEASE Then
-    Public Const VersionCode As Integer = 428 '正式版
+    Public Const VersionCode As Integer = 429 '正式版
 #Else
-    Public Const VersionCode As Integer = 428 '快照版
+    Public Const VersionCode As Integer = 429 '快照版
 #End If
 
     '版本信息
@@ -1531,8 +1531,8 @@ Public Module ModBase
                     Try
                         If UpdateProgressWindow IsNot Nothing Then Return
                         Dim W As New Window With {
-                            .Title = Title, .Width = 420, .Height = 150, .ResizeMode = ResizeMode.NoResize,
-                            .WindowStyle = WindowStyle.ToolWindow, .ShowInTaskbar = False,
+                            .Title = Title, .Width = 420, .Height = 150, .ResizeMode = ResizeMode.CanMinimize,
+                            .WindowStyle = WindowStyle.SingleBorderWindow, .ShowInTaskbar = True,
                             .WindowStartupLocation = WindowStartupLocation.CenterOwner,
                             .Background = Brushes.White}
                         If FrmMain IsNot Nothing AndAlso FrmMain.IsLoaded Then W.Owner = FrmMain

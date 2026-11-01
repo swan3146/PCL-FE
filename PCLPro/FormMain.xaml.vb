@@ -13,6 +13,9 @@ Public Class FormMain
         Dim FeatureList As New List(Of KeyValuePair(Of Integer, String))
         '统计更新日志条目
         If BuildType = BuildTypes.Release Then
+            If LastVersion < 429 Then 'Release 1.3.0
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "修复：更新下载进度窗口无法最小化，现在可最小化到任务栏并在后台继续下载"))
+            End If
             If LastVersion < 428 Then 'Release 1.2.9
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "调整：内存优化改为实验性功能，执行前会二次确认，并提示可能造成的读盘变慢"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：内存优化会同时清理系统备用内存与文件缓存，释放效果更明显"))
@@ -300,24 +303,32 @@ Public Class FormMain
         Dim SortedFeatures = FeatureList.OrderByDescending(Function(f) f.Key).ToList
         If Not SortedFeatures.Any() AndAlso FeatureCount = 0 AndAlso BugCount = 0 Then ContentList.Add("没有更新日志……")
         For i = 0 To Math.Min(14, SortedFeatures.Count - 1) '最多取 15 项
-            ContentList.Add(SortedFeatures(i).Value)
+            ContentList.Add(CleanUpdateLine(SortedFeatures(i).Value))
         Next
         If SortedFeatures.Count > 15 Then FeatureCount += SortedFeatures.Count - 15
         If FeatureCount > 0 OrElse BugCount > 0 Then
-            ContentList.Add(If(FeatureCount > 0, FeatureCount & " 项小调整与修改", "") &
-                If(FeatureCount > 0 AndAlso BugCount > 0, "，", "") &
-                If(BugCount > 0, "修复了 " & BugCount & " 个 Bug", "") &
-                "，详见完整更新日志")
+            ContentList.Add(CleanUpdateLine(
+                If(FeatureCount > 0, FeatureCount & " 项小调整与修改 ", "") &
+                If(BugCount > 0, "修复了 " & BugCount & " 个 Bug ", "") &
+                "详见完整更新日志"))
         End If
         Dim Content As String = "· " & ContentList.Join(vbCrLf & "· ")
         '输出更新日志
         RunInNewThread(
         Sub()
-            If MyMsgBox(Content, "PCL 已更新至" & VersionDisplay, "确定", "完整更新日志") = 2 Then
+            If MyMsgBox(Content, "PCL Pro 已更新至 " & VersionBaseName, "确定", "完整更新日志") = 2 Then
                 OpenWebsite("https://meloong.com/afd/a/LTCat?tab=feed")
             End If
         End Sub, "UpdateLog Output")
     End Sub
+    ''' <summary>去掉更新日志里的逗号与句号，让弹窗更清爽。</summary>
+    Private Shared Function CleanUpdateLine(Text As String) As String
+        Dim Result As String = Text.Replace("，", " ").Replace(",", " ").Replace("。", "").Replace("；", " ").Replace("：", " ")
+        While Result.Contains("  ")
+            Result = Result.Replace("  ", " ")
+        End While
+        Return Result.Trim()
+    End Function
 
     '窗口加载
     Private IsWindowLoadFinished As Boolean = False
