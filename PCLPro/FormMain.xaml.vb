@@ -13,9 +13,10 @@ Public Class FormMain
         Dim FeatureList As New List(Of KeyValuePair(Of Integer, String))
         '统计更新日志条目
         If BuildType = BuildTypes.Release Then
-            If LastVersion < 430 Then 'Release 1.3.1
-                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "修复：加入联机房间时房间码被反转解析，客人会一直卡在「正在与房主建立点对点连接」并反复重试"))
-                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "提醒：联机需要双方都把启动器更新到 1.3.1，旧版本仍然无法加入房间"))
+            If LastVersion < 431 Then 'Release 1.3.2
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "修复：版本选择页无法显示版本卡片、导入压缩包时报「无法创建未知类型 MyCard」"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "修复：更新后启动时窗口变暗且无法点击，更新日志弹窗不再卡住界面"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "联机：修正房间码解析方向，加入房间可能已恢复，需要双方都更新到 1.3.2"))
             End If
             If LastVersion < 429 Then 'Release 1.3.0
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "修复：更新下载进度窗口无法最小化，现在可最小化到任务栏并在后台继续下载"))
@@ -320,12 +321,21 @@ Public Class FormMain
         '每次更新日志都固定强调这不是官方版本，避免有人把它当成 PCL2 官方版
         Content &= vbCrLf & vbCrLf & "注意：PCL Pro 是第三方基于 PCL2 开发的非官方分支 并非 PCL2 官方发布 请注意辨别"
         '输出更新日志
-        RunInNewThread(
+        '必须在窗口加载完成后由 UI 线程弹出：等待帧在启动阶段卡住会让整个窗口无响应
+        Dim ShowLog As Action =
+            Sub()
+                If MyMsgBox(Content, "PCL Pro 已更新至 " & VersionBaseName, "确定", "完整更新日志") = 2 Then
+                    OpenWebsite("https://meloong.com/afd/a/LTCat?tab=feed")
+                End If
+            End Sub
+        RunInUi(
         Sub()
-            If MyMsgBox(Content, "PCL Pro 已更新至 " & VersionBaseName, "确定", "完整更新日志") = 2 Then
-                OpenWebsite("https://meloong.com/afd/a/LTCat?tab=feed")
+            If IsWindowLoadFinished Then
+                ShowLog()
+            Else
+                AddHandler ContentRendered, Sub(s, e) ShowLog()
             End If
-        End Sub, "UpdateLog Output")
+        End Sub)
     End Sub
     ''' <summary>去掉更新日志里的逗号与句号，让弹窗更清爽。</summary>
     Private Shared Function CleanUpdateLine(Text As String) As String

@@ -6,12 +6,12 @@ Public Module ModBase
 #Region "声明"
 
     '下列版本信息由更新器自动修改
-    Public Const VersionBaseName As String = "1.3.1" '显示用版本名
+    Public Const VersionBaseName As String = "1.3.2" '显示用版本名
     Public Const CommitHash As String = "" 'Commit Hash，由 GitHub Workflow 自动替换
 #If RELEASE Then
-    Public Const VersionCode As Integer = 430 '正式版
+    Public Const VersionCode As Integer = 431 '正式版
 #Else
-    Public Const VersionCode As Integer = 430 '快照版
+    Public Const VersionCode As Integer = 431 '快照版
 #End If
 
     '版本信息
@@ -1136,6 +1136,11 @@ Public Module ModBase
     ''' 注意：性能较差，不应大量使用。
     ''' </summary>
     Public Function GetObjectFromXML(Str As String) As Object
+        '旧版 XAML 片段里把程序集名写死成了 Plain Craft Launcher Enhanced，改名后会导致类型找不到
+        Dim AsmName As String = Reflection.Assembly.GetExecutingAssembly().GetName().Name
+        If AsmName <> "Plain Craft Launcher Enhanced" Then
+            Str = Str.Replace("Plain Craft Launcher Enhanced", AsmName)
+        End If
         Str = Str. '兼容旧版自定义事件写法
             Replace("EventType=""", "local:CustomEventService.EventType=""").
             Replace("EventData=""", "local:CustomEventService.EventData=""").
@@ -1328,11 +1333,11 @@ Public Module ModBase
         End Sub, "Update Checker Manual")
     End Sub
 
-    ''' <summary>1.3.1 的特别提示：修复了联机房间码解析，且联机双方都必须升级。</summary>
+    ''' <summary>1.3.2 的特别提示：联机修复需要双方同步升级。</summary>
     Private Function LinkFixTip(VersionName As String) As String
-        If VersionName Is Nothing OrElse Not VersionName.StartsWith("1.3.1", StringComparison.Ordinal) Then Return ""
+        If VersionName Is Nothing OrElse Not VersionName.StartsWith("1.3.2", StringComparison.Ordinal) Then Return ""
         Return "该版本可能修复了联机功能（加入房间失败）。" & vbCrLf &
-               "联机需要双方都把启动器更新到 1.3.1。" & vbCrLf & vbCrLf
+               "联机需要双方都把启动器更新到 1.3.2。" & vbCrLf & vbCrLf
     End Function
 
     Private Function FetchLatestRelease() As UpdateRelease
