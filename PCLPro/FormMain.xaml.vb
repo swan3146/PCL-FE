@@ -318,7 +318,7 @@ Public Class FormMain
         End If
         Dim Content As String = "· " & ContentList.Join(vbCrLf & "· ")
         '每次更新日志都固定强调这不是官方版本，避免有人把它当成 PCL2 官方版
-        Content &= vbCrLf & vbCrLf & "注意：PCL Pro 是非官方的第三方修改版 与 PCL2 官方版无关 请注意辨别"
+        Content &= vbCrLf & vbCrLf & "注意：PCL Pro 是第三方基于 PCL2 开发的非官方分支 并非 PCL2 官方发布 请注意辨别"
         '输出更新日志
         RunInNewThread(
         Sub()
