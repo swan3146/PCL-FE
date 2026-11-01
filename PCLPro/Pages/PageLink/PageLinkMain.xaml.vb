@@ -34,13 +34,27 @@ Public Class PageLinkMain
         Value -= Value Mod 7
         Return TcFormat(Value)
     End Function
-    ''' <summary>把 128 位房间数值格式化为 (房间码, 网络名, 网络密码)。</summary>
+    ''' <summary>把 128 位房间数值格式化为 (房间码, 网络名, 网络密码)。首字符为最高位，与陶瓦 / HMCL 一致。</summary>
     Private Shared Function TcFormat(Value As BigInteger) As Tuple(Of String, String, String)
+        Return TcFormatCore(Value, False)
+    End Function
+    ''' <summary>1.2.8～1.3.0 生成的房间码是低位在前（解析方向错误），沿用旧排列才能还原它当时的网络名。</summary>
+    Private Shared Function TcFormatLegacy(Value As BigInteger) As Tuple(Of String, String, String)
+        Return TcFormatCore(Value, True)
+    End Function
+    Private Shared Function TcFormatCore(Value As BigInteger, LittleEndian As Boolean) As Tuple(Of String, String, String)
         Dim Chars(15) As Char
-        For i = 0 To 15
-            Chars(i) = TC_CHARS(CInt(Value Mod 34))
-            Value = BigInteger.Divide(Value, 34)
-        Next
+        If LittleEndian Then
+            For i = 0 To 15
+                Chars(i) = TC_CHARS(CInt(Value Mod 34))
+                Value = BigInteger.Divide(Value, 34)
+            Next
+        Else
+            For i = 15 To 0 Step -1
+                Chars(i) = TC_CHARS(CInt(Value Mod 34))
+                Value = BigInteger.Divide(Value, 34)
+            Next
+        End If
         Dim Code As String = "U/" & New String(Chars, 0, 4) & "-" & New String(Chars, 4, 4) & "-" &
                              New String(Chars, 8, 4) & "-" & New String(Chars, 12, 4)
         Dim Name As String = "scaffolding-mc-" & New String(Chars, 0, 4) & "-" & New String(Chars, 4, 4)
@@ -58,17 +72,34 @@ Public Class PageLinkMain
         If Body.Length <> 19 Then Return Nothing
         If Body(4) <> "-"c OrElse Body(9) <> "-"c OrElse Body(14) <> "-"c Then Return Nothing
         Body = Body.Replace("-", "")
-        Dim Value As BigInteger = BigInteger.Zero
-        For Each C As Char In Body
-            Dim Ch As Char = Char.ToUpperInvariant(C)
+        '先把每个字符转成 34 进制数值
+        Dim Digits(15) As Integer
+        For i = 0 To 15
+            Dim Ch As Char = Char.ToUpperInvariant(Body(i))
             If Ch = "I"c Then Ch = "1"c
             If Ch = "O"c Then Ch = "0"c
             Dim Pos As Integer = TC_CHARS.IndexOf(Ch)
             If Pos < 0 Then Return Nothing
-            Value = Value * 34 + Pos
+            Digits(i) = Pos
         Next
-        If Value Mod 7 <> 0 Then Return Nothing
-        Return TcFormat(Value)
+        '标准排列：首字符是最高位（陶瓦与 HMCL 发给玩家的房间码都是这种）
+        Dim Value As BigInteger = BigInteger.Zero
+        For i = 0 To 15
+            Value = Value * 34 + Digits(i)
+        Next
+        If Value Mod 7 = 0 Then Return TcFormat(Value)
+        '兼容旧版 PCL Pro 低位在前的房间码（房主升级前创建的房间仍能被新版本加入）
+        Value = BigInteger.Zero
+        Dim Power As BigInteger = BigInteger.One
+        For i = 0 To 15
+            Value += Digits(i) * Power
+            Power *= 34
+        Next
+        If Value Mod 7 = 0 Then
+            Logger.Info("检测到旧版 PCL Pro 生成的房间码（低位在前），已按旧格式解析")
+            Return TcFormatLegacy(Value)
+        End If
+        Return Nothing
     End Function
     '===============================
     '  状态机与前端页面

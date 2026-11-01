@@ -6,12 +6,12 @@ Public Module ModBase
 #Region "声明"
 
     '下列版本信息由更新器自动修改
-    Public Const VersionBaseName As String = "1.3.0" '显示用版本名
+    Public Const VersionBaseName As String = "1.3.1" '显示用版本名
     Public Const CommitHash As String = "" 'Commit Hash，由 GitHub Workflow 自动替换
 #If RELEASE Then
-    Public Const VersionCode As Integer = 429 '正式版
+    Public Const VersionCode As Integer = 430 '正式版
 #Else
-    Public Const VersionCode As Integer = 429 '快照版
+    Public Const VersionCode As Integer = 430 '快照版
 #End If
 
     '版本信息
@@ -1279,7 +1279,7 @@ Public Module ModBase
                 If Not String.IsNullOrWhiteSpace(Release.Changelog) Then Desc = vbCrLf & vbCrLf & "更新内容：" & vbCrLf & Release.Changelog.Trim
                 RunInUi(
                 Sub()
-                    If MyMsgBox($"检测到新版本 {Release.VersionName}，当前版本 {VersionBaseName}。" & vbCrLf & "是否立即下载并更新？" & Desc,
+                    If MyMsgBox(LinkFixTip(Release.VersionName) & $"检测到新版本 {Release.VersionName}，当前版本 {VersionBaseName}。" & vbCrLf & "是否立即下载并更新？" & Desc,
                                 "发现新版本", "立即更新", "稍后") = 1 Then
                         DownloadUpdate(Release)
                     End If
@@ -1316,7 +1316,7 @@ Public Module ModBase
                 If Not String.IsNullOrWhiteSpace(Release.Changelog) Then Desc = vbCrLf & vbCrLf & "更新内容：" & vbCrLf & Release.Changelog.Trim
                 RunInUi(
                 Sub()
-                    If MyMsgBox($"检测到新版本 {Release.VersionName}，当前版本 {VersionBaseName}。" & vbCrLf & "是否立即下载并更新？" & Desc,
+                    If MyMsgBox(LinkFixTip(Release.VersionName) & $"检测到新版本 {Release.VersionName}，当前版本 {VersionBaseName}。" & vbCrLf & "是否立即下载并更新？" & Desc,
                                 "发现新版本", "立即更新", "稍后") = 1 Then
                         DownloadUpdate(Release)
                     End If
@@ -1327,6 +1327,13 @@ Public Module ModBase
             End Try
         End Sub, "Update Checker Manual")
     End Sub
+
+    ''' <summary>1.3.1 的特别提示：修复了联机房间码解析，且联机双方都必须升级。</summary>
+    Private Function LinkFixTip(VersionName As String) As String
+        If VersionName Is Nothing OrElse Not VersionName.StartsWith("1.3.1", StringComparison.Ordinal) Then Return ""
+        Return "该版本可能修复了联机功能（加入房间失败）。" & vbCrLf &
+               "联机需要双方都把启动器更新到 1.3.1。" & vbCrLf & vbCrLf
+    End Function
 
     Private Function FetchLatestRelease() As UpdateRelease
         Dim Raw As String = Nothing

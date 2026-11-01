@@ -13,6 +13,10 @@ Public Class FormMain
         Dim FeatureList As New List(Of KeyValuePair(Of Integer, String))
         '统计更新日志条目
         If BuildType = BuildTypes.Release Then
+            If LastVersion < 430 Then 'Release 1.3.1
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "修复：加入联机房间时房间码被反转解析，客人会一直卡在「正在与房主建立点对点连接」并反复重试"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "提醒：联机需要双方都把启动器更新到 1.3.1，旧版本仍然无法加入房间"))
+            End If
             If LastVersion < 429 Then 'Release 1.3.0
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "修复：更新下载进度窗口无法最小化，现在可最小化到任务栏并在后台继续下载"))
             End If
@@ -313,6 +317,8 @@ Public Class FormMain
                 "详见完整更新日志"))
         End If
         Dim Content As String = "· " & ContentList.Join(vbCrLf & "· ")
+        '每次更新日志都固定强调这不是官方版本，避免有人把它当成 PCL2 官方版
+        Content &= vbCrLf & vbCrLf & "注意：PCL Pro 是非官方的第三方修改版 与 PCL2 官方版无关 请注意辨别"
         '输出更新日志
         RunInNewThread(
         Sub()
