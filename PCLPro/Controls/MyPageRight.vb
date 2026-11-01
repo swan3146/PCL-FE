@@ -396,32 +396,23 @@ Public Class MyPageRight
         Next
         Dim AniList As New List(Of AniData)
         Dim Delay As Integer = 0
-        '基础动画：缩放 + 侧向滑入 + 上浮 + 淡入，用欠阻尼弹簧制造 Q 弹手感
-        Const EnterScale As Double = 0.94
-        Const EnterOffset As Double = 26
-        Const EnterOffsetX As Double = 16
+        '基础动画
         For Each Element In RealElements
             For Each Control As FrameworkElement In GetAllAnimControls(Element, True)
                 '还原被隐藏的卡片的消失动画
                 Control.IsHitTestVisible = True
-                If TypeOf Control.RenderTransform Is TranslateTransform OrElse TypeOf Control.RenderTransform Is TransformGroup Then Control.RenderTransform = Nothing
+                If Control.RenderTransform IsNot Nothing AndAlso TypeOf Control.RenderTransform Is TranslateTransform Then Control.RenderTransform = Nothing
             Next
             For Each Control As FrameworkElement In GetAllAnimControls(Element)
                 If TypeOf Control Is MyExtraTextButton Then
                     CType(Control, MyExtraTextButton).Show = True
                 Else
-                    '初始状态：略小、偏右下、透明
                     Control.Opacity = 0
-                    Control.RenderTransformOrigin = New Point(0.5, 0.5)
-                    Dim Group As New TransformGroup()
-                    Group.Children.Add(New ScaleTransform(EnterScale, EnterScale))
-                    Group.Children.Add(New TranslateTransform(EnterOffsetX, EnterOffset))
-                    Control.RenderTransform = Group
-                    '淡入先行，让元素“浮现”而不是硬切
-                    AniList.Add(AaOpacity(Control, 1, 330, Delay, New AniEaseOutFluent(AniEasePower.Weak)))
-                    '缩放与位移同步推进，弹簧会越过终点再回弹
-                    AniList.Add(AaPop(Control, 1 - EnterScale, -EnterOffset, -EnterOffsetX, 840, Delay, New AniEaseOutSpring(AniEasePower.Strong)))
-                    Delay += If(Delay < 340, 46, 16) '前几个错峰明显，后面加速跟上，避免整页过慢
+                    Control.RenderTransform = New TranslateTransform(0, -16)
+                    AniList.Add(AaOpacity(Control, 1, 100, Delay, New AniEaseOutFluent(AniEasePower.Weak)))
+                    AniList.Add(AaTranslateY(Control, 5, 250, Delay, New AniEaseOutFluent))
+                    AniList.Add(AaTranslateY(Control, 11, 350, Delay, New AniEaseOutBack))
+                    Delay += 25
                 End If
             Next
         Next
@@ -429,7 +420,7 @@ Public Class MyPageRight
         Dim Scroll As MyScrollBar = GetFirstScrollViewer(RealElements)
         If Scroll IsNot Nothing Then
             If TypeOf Scroll.RenderTransform IsNot TranslateTransform Then Scroll.RenderTransform = New TranslateTransform(10, 0)
-            AniList.Add(AaTranslateX(Scroll, -CType(Scroll.RenderTransform, TranslateTransform).X, 620, 0, New AniEaseOutBack))
+            AniList.Add(AaTranslateX(Scroll, -CType(Scroll.RenderTransform, TranslateTransform).X, 350, 0, New AniEaseOutFluent))
         End If
         '结束
         AniList.Add(AaCode(Sub() PageOnEnterAnimationFinished(),, True))
@@ -447,9 +438,9 @@ Public Class MyPageRight
                     CType(Control, MyExtraTextButton).Show = False
                 Else
                     Control.IsHitTestVisible = False
-                    AniList.Add(AaOpacity(Control, -1, 90, Delay, New AniEaseInFluent(AniEasePower.Weak)))
-                    AniList.Add(AaPop(Control, -0.05, -12, 0, 110, Delay, New AniEaseInFluent))
-                    Delay += 13
+                    AniList.Add(AaOpacity(Control, -1, 70, Delay))
+                    AniList.Add(AaTranslateY(Control, -6, 70, Delay))
+                    Delay += 15
                 End If
             Next
         Next

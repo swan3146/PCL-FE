@@ -337,4 +337,17 @@ Public Module ModGlass
 
 #End Region
 
+    ''' <summary>
+    ''' 毛玻璃模式的半透明磨砂填充（用于卡片与侧栏背景板）。
+    ''' </summary>
+    Public Function GlassFrostBrush() As Brush
+        Dim Frost As New LinearGradientBrush With {.StartPoint = New Point(0, 0), .EndPoint = New Point(0.35, 1)}
+        Frost.GradientStops.Add(New GradientStop(Color.FromArgb(38, 255, 255, 255), 0))
+        Frost.GradientStops.Add(New GradientStop(Color.FromArgb(26, 255, 255, 255), 0.16))
+        Frost.GradientStops.Add(New GradientStop(Color.FromArgb(56, 255, 255, 255), 0.56))
+        Frost.GradientStops.Add(New GradientStop(Color.FromArgb(72, 255, 255, 255), 1))
+        Frost.Freeze()
+        Return Frost
+    End Function
+
 End Module

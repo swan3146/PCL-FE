@@ -163,6 +163,16 @@
                     </Grid>
                 </StackPanel>
             </local:MyCard>
+            <local:MyCard x:Name="CardSaveSync" Margin="0,0,0,15" Title="存档同步">
+                <StackPanel Margin="25,40,25,15">
+                    <local:MyCheckBox Text="启动时自动检测官方版 PCL2 的存档" Height="22" Margin="-1,0,0,2" x:Name="CheckAutoSyncSaves"
+                                      local:SettingService.Key="UiAutoSyncOfficialSaves"
+                                      ToolTip="启动时会扫描其它常见 .minecraft 目录中的存档，若发现当前游戏文件夹缺少的存档，会询问是否复制过来。同名存档不会被覆盖。" />
+                    <TextBlock Text="开启后，启动器会在启动时检查其它 .minecraft 目录中的存档并询问是否同步；也可以点下面的按钮手动检测。"
+                               TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,0,0,10" />
+                    <local:MyButton x:Name="BtnSyncSavesNow" Text="立即检测并同步" MinWidth="140" Padding="13,0" HorizontalAlignment="Left" />
+                </StackPanel>
+            </local:MyCard>
             <local:MyCard x:Name="CardSkin" Margin="0,0,0,15" Title="离线皮肤" CanSwap="True" IsSwapped="True">
                 <StackPanel Margin="25,40,25,15">
                     <local:MyHint Text="由于技术问题，此功能只保证对 1.19.2 以前的版本有效！" Theme="Yellow" Margin="0,0,0,10" />
@@ -287,6 +297,7 @@
                         <local:MyCheckBox Height="28" Text="禁用 LWJGL Unsafe Agent" local:SettingService.Key="LaunchAdvanceDisableLUA" ToolTip="是否使用 LWJGL Unsafe Agent 修复 LWJGL 3.4.1 的一个性能问题。&#xa;详见：https://github.com/HMCL-dev/lwjgl-unsafe-agent" />
                         <local:MyCheckBox Height="28" Text="使用高性能显卡" local:SettingService.Key="LaunchAdvanceGraphicCard" ToolTip="自动在 Windows 设置 → 系统 → 屏幕 → 显示卡 中将 PCL 和 Java 改为使用高性能显卡。&#xa;如果同时有集成显卡和独立显卡，这能确保 MC 使用独立显卡进行渲染，以大幅提高帧率。" />
                         <local:MyCheckBox Height="28" Text="在正版登录时验证 SSL 证书" local:SettingService.Key="ToolDownloadCert" ToolTip="开启验证可以提高安全性，但可能会导致正版登录失败（见 #3018）。&#xa;若登录因为 “未能为 SSL/TLS 安全通道建立信任关系” 失败，请考虑关闭此选项。" />
+                        <local:MyCheckBox Height="28" Text="启动时自动检查更新" local:SettingService.Key="UiCheckUpdateAtStartup" ToolTip="启动后从 GitHub 检查新版本；发现新版本只会弹窗提示，不会自动更新。" />
                     </StackPanel>
                     <local:MyHint Text="版本独立设置中还有更多高级选项可供调整。" Margin="0,5,0,10" Theme="Blue" Grid.Row="11" Grid.ColumnSpan="2"
                                   CanClose="True" RelativeSetup="HintMoreAdvancedSetup" />

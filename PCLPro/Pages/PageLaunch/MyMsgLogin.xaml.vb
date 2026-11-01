@@ -1,4 +1,4 @@
-Public Class MyMsgLogin
+﻿Public Class MyMsgLogin
     Private Data As JObject
     Private UserCode As String '需要用户在网页上输入的设备代码
     Private DeviceCode As String '用于轮询的设备代码
@@ -28,14 +28,14 @@ Public Class MyMsgLogin
 
     Private Sub Load(sender As Object, e As EventArgs) Handles MyBase.Loaded
         Try
-            '液态玻璃
-            GlassAttachDialog(PanBorder)
+            '毛玻璃弹窗
+            If Settings.Get(Of Integer)("UiUiStyle") = 1 Then GlassAttachDialog(PanBorder)
             '动画
             Opacity = 0
             AniStart(AaColor(FrmMain.PanMsg, Grid.BackgroundProperty, If(MyConverter.IsWarn, New MyColor(140, 80, 0, 0), New MyColor(90, 0, 0, 0)) - FrmMain.PanMsg.Background, 280), "PanMsg Background")
             AniStart({
                 AaOpacity(Me, 1, 240, 90, New AniEaseOutFluent(AniEasePower.Weak)),
-                AaDouble(Sub(i) TransformPos.Y += i, -TransformPos.Y, 680, 90, New AniEaseOutSpring(AniEasePower.Strong)),
+                AaDouble(Sub(i) TransformPos.Y += i, -TransformPos.Y, 500, 90, New AniEaseOutBack(AniEasePower.Weak)),
                 AaDouble(Sub(i) TransformRotate.Angle += i, -TransformRotate.Angle, 740, 90, New AniEaseOutBack(AniEasePower.Weak))
             }, "MyMsgBox " & Uuid)
             '记录日志
@@ -175,6 +175,15 @@ Public Class MyMsgLogin
         Website = Data("verification_uri")
         '设置 UI
         LabTitle.Text = "登录 Minecraft"
+        UpdateUiWithDeviceCode()
+        '启动工作线程
+        RunInNewThread(AddressOf WorkThread, "MyMsgLogin")
+    End Sub
+
+    ''' <summary>
+    ''' 把当前设备代码同步到弹窗文案与按钮事件中（重新申请设备代码后需要刷新）。
+    ''' </summary>
+    Private Sub UpdateUiWithDeviceCode()
         LabCaption.Text =
             $"登录网页将自动开启，请在网页中输入 {UserCode}（已自动复制）。" & vbCrLf & vbCrLf &
             $"如果网页一直加载不出来或提示登录失败：" & vbCrLf &
@@ -184,20 +193,49 @@ Public Class MyMsgLogin
             $"以上都无效时，可点击「手动登录」，粘贴其他启动器里的 refresh_token 跳过网页登录。"
         CustomEventService.SetEventData(Btn1, Website)
         CustomEventService.SetEventData(Btn2, UserCode)
-        '启动工作线程
-        RunInNewThread(AddressOf WorkThread, "MyMsgLogin")
     End Sub
+
+    ''' <summary>
+    ''' 重新申请一个设备代码。设备代码被消费后（例如上一次轮询其实已成功但响应超时）无法复用，只能换新的。
+    ''' </summary>
+    Private Function RefreshDeviceCode() As Boolean
+        Try
+            Dim NewData As JObject = NetRequestByClientRetry(
+                "https://login.live.com/oauth20_connect.srf", HttpMethod.Post,
+                Content:=$"client_id={OAuthClientIdMsa}&scope={StringUtils.FormUrlEscape(OAuthScopeMsa)}&response_type=device_code",
+                ContentType:="application/x-www-form-urlencoded", RequireJson:=True).DeserializeJson()
+            Data = NewData
+            UserCode = NewData("user_code").ToString
+            DeviceCode = NewData("device_code").ToString
+            Website = NewData("verification_uri").ToString
+            RunInUi(AddressOf UpdateUiWithDeviceCode)
+            Thread.Sleep(800)
+            OpenWebsite(Website)
+            ClipboardSet(UserCode)
+            McLaunchLog($"已重新申请设备代码：{UserCode}")
+            Return True
+        Catch ex As Exception
+            Logger.Warn(ex, "重新申请设备代码失败")
+            Return False
+        End Try
+    End Function
 
     Private Sub WorkThread()
         Thread.Sleep(2000)
         If MyConverter.IsExited Then Return
         OpenWebsite(Website)
         ClipboardSet(UserCode)
-        Thread.Sleep((Data("interval").ToObject(Of Integer) - 1) * 1000)
+        Dim IntervalSec As Integer = 5
+        Integer.TryParse(Data("interval")?.ToString, IntervalSec)
+        If IntervalSec < 1 OrElse IntervalSec > 60 Then IntervalSec = 5
+        Thread.Sleep((IntervalSec - 1) * 1000)
         '轮询
         Dim UnknownFailureCount As Integer = 0
+        Dim DeviceCodeRefreshCount As Integer = 0
         Do While Not MyConverter.IsExited
             Try
+                '超时不能太短：请求在服务端已经消费掉设备代码、客户端却先超时重试的话，只会拿到
+                'invalid_grant（device_code has already been used），表现就是“偶尔登录失败”
                 Dim Result = NetRequestByClient(
                     "https://login.live.com/oauth20_token.srf", HttpMethod.Post,
                     Content:=
@@ -206,7 +244,7 @@ Public Class MyMsgLogin
                         "device_code=" & StringUtils.FormUrlEscape(DeviceCode) & "&" &
                         "scope=" & StringUtils.FormUrlEscape(OAuthScopeMsa),
                     ContentType:="application/x-www-form-urlencoded",
-                    Timeout:=5000 + UnknownFailureCount * 5000,
+                    Timeout:=20000 + UnknownFailureCount * 10000,
                     MakeLog:=False, RequireJson:=True)
                 '获取结果
                 Dim ResultJson As JObject = Result.DeserializeJson()
@@ -232,6 +270,19 @@ Public Class MyMsgLogin
                         Return
                     ElseIf Response.Contains("AADSTS70000") Then '可能不能判 “invalid_grant”，见 #269
                         Finished(New RestartException)
+                        Return
+                    ElseIf Response.Contains("already been used") OrElse
+                           (Response.Contains("invalid_grant") AndAlso Response.Contains("device_code")) Then
+                        '设备代码已被消费：上一次轮询在服务端其实已经成功，只是响应在客户端超时或被截断；
+                        '同一个代码无法再次换取令牌，这里自动换一个新的设备代码继续，避免直接判定登录失败
+                        If DeviceCodeRefreshCount < 1 AndAlso RefreshDeviceCode() Then
+                            DeviceCodeRefreshCount += 1
+                            UnknownFailureCount = 0
+                            Hint("登录会话已刷新，请在新打开的网页中重新输入代码", HintType.Blue)
+                            Thread.Sleep(1000)
+                            Continue Do
+                        End If
+                        Finished(New Exception("$登录会话已失效，请重新点击登录。"))
                         Return
                     ElseIf Response.Contains("authorization_pending") Then
                         Thread.Sleep(2000)

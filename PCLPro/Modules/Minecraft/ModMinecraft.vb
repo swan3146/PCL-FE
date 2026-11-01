@@ -1057,6 +1057,10 @@ OnLoaded:
                         Instance.Info = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "CustomInfo", "")
                         If Instance.Info = "" Then Instance.Info = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "Info", Instance.Info)
                         Instance.Logo = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "Logo", Instance.Logo)
+                        '兼容旧版 PCL2 写入的程序集名，避免老版本图标指向 Plain Craft Launcher 2 导致加载失败
+                        If Instance.Logo IsNot Nothing AndAlso Instance.Logo.StartsWith("pack://application:,,,/Plain Craft Launcher 2;") Then
+                            Instance.Logo = Instance.Logo.Replace("pack://application:,,,/Plain Craft Launcher 2;", "pack://application:,,,/Plain Craft Launcher Pro;")
+                        End If
                         Instance.State = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "State", Instance.State)
                         Instance.IsStar = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "IsStar", False)
                         Instance.DisplayType = ReadIni(Folder & "PCL\Setup.ini", "DisplayType", McInstanceCardType.Auto)

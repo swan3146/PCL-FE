@@ -5,8 +5,8 @@
              RenderTransformOrigin="0,0.5" UseLayoutRounding="True" SnapsToDevicePixels="True" MinWidth="400" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="25">
     <Grid.RenderTransform>
         <TransformGroup>
-            <RotateTransform x:Name="TransformRotate" Angle="-6" />
-            <TranslateTransform x:Name="TransformPos" X="0" Y="56" />
+            <RotateTransform x:Name="TransformRotate" Angle="-4" />
+            <TranslateTransform x:Name="TransformPos" X="0" Y="40" />
         </TransformGroup>
     </Grid.RenderTransform>
     <Border Name="PanBorder" CornerRadius="7" Background="#FBFBFB">

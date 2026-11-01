@@ -1,5 +1,6 @@
 ﻿Imports System.Collections.ObjectModel
 Imports System.Globalization
+Imports System.IO
 Imports System.Net.Sockets
 Imports System.Numerics
 Imports System.Reflection
@@ -135,6 +136,7 @@ Public Class PageLinkMain
     '由任意状态切换到 Waiting
     Private Sub SwitchToWaiting(OldState As LinkStates)
         '加载器与进程状态
+        HostGuideStop = True
         LinkLoader.Cancel()
         SyncLock LinkLoader.LockState
             LinkLoader.State = LoadState.Waiting
@@ -159,13 +161,25 @@ Public Class PageLinkMain
         '短时间内重复点击去重
         If Math.Abs(GetTimeMs() - LastCreateTrigger) < 500 Then Return
         LastCreateTrigger = GetTimeMs()
+        '与 HMCL 一致：先确认游戏已经在运行，否则陶瓦扫不到局域网端口
+        If Not TcGameRunning() Then
+            If MyMsgBox("还没有检测到正在运行的游戏。" & vbCrLf &
+                        "陶瓦联机需要在游戏里选择「对局域网开放」之后才能扫描到端口，" & vbCrLf &
+                        "建议先进入存档并开放局域网，再创建房间。" & vbCrLf & vbCrLf &
+                        "是否仍然创建房间？", "创建联机房间", "仍然创建", "取消") = 2 Then Return
+        End If
         '基础信息（使用陶瓦联机的房间码体系，游戏端口由陶瓦自动扫描，不需要用户填写）
         IsServerSide = True
+        '记录创建房间时选中的公共节点
+        Dim NodeItem = TryCast(ComboCreateNode.SelectedItem, MyComboBoxItem)
+        If NodeItem IsNot Nothing Then TcSelectedNode = TryCast(NodeItem.Tag, String)
         Dim Room = TcRandomRoom()
         RoomCode = Room.Item1
         NetworkName = Room.Item2
         NetworkSecret = Room.Item3
         Logger.Info($"尝试创建陶瓦房间，房间码 {RoomCode}，网络名 {NetworkName}")
+        '联机前检查防火墙是否放行了陶瓦与 EasyTier
+        ModFirewall.CheckTerracottaFirewall()
         '启动
         ChangeState(LinkStates.Loading)
     End Sub
@@ -224,6 +238,8 @@ Public Class PageLinkMain
         NetworkName = Room.Item2
         NetworkSecret = Room.Item3
         Logger.Info($"尝试加入陶瓦房间，房间码 {RoomCode}，网络名 {NetworkName}")
+        '联机前检查防火墙是否放行了陶瓦与 EasyTier
+        ModFirewall.CheckTerracottaFirewall()
         '启动
         LastCode = Code
         ChangeState(LinkStates.Loading)
@@ -237,10 +253,33 @@ Public Class PageLinkMain
     ''' <summary>整理用户输入的房间码，去掉复制消息带来的多余字符。</summary>
     Private Shared Function FixCodeFormat(Code As String) As String
         Code = Code.Between("【", "】").Between("[", "]").Upper.Trim '从完整消息中提取
+        Code = TcNormalizeWidth(Code)
         Code = Code.Replace(" ", "").Replace(vbCrLf, "").Replace(vbCr, "")
         Dim Index As Integer = Code.IndexOf("U/", StringComparison.Ordinal)
         If Index > 0 Then Code = Code.Substring(Index)
         Return Code
+    End Function
+    ''' <summary>
+    ''' 把全角字符归一化为半角。中文输入法手打房间码时容易出全角的「Ｕ／」、全角连字符，
+    ''' 这些字符会让房间码解析直接失败，表现为「房间码有误」。
+    ''' </summary>
+    Private Shared Function TcNormalizeWidth(Text As String) As String
+        If String.IsNullOrEmpty(Text) Then Return Text
+        Dim Buffer As New Text.StringBuilder(Text.Length)
+        For Each C As Char In Text
+            Dim CharCode As Integer = AscW(C)
+            Select Case CharCode
+                Case &HFF01 To &HFF5E '全角 ASCII 区（含 － ／ 数字与字母）
+                    Buffer.Append(ChrW(CharCode - &HFEE0))
+                Case &H3000 '全角空格
+                    Buffer.Append(" "c)
+                Case &H2010, &H2011, &H2013, &H2014, &H2212 '各种连字符、短横线
+                    Buffer.Append("-"c)
+                Case Else
+                    Buffer.Append(C)
+            End Select
+        Next
+        Return Buffer.ToString()
     End Function
 
     '自动加入
@@ -274,6 +313,9 @@ Public Class PageLinkMain
     Private Sub SwitchToLoading(OldState As LinkStates)
         '清理变量
         TcFailCount = 0
+        HostGuideStop = True
+        HostPort = 0
+        HostNodeText = ""
         '加载器与进程状态
         LinkLoader.Start(IsForceRestart:=True)
         '页面切换会由 Loader 调用 MyPageRight 来触发
@@ -286,6 +328,7 @@ Public Class PageLinkMain
     '由 Loading 状态切换到 Failed
     Private Sub SwitchToFailed(OldState As LinkStates)
         '加载器与进程状态
+        HostGuideStop = True
         LinkLoader.Cancel()
         ProcessStop()
         'UI 更新
@@ -363,7 +406,10 @@ Public Class PageLinkMain
         'UI 更新
         If IsServerSide Then
             LabFinishTitle.Text = "已创建房间"
-            LabFinishDesc.Text = $"把房间码发给朋友，让大家加入房间吧！{vbCrLf}房间码：{GetInviteCode()}"
+            HostNodeText = TcNodeText()
+            HostGuideStop = False
+            RefreshHostGuide()
+            StartHostGuideWatch()
             BtnFinishExit.Text = "关闭"
             BtnFinishPing.ToolTip = "网络延迟"
             BtnFinishCopy.Visibility = Visibility.Visible
@@ -427,6 +473,78 @@ Public Class PageLinkMain
         Return RoomCode
     End Function
 
+    ''' <summary>
+    ''' 刷新房主完成页的提示。陶瓦在游戏还没「对局域网开放」时也会给出 host-ok（端口是猜的），
+    ''' 所以这里要实测一次本地端口，没开就明确提醒房主，避免把房间码发出去却谁都进不来。
+    ''' </summary>
+    Private Sub RefreshHostGuide()
+        If FrmLinkMain Is Nothing Then Return
+        Dim Alive As Boolean = HostPort > 0 AndAlso TcGamePortAlive(HostPort)
+        Dim Text As String = $"把房间码发给朋友，让大家加入房间吧！{vbCrLf}房间码：{GetInviteCode()}{vbCrLf}节点：{HostNodeText}"
+        If HostPort > 0 AndAlso Not Alive Then
+            Text &= vbCrLf & vbCrLf &
+                    "注意：还没有检测到游戏端口。请现在进入游戏并选择「对局域网开放」，否则朋友会一直卡在「连接房主」。"
+        End If
+        If Not TcHasReachableNode Then
+            Text &= vbCrLf & vbCrLf &
+                    "注意：当前没有可用的联机节点，朋友很可能连不进来。请检查网络或代理后重新创建房间。"
+        End If
+        LabFinishDesc.Text = Text
+    End Sub
+
+    ''' <summary>
+    ''' 轮询本地游戏端口，房主开放局域网后自动去掉提示。
+    ''' 注意：MC 每次「对局域网开放」都会换随机端口，所以不能只用建房时读到的那一次，
+    ''' 必须持续从陶瓦的 /state 读 port 字段，端口一变就跟着变。
+    ''' </summary>
+    Private Sub StartHostGuideWatch()
+        RunInNewThread(
+        Sub()
+            For i = 1 To 600 '每 3 秒一次，最多观察 30 分钟
+                Thread.Sleep(3000)
+                If HostGuideStop OrElse LinkState <> LinkStates.Finished Then Exit For
+                '跟随陶瓦上报的端口（扫描到新端口时它会自己重建 EasyTier）
+                Dim Json As JObject = TcGetStateJson(1500)
+                Dim Port As Integer = 0
+                If Json IsNot Nothing Then Integer.TryParse(If(Json("port")?.ToString, ""), Port)
+                If Port <= 0 Then Port = HostPort
+                Dim PortChanged As Boolean = Port <> HostPort
+                If PortChanged Then HostPort = Port
+                '端口变了才刷新提示：已开放时去掉提醒，游戏退出或换端口后又没监听时重新提醒
+                If PortChanged Then
+                    RunInUi(Sub()
+                                If HostGuideStop Then Return
+                                RefreshHostGuide()
+                            End Sub)
+                End If
+            Next
+        End Sub, "陶瓦房主端口检测")
+    End Sub
+
+    ''' <summary>检查本地游戏端口是否真的在监听（游戏开了「对局域网开放」才会监听）。</summary>
+    Private Shared Function TcGamePortAlive(Port As Integer) As Boolean
+        If Port <= 0 Then Return False
+        Try
+            Using Client As New TcpClient()
+                Dim ConnectTask = Client.ConnectAsync("127.0.0.1", Port)
+                Return ConnectTask.Wait(700) AndAlso Client.Connected
+            End Using
+        Catch
+            Return False
+        End Try
+    End Function
+
+    ''' <summary>最近一次由启动器启动的游戏是否还在运行（建房前的检查，与 HMCL 的 countManagedProcesses 对应）。</summary>
+    Private Shared Function TcGameRunning() As Boolean
+        Try
+            Dim Game As Process = McLaunchProcess
+            If Game Is Nothing Then Return False
+            Return Not Game.HasExited
+        Catch
+            Return False
+        End Try
+    End Function
+
     '复制 IP
     Private Sub BtnFinishIp_MouseLeftButtonUp(sender As Object, e As MouseButtonEventArgs) Handles BtnFinishIp.MouseLeftButtonUp
         ClipboardSet(ClientAddress, False)
@@ -451,12 +569,20 @@ Public Class PageLinkMain
     Private IsServerSide As Boolean
     ''' <summary>客户端连接游戏时使用的地址，由陶瓦给出；服务端一直为 Nothing。</summary>
     Private ClientAddress As String = Nothing
+    ''' <summary>房主房间使用的游戏端口，由陶瓦上报；未上报时为 0。</summary>
+    Private HostPort As Integer = 0
+    ''' <summary>完成页展示的节点文本（提前取好，避免后台刷新时重复请求网络）。</summary>
+    Private HostNodeText As String = ""
+    ''' <summary>完成页「等待游戏开放」检测的停止标记。</summary>
+    Private Shared HostGuideStop As Boolean = True
     ''' <summary>陶瓦联机的房间码。</summary>
     Private RoomCode As String
     ''' <summary>网络名与网络密码，由房间码推导，仅用于日志。</summary>
     Private NetworkName As String, NetworkSecret As String
     ''' <summary>本启动器拉起的陶瓦进程（复用已有实例时为 Nothing）。</summary>
     Private Shared ProcessTc As Process
+    ''' <summary>本次启动使用的唯一端口文件所在目录，退出时清理。</summary>
+    Private Shared TcPortDir As String
     ''' <summary>陶瓦本地 HTTP API 端口，未启动时为 0。</summary>
     Private Shared TcPort As Integer = 0
     ''' <summary>陶瓦进程是否由本启动器启动。</summary>
@@ -507,7 +633,15 @@ Public Class PageLinkMain
                     Exit For
                 End If
             Next
-            If Source Is Nothing Then Throw New Exception($"$找不到陶瓦联机模块（{TcExeName}）。{vbCrLf}请重新安装启动器，或把 terracotta.exe 放到：{vbCrLf}{PathTerracotta}")
+            If Source Is Nothing Then
+                '随包未附带时，从 GitHub Release 下载联机模块
+                UpdateLoadingPage("正在下载陶瓦联机模块……", "下载联机模块")
+                If DownloadTerracottaModule(Paths.Base & "Terracotta\") Then
+                    Source = Paths.Base & "Terracotta\" & TcExeName
+                Else
+                    Throw New Exception($"$找不到陶瓦联机模块（{TcExeName}），自动下载也失败了。{vbCrLf}请检查网络后重试，或手动把 terracotta.exe 放到：{vbCrLf}{PathTerracotta}")
+                End If
+            End If
             FileUtils.Copy(Source, Target)
             Logger.Info($"已复制陶瓦联机模块：{Source} -> {Target}")
         End If
@@ -528,14 +662,14 @@ Public Class PageLinkMain
     '3. 启动陶瓦联机模块
     Private Sub InitLaunch(Task As LoaderTask(Of Integer, Integer))
         UpdateLoadingPage("正在启动陶瓦联机……", "启动联机模块")
+        '结束残留实例（含被其他启动器遗留的进程），避免其抢占 UDP 4445 局域网广播端口
+        TcKillStaleProcesses()
         '结束上一次残留的实例
         ProcessStop()
-        Dim PortFile As String = PathTerracotta & "pcl-port.json"
-        Try
-            If FileUtils.Exists(PortFile) Then FileUtils.Delete(PortFile)
-        Catch ex As Exception
-            Logger.Warn(ex, "清理陶瓦端口文件失败")
-        End Try
+        '端口文件放在每次启动唯一的临时目录，避免多开或残留实例互相覆盖（与 HMCL 的做法一致）
+        TcPortDir = IO.Path.Combine(IO.Path.GetTempPath(), "PCLPro-Terracotta-" & Guid.NewGuid().ToString("N"))
+        If Not IO.Directory.Exists(TcPortDir) Then IO.Directory.CreateDirectory(TcPortDir)
+        Dim PortFile As String = IO.Path.Combine(TcPortDir, "http")
         '--hmcl2 会让陶瓦把本地 API 端口写入指定文件
         Dim Info As New ProcessStartInfo With {
             .FileName = PathTerracotta & TcExeName,
@@ -599,19 +733,49 @@ Public Class PageLinkMain
 
     '4. 创建或加入房间：只依赖房间码，游戏端口由陶瓦自动扫描
     Private Sub InitEnterRoom(Task As LoaderTask(Of Integer, Integer))
+        '加入房间必须有一个真的能连上的公共节点：陶瓦内置节点早已失效，没有节点时客人只会一直 PingHostFail
+        If Not IsServerSide AndAlso Not TcEnsureNodesUsable() Then
+            Throw New Exception("$找不到可用的陶瓦联机节点，无法加入房间。" & vbCrLf &
+                                "当前网络下陶瓦的公共节点都连不上（它内置的节点已经失效）。" & vbCrLf &
+                                "请检查网络、代理或防火墙后点击重试；如果仍然不行，请让房主重新创建房间。")
+        End If
         Dim Start As Long = GetTimeMs()
         Dim LastRequest As Long = 0
         Dim FailCount As Integer = 0
+        Dim EnterFailCount As Integer = 0
+        Dim RecoverCount As Integer = 0
         Dim Succeeded As Boolean = False
+        Dim CurState As String = ""
+        Dim LastStateIndex As Integer = -1
         Do
             If Task.IsCanceled Then Throw New OperationCanceledException
-            '陶瓦只在 Waiting 状态接受请求，重复下发等价，可自动续上被重置的状态
-            If GetTimeMs() - LastRequest > 1000 Then
+            '陶瓦只在 Waiting 状态接受状态切换请求，否则会返回 400 或打断当前流程
+            If (CurState = "" OrElse CurState = "waiting") AndAlso GetTimeMs() - LastRequest > 1000 Then
                 LastRequest = GetTimeMs()
+                Dim EnterBody As String = Nothing
+                Dim EnterStatus As Integer
                 If IsServerSide Then
-                    TcApi($"/state/scanning?player={Uri.EscapeDataString(TcPlayerName())}", 1500)
+                    EnterStatus = TcApiStatus($"/state/scanning?player={Uri.EscapeDataString(TcPlayerName())}{TcPublicNodesQuery()}", EnterBody)
                 Else
-                    TcApi($"/state/guesting?room={Uri.EscapeDataString(RoomCode)}&player={Uri.EscapeDataString(TcPlayerName())}", 1500)
+                    EnterStatus = TcApiStatus($"/state/guesting?room={Uri.EscapeDataString(RoomCode)}&player={Uri.EscapeDataString(TcPlayerName())}{TcPublicNodesQuery()}", EnterBody, 4000)
+                End If
+                '拿到明确的拒绝原因就暴露出来，而不是静默重试到超时
+                If EnterStatus >= 400 Then
+                    EnterFailCount += 1
+                    Logger.Warn($"陶瓦拒绝联机请求（HTTP {EnterStatus}，第 {EnterFailCount} 次）：{EnterBody}")
+                    '400 在房主尚未开放局域网时非常常见，不应立刻判死：复位到 Waiting 后带退避重试
+                    If EnterFailCount >= 8 Then
+                        Throw New Exception("$" & $"陶瓦联机模块拒绝了{If(IsServerSide, "创建房间", "加入房间")}请求（HTTP {EnterStatus}）。{vbCrLf}服务端回应：{If(EnterBody, "（无）")}{vbCrLf}请点击重试；如果反复失败，请让房主重新创建房间后把新的房间码发给你。")
+                    End If
+                    TcApi("/state/ide", 1200)
+                    LastStateIndex = -1 '复位后陶瓦会重新计数，不能再拿旧 index 挡新状态
+                    Thread.Sleep(600 + EnterFailCount * 250)
+                ElseIf EnterStatus > 0 Then
+                    EnterFailCount = 0
+                    Logger.Info($"陶瓦已接受联机请求（HTTP {EnterStatus}）：{EnterBody}")
+                Else
+                    '本地接口无响应（-1）：不累加拒绝计数，交给状态轮询的 FailCount 处理
+                    Logger.Warn($"调用陶瓦联机接口无响应：{If(IsServerSide, "/state/scanning", "/state/guesting")}")
                 End If
             End If
             '读取状态
@@ -624,6 +788,16 @@ Public Class PageLinkMain
             End If
             FailCount = 0
             Dim State As String = If(Json("state")?.ToString, "")
+            '与 HMCL 一致：只处理 index 递增的状态，避免读到滞后响应把状态倒退回去
+            '成功状态不受此限制，否则重复读到同一个 host-ok 会被误判为没有进展
+            Dim StateIndex As Integer = -1
+            Integer.TryParse(If(Json("index")?.ToString, ""), StateIndex)
+            If StateIndex >= 0 AndAlso StateIndex <= LastStateIndex AndAlso State <> "host-ok" AndAlso State <> "guest-ok" Then
+                Thread.Sleep(300)
+                Continue Do
+            End If
+            If StateIndex >= 0 Then LastStateIndex = StateIndex
+            CurState = State
             LastTcState = State
             Select Case State
                 Case "host-scanning", "waiting"
@@ -639,20 +813,43 @@ Public Class PageLinkMain
                         UpdateLoadingPage("正在等待房主响应……", "连接房主")
                     End If
                 Case "host-starting"
-                    UpdateLoadingPage("正在创建陶瓦联机房间……", "创建联机房间")
+                    UpdateLoadingPage($"正在创建陶瓦联机房间……{vbCrLf}节点：{TcNodeText()}", "创建联机房间")
                 Case "guest-connecting"
                     UpdateLoadingPage("正在连接陶瓦公共节点……", "连接联机节点")
                 Case "guest-starting"
-                    UpdateLoadingPage("正在与房主建立点对点连接……", "连接房主")
+                    '与 HMCL 一致：陶瓦会给出网络穿透难度（仅估计），难度高时先给用户一个预期
+                    Dim Difficulty As String = If(Json("difficulty")?.ToString, "").ToUpperInvariant
+                    Dim GuestText As String = "正在与房主建立点对点连接……"
+                    Select Case Difficulty
+                        Case "EASIEST", "SIMPLE"
+                            GuestText &= vbCrLf & "网络穿透难度：较低，通常很快就能连上。"
+                        Case "MEDIUM", "TOUGH"
+                            GuestText &= vbCrLf & "网络穿透难度：较高，可能需要多等一会儿；若长时间连不上，请让房主换个节点重新创建房间。"
+                    End Select
+                    UpdateLoadingPage(GuestText, "连接房主")
                 Case "host-ok"
                     RoomCode = If(Json("room")?.ToString, RoomCode)
                     If String.IsNullOrEmpty(RoomCode) Then Continue Do
+                    Integer.TryParse(If(Json("port")?.ToString, ""), HostPort)
                     Succeeded = True
                 Case "guest-ok"
                     ClientAddress = If(Json("url")?.ToString, "")
                     If String.IsNullOrEmpty(ClientAddress) Then ClientAddress = "127.0.0.1"
                     Succeeded = True
                 Case "exception"
+                    Dim Kind As Integer = -1
+                    Integer.TryParse(If(Json("type")?.ToString, ""), Kind)
+                    'PingHostFail（type 0）每次要等陶瓦自己判定约 14 秒，重试太多次只会拖到总超时
+                    If Not IsServerSide AndAlso (Kind = 0 OrElse Kind = 1 OrElse Kind = 5) AndAlso RecoverCount < 10 Then
+                        RecoverCount += 1
+                        Logger.Info($"陶瓦返回异常 {Kind}，复位后重试第 {RecoverCount} 次")
+                        UpdateLoadingPage($"正在等待房主开放游戏端口……（第 {RecoverCount} 次尝试）", "等待房主")
+                        TcApi("/state/ide", 1200)
+                        LastStateIndex = -1
+                        CurState = ""
+                        Thread.Sleep(900)
+                        Continue Do
+                    End If
                     Throw New Exception("$" & TcExceptionText(Json))
             End Select
             If Succeeded Then Exit Do
@@ -679,7 +876,10 @@ Public Class PageLinkMain
         Integer.TryParse(If(Json("type")?.ToString, ""), Kind)
         Select Case Kind
             Case 0
-                Return "无法连接到房主的游戏，房主可能没有在游戏内「对局域网开放」。"
+                Return "无法与房主建立联机通道。" & vbCrLf &
+                       "常见原因：" & vbCrLf &
+                       "- 房主还没有在游戏内选择「对局域网开放」" & vbCrLf &
+                       "- 你和房主之间没有可用的联机节点（可换一个节点重试，并检查代理与防火墙）"
             Case 1
                 Return "房主拒绝了连接，请让房主检查游戏内的「对局域网开放」。"
             Case 2
@@ -700,13 +900,294 @@ Public Class PageLinkMain
         Return If(IsServerSide, "PCL-Host-", "PCL-Guest-") & Identify.GetStableHashCode().ConvertRadix(36).TrimStart("-"c).EnsureLength("0", 6)
     End Function
 
+    ''' <summary>启动器自行解析的陶瓦公共节点缓存。</summary>
+    Private Shared PublicNodeCache As List(Of String) = Nothing
+    ''' <summary>节点缓存的有效期（毫秒）：过期后重新获取并测速，避免一直使用一份已经失效的节点。</summary>
+    Private Const TcNodeCacheMs As Integer = 10 * 60 * 1000
+    Private Shared PublicNodeCacheTime As Long = 0
+    ''' <summary>最近一次刷新时，是否至少有一个节点真的能连上。</summary>
+    Private Shared TcHasReachableNode As Boolean = False
+
+    ''' <summary>
+    ''' 主动获取可用的公共节点。
+    ''' 节点清单里给的其实是「解析地址」（例如 https://etnode.../node1），
+    ''' 请求后才会返回真正的 tcp:// 中继地址，所以必须再解析一次。
+    ''' 解析后逐个实测，剔除连不上的节点：陶瓦内置的 public.easytier.top / public2.easytier.cn 早已失效，
+    ''' 仍把死节点交给陶瓦会让客人一直卡在「连接房主」并最终报 PingHostFail。
+    ''' </summary>
+    Private Shared Function TcFetchPublicNodes() As List(Of String)
+        If PublicNodeCache IsNot Nothing AndAlso GetTimeMs() - PublicNodeCacheTime < TcNodeCacheMs Then Return PublicNodeCache
+        Dim Nodes As New List(Of String)
+        Dim Sources As New List(Of String)
+        '1. 官方节点清单
+        Try
+            Dim Text As String = TcHttpGet("https://terracotta.glavo.site/nodes")
+            Dim Json = Text.DeserializeJson()
+            If TypeOf Json Is JArray Then
+                For Each Item In CType(Json, JArray)
+                    Dim Url As String = CStr(Item("url")).Trim()
+                    If Url <> "" AndAlso Not Sources.Contains(Url) Then Sources.Add(Url)
+                Next
+            End If
+        Catch ex As Exception
+            Logger.Warn(ex, "获取陶瓦节点清单失败")
+        End Try
+        '2. 清单不可用时退回旧解析地址
+        If Sources.Count = 0 Then
+            Sources.Add("https://etnode.zkitefly.eu.org/node1")
+            Sources.Add("https://etnode.zkitefly.eu.org/node2")
+        End If
+        '3. 逐个解析成真正的 tcp:// 中继地址
+        For Each Source As String In Sources
+            Try
+                TcResolveNode(Source, Nodes)
+            Catch ex As Exception
+                Logger.Warn(ex, "解析陶瓦公共节点失败：" & Source)
+            End Try
+        Next
+        '4. 逐个实测，只保留真的能连上的节点
+        Dim Reachable As New List(Of String)
+        For Each Node As String In Nodes
+            If TcNodeReachable(Node) Then Reachable.Add(Node)
+        Next
+        If Reachable.Count > 0 Then
+            TcHasReachableNode = True
+            Nodes = Reachable
+        Else
+            TcHasReachableNode = False
+            Logger.Warn("没有可连通的陶瓦公共节点：" & If(Nodes.Count > 0, String.Join("，", Nodes), "（节点清单为空）"))
+        End If
+        Logger.Info("陶瓦公共节点：" & If(Nodes.Count > 0, String.Join("，", Nodes), "（无）"))
+        PublicNodeCache = Nodes
+        PublicNodeCacheTime = GetTimeMs()
+        Return Nodes
+    End Function
+
+    ''' <summary>节点是否可用：UDP 节点无法用 TCP 探测，直接保留；其余按 TCP 连通性判断。</summary>
+    Private Shared Function TcNodeReachable(Node As String) As Boolean
+        If Node.StartsWith("udp://", StringComparison.OrdinalIgnoreCase) Then Return True
+        Return TcPingNode(Node) >= 0
+    End Function
+
+    ''' <summary>确认至少有一个可用的公共节点（加入房间前的预检）。</summary>
+    Private Shared Function TcEnsureNodesUsable() As Boolean
+        TcFetchPublicNodes()
+        Return TcHasReachableNode
+    End Function
+
+    ''' <summary>把节点清单里的地址解析成实际的中继地址并加入节点列表。</summary>
+    Private Shared Sub TcResolveNode(Source As String, Nodes As List(Of String))
+        For Each Prefix As String In {"tcp://", "udp://", "ws://", "wss://"}
+            If Source.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase) Then
+                If Not Nodes.Contains(Source) Then Nodes.Add(Source)
+                Return
+            End If
+        Next
+        If Not Source.StartsWith("http", StringComparison.OrdinalIgnoreCase) Then Return
+        Dim Text As String = TcHttpGet(Source)
+        For Each Line As String In Text.Split({vbCrLf, vbCr, vbLf}, StringSplitOptions.RemoveEmptyEntries)
+            Dim Node As String = Line.Trim()
+            For Each Prefix As String In {"tcp://", "udp://", "ws://", "wss://"}
+                If Node.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase) Then
+                    If Not Nodes.Contains(Node) Then Nodes.Add(Node)
+                    Return
+                End If
+            Next
+        Next
+        Logger.Warn($"节点解析地址没有返回有效中继：{Source}")
+    End Sub
+
+    ''' <summary>带超时的简单文本请求。</summary>
+    Private Shared Function TcHttpGet(Url As String) As String
+        Dim Request As HttpWebRequest = CType(WebRequest.Create(Url), HttpWebRequest)
+        Request.Timeout = 5000
+        Request.UserAgent = "PCL"
+        Using Response As WebResponse = Request.GetResponse()
+            Using Reader As New StreamReader(Response.GetResponseStream(), Text.Encoding.UTF8)
+                Return Reader.ReadToEnd()
+            End Using
+        End Using
+    End Function
+
+    ''' <summary>
+    ''' 把公共节点拼接成陶瓦 HTTP 接口的 public_nodes 参数。
+    ''' 与 HMCL 一致：房主和加入者都带上完整节点列表，否则双方可能走不同中继而互相找不到。
+    ''' </summary>
+    Private Shared Function TcPublicNodesQuery() As String
+        Dim Nodes As List(Of String) = TcFetchPublicNodes()
+        Dim Query As New Text.StringBuilder
+        If Not String.IsNullOrEmpty(TcSelectedNode) Then Query.Append("&public_nodes=" & Uri.EscapeDataString(TcSelectedNode))
+        For Each Node As String In Nodes
+            If Node = TcSelectedNode Then Continue For
+            Query.Append("&public_nodes=" & Uri.EscapeDataString(Node))
+        Next
+        Return Query.ToString()
+    End Function
+
+    ''' <summary>当前用于创建房间的公共节点。</summary>
+    Private Shared TcSelectedNode As String = ""
+
+    ''' <summary>用于界面上展示的节点文本（不暴露 IP，按顺序显示为「一号节点」等）。</summary>
+    Private Shared Function TcNodeText() As String
+        Dim Node As String = If(TcSelectedNode, "")
+        Dim Nodes = TcFetchPublicNodes()
+        If Node = "" Then Node = If(Nodes.Count > 0, Nodes(0), "")
+        If Node = "" Then Return "未获取到可用节点"
+        Dim Index As Integer = Nodes.IndexOf(Node)
+        Return TcNodeName(If(Index < 0, 0, Index))
+    End Function
+
+    ''' <summary>按序号生成节点名称，如「一号公共节点」。</summary>
+    Private Shared Function TcNodeName(Index As Integer) As String
+        Const Numerals As String = "一二三四五六七八九十"
+        Dim Text As String = If(Index < Numerals.Length, Numerals.Substring(Index, 1), (Index + 1).ToString())
+        Return Text & "号公共节点"
+    End Function
+
+    ''' <summary>延迟文字颜色：绿色良好、黄色一般、红色较差、灰色不可用。</summary>
+    Private Shared Function TcPingColor(Ping As Integer) As String
+        If Ping < 0 Then Return "#B8B8B8"
+        If Ping <= 80 Then Return "#2FA84F"
+        If Ping <= 200 Then Return "#E8A33D"
+        Return "#E05B5B"
+    End Function
+
+    ''' <summary>延迟文字。</summary>
+    Private Shared Function TcPingText(Ping As Integer) As String
+        Return If(Ping >= 0, $"{Ping} ms", "不可用")
+    End Function
+
+    ''' <summary>测量节点延迟（毫秒），返回 -1 表示不可用或无法测速（如 UDP 节点）。</summary>
+    Private Shared Function TcPingNode(Node As String) As Integer
+        Try
+            If Node.StartsWith("udp://", StringComparison.OrdinalIgnoreCase) Then Return -1
+            Dim SchemeEnd As Integer = Node.IndexOf("://", StringComparison.Ordinal)
+            If SchemeEnd < 0 Then Return -1
+            Dim HostPort As String = Node.Substring(SchemeEnd + 3)
+            Dim Colon As Integer = HostPort.LastIndexOf(":"c)
+            If Colon <= 0 Then Return -1
+            Dim Host As String = HostPort.Substring(0, Colon)
+            Dim Port As Integer
+            If Not Integer.TryParse(HostPort.Substring(Colon + 1), Port) OrElse Port <= 0 Then Return -1
+            Dim Watch As Stopwatch = Stopwatch.StartNew()
+            Using Client As New TcpClient()
+                Dim Task = Client.ConnectAsync(Host, Port)
+                If Not Task.Wait(2500) Then Return -1
+                If Not Client.Connected Then Return -1
+            End Using
+            Return CInt(Math.Min(Watch.ElapsedMilliseconds, Integer.MaxValue))
+        Catch
+            Return -1
+        End Try
+    End Function
+
+    '节点下拉框：首次显示时测速并填充
+    Private Sub ComboCreateNode_Loaded(sender As Object, e As RoutedEventArgs)
+        If ComboCreateNode.Items.Count > 0 Then Return
+        ComboCreateNode.Items.Add(New MyComboBoxItem With {.Content = "正在获取公共节点……", .Tag = ""})
+        ComboCreateNode.SelectedIndex = 0
+        RunInNewThread(
+            Sub()
+                Dim Nodes = TcFetchPublicNodes()
+                Dim Pings = Nodes.Select(Function(N) New KeyValuePair(Of String, Integer)(N, TcPingNode(N))).ToList()
+                RunInUi(
+                    Sub()
+                        ComboCreateNode.Items.Clear()
+                        Dim BestIndex As Integer = 0, BestPing As Integer = Integer.MaxValue
+                        For i = 0 To Pings.Count - 1
+                            Dim Item = Pings(i)
+                            Dim Row As New StackPanel With {.Orientation = Orientation.Horizontal, .VerticalAlignment = VerticalAlignment.Center}
+                            Row.Children.Add(New TextBlock With {.Text = TcNodeName(i), .VerticalAlignment = VerticalAlignment.Center})
+                            Row.Children.Add(New TextBlock With {
+                                .Text = TcPingText(Item.Value),
+                                .VerticalAlignment = VerticalAlignment.Center,
+                                .Margin = New Thickness(10, 0, 0, 0),
+                                .FontSize = 12.5,
+                                .Foreground = New System.Windows.Media.SolidColorBrush(System.Windows.Media.ColorConverter.ConvertFromString(TcPingColor(Item.Value)))
+                            })
+                            Dim NodeItem As New MyComboBoxItem With {
+                                .Content = Row,
+                                .Tag = Item.Key,
+                                .ToolTip = If(Item.Value >= 0, $"{TcNodeName(i)}：{Item.Value} ms", $"{TcNodeName(i)}：不可用")
+                            }
+                            System.Windows.Automation.AutomationProperties.SetName(NodeItem, If(Item.Value >= 0, $"{TcNodeName(i)}，延迟 {Item.Value} ms", $"{TcNodeName(i)}，不可用"))
+                            ComboCreateNode.Items.Add(NodeItem)
+                            If Item.Value >= 0 AndAlso Item.Value < BestPing Then
+                                BestPing = Item.Value
+                                BestIndex = i
+                            End If
+                        Next
+                        If Pings.Count = 0 Then
+                            LabNodeStatus.Text = "没有可用的公共节点，联机可能无法建立"
+                        Else
+                            ComboCreateNode.SelectedIndex = BestIndex
+                            LabNodeStatus.Text = $"已测速，共 {Pings.Count} 个节点"
+                        End If
+                    End Sub)
+            End Sub, "TcNodePing")
+    End Sub
+
+    '节点下拉框：记录选中的节点
+    Private Sub ComboCreateNode_SelectionChanged(sender As Object, e As SelectionChangedEventArgs)
+        Dim Item = TryCast(ComboCreateNode.SelectedItem, MyComboBoxItem)
+        If Item IsNot Nothing Then TcSelectedNode = TryCast(Item.Tag, String)
+    End Sub
+
+    ''' <summary>
+    ''' 结束残留的陶瓦进程：陶瓦需要占用 UDP 4445 监听局域网广播，
+    ''' 残留实例会抢走该端口，导致新房间无法被游戏局域网列表发现。
+    ''' 只清理位于本启动器目录下的实例，避免影响其它启动器正在使用的房间。
+    ''' </summary>
+    Private Shared Sub TcKillStaleProcesses()
+        For Each Proc As Process In Process.GetProcesses()
+            Try
+                If Not Proc.ProcessName.StartsWith("terracotta", StringComparison.OrdinalIgnoreCase) Then Continue For
+                Dim FilePath As String = Nothing
+                Try
+                    FilePath = Proc.MainModule?.FileName
+                Catch
+                    '无权读取模块信息时按名称清理
+                End Try
+                If Not String.IsNullOrEmpty(FilePath) Then
+                    Dim IsOwnedPath As Boolean =
+                        FilePath.StartsWith(Paths.AppData, StringComparison.OrdinalIgnoreCase) OrElse
+                        FilePath.StartsWith(Paths.Base, StringComparison.OrdinalIgnoreCase) OrElse
+                        FilePath.StartsWith(IO.Path.GetTempPath, StringComparison.OrdinalIgnoreCase)
+                    If Not IsOwnedPath Then Continue For
+                End If
+                Logger.Info($"发现残留的陶瓦进程，正在结束：PID {Proc.Id}，路径：{If(FilePath, "未知")}")
+                'peaceful 让陶瓦自行清理虚拟网卡
+                Try
+                    TcApi("/panic?peaceful=true", 800)
+                Catch
+                End Try
+                Proc.Kill()
+                Proc.WaitForExit(1500)
+            Catch
+            End Try
+        Next
+        '等待虚拟网卡与端口释放
+        Thread.Sleep(300)
+    End Sub
+
 #End Region
 
 #Region "接口与进程"
 
     ''' <summary>调用陶瓦本地 HTTP 接口，失败返回 Nothing</summary>
     Private Shared Function TcApi(Path As String, Optional TimeoutMs As Integer = 1500) As String
-        If TcPort <= 0 Then Return Nothing
+        Dim Body As String = Nothing
+        TcApiStatus(Path, Body, TimeoutMs)
+        Return Body
+    End Function
+
+    ''' <summary>
+    ''' 调用陶瓦本地 HTTP 接口，返回 HTTP 状态码（通信失败返回 -1），响应正文由 Body 带回。
+    ''' 陶瓦用 400 表示「请求被拒绝」，必须区分出来，否则会表现为一直卡着不动。
+    ''' </summary>
+    Private Shared Function TcApiStatus(Path As String, ByRef Body As String, Optional TimeoutMs As Integer = 1500) As Integer
+        Body = Nothing
+        If TcPort <= 0 Then Return -1
         Try
             Dim Request As HttpWebRequest = CType(WebRequest.Create($"http://127.0.0.1:{TcPort}{Path}"), HttpWebRequest)
             Request.Method = "GET"
@@ -716,22 +1197,25 @@ Public Class PageLinkMain
             Request.KeepAlive = False
             Using Response As HttpWebResponse = CType(Request.GetResponse(), HttpWebResponse)
                 Using Reader As New System.IO.StreamReader(Response.GetResponseStream(), Encoding.UTF8)
-                    Return Reader.ReadToEnd()
+                    Body = Reader.ReadToEnd()
                 End Using
+                Return CInt(Response.StatusCode)
             End Using
         Catch ex As WebException
             '400 等错误也会带回响应体
             Try
                 If ex.Response IsNot Nothing Then
-                    Using Reader As New System.IO.StreamReader(ex.Response.GetResponseStream(), Encoding.UTF8)
-                        Return Reader.ReadToEnd()
+                    Dim ErrorResponse As HttpWebResponse = CType(ex.Response, HttpWebResponse)
+                    Using Reader As New System.IO.StreamReader(ErrorResponse.GetResponseStream(), Encoding.UTF8)
+                        Body = Reader.ReadToEnd()
                     End Using
+                    Return CInt(ErrorResponse.StatusCode)
                 End If
             Catch
             End Try
-            Return Nothing
+            Return -1
         Catch ex As Exception
-            Return Nothing
+            Return -1
         End Try
     End Function
 
@@ -795,6 +1279,12 @@ Public Class PageLinkMain
         TcOwned = False
         LastTcState = Nothing
         TcFailCount = 0
+        Try
+            If TcPortDir IsNot Nothing AndAlso IO.Directory.Exists(TcPortDir) Then IO.Directory.Delete(TcPortDir, True)
+        Catch ex As Exception
+            Logger.Warn(ex, "清理陶瓦端口文件目录失败")
+        End Try
+        TcPortDir = Nothing
     End Sub
 
     ''' <summary>

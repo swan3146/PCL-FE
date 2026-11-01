@@ -59,8 +59,8 @@ Public Class MyExtraButton
                     '有了
                     Visibility = Visibility.Visible
                     AniStart({
-                        AaScaleTransform(Me, 0.3 - CType(RenderTransform, ScaleTransform).ScaleX, 660, 70, New AniEaseOutFluent(AniEasePower.Weak)),
-                        AaScaleTransform(Me, 0.7, 660, 70, New AniEaseOutBack(AniEasePower.Weak)),
+                        AaScaleTransform(Me, 0.3 - CType(RenderTransform, ScaleTransform).ScaleX, 500, 60, New AniEaseOutFluent(AniEasePower.Weak)),
+                        AaScaleTransform(Me, 0.7, 500, 60, New AniEaseOutBack(AniEasePower.Weak)),
                         AaHeight(Me, 50 - Height, 200,, New AniEaseOutFluent(AniEasePower.Weak))
                     }, "MyExtraButton MainScale " & Uuid)
                 Else
@@ -135,7 +135,7 @@ Public Class MyExtraButton
     Private Sub Button_LeftMouseUp() Handles PanClick.MouseLeftButtonUp
         If Not IsRightMouseHeld Then
             AniStart({
-                AaScaleTransform(PanScale, 1 - CType(PanScale.RenderTransform, ScaleTransform).ScaleX, 400,, New AniEaseOutBack)
+                AaScaleTransform(PanScale, 1 - CType(PanScale.RenderTransform, ScaleTransform).ScaleX, 300,, New AniEaseOutBack)
             }, "MyExtraButton Scale " & Uuid)
         End If
         If IsLeftMouseHeld Then RaiseCustomEvent()
@@ -146,7 +146,7 @@ Public Class MyExtraButton
         If Not CanRightClick Then Return
         If Not IsLeftMouseHeld Then
             AniStart({
-                AaScaleTransform(PanScale, 1 - CType(PanScale.RenderTransform, ScaleTransform).ScaleX, 400,, New AniEaseOutBack)
+                AaScaleTransform(PanScale, 1 - CType(PanScale.RenderTransform, ScaleTransform).ScaleX, 300,, New AniEaseOutBack)
             }, "MyExtraButton Scale " & Uuid)
         End If
         IsRightMouseHeld = False

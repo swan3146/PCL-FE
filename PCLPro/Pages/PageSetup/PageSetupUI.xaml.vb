@@ -46,6 +46,9 @@
             '背景音乐
             MusicRefreshUI()
 
+            '视频背景状态
+            RefreshVideoBackgroundLabel()
+
             '主页
             OnMainPageTypeChanged()
         Catch ex As NullReferenceException
@@ -69,6 +72,24 @@
     '背景图片
     Private Sub BtnUIBgOpen_Click(sender As Object, e As EventArgs) Handles BtnBackgroundOpen.Click
         OpenExplorer(Paths.Base & "PCL\Pictures\")
+    End Sub
+    Private Sub BtnBackgroundPick_Click(sender As Object, e As EventArgs) Handles BtnBackgroundPick.Click
+        Dim FileName As String = Dialogs.SelectFile("选择背景图片", False, filter:={({"png", "jpg", "jpeg", "bmp", "gif", "webp"}, "图片文件")}).FirstOrDefault()
+        If String.IsNullOrWhiteSpace(FileName) Then Return
+        Try
+            DirectoryUtils.Create(Paths.Base & "PCL\Pictures\")
+            Dim BaseName As String = IO.Path.GetFileNameWithoutExtension(FileName)
+            Dim Extension As String = IO.Path.GetExtension(FileName)
+            Dim TargetPath As String = Paths.Base & "PCL\Pictures\" & BaseName & Extension
+            If IO.File.Exists(TargetPath) Then
+                TargetPath = Paths.Base & "PCL\Pictures\" & BaseName & "_" & Now.ToString("yyyyMMddHHmmss") & Extension
+            End If
+            FileUtils.Copy(FileName, TargetPath)
+            BackgroundRefresh(True, True)
+            Hint("背景图片已更新！", HintType.Green)
+        Catch ex As Exception
+            Logger.Error(ex, "导入背景图片失败", LogBehavior.Alert)
+        End Try
     End Sub
     Private Sub BtnBackgroundRefresh_Click(sender As Object, e As EventArgs) Handles BtnBackgroundRefresh.Click
         BackgroundRefresh(True, True)
@@ -97,6 +118,24 @@
             BackgroundRefresh(False, True)
             Hint("背景图片已清空！", HintType.Green)
         End If
+    End Sub
+    '视频背景
+    Private Sub BtnVideoBackgroundPick_Click(sender As Object, e As EventArgs) Handles BtnVideoBackgroundPick.Click
+        Dim FileName As String = Dialogs.SelectFile("选择视频背景", False, filter:={({"mp4", "mkv", "mov", "webm"}, "视频文件")}).FirstOrDefault()
+        If String.IsNullOrWhiteSpace(FileName) Then Return
+        If FormMain.VideoBackgroundApply(FileName) Then
+            Hint("视频背景已启用！", HintType.Green)
+            RefreshVideoBackgroundLabel()
+        End If
+    End Sub
+    Private Sub BtnVideoBackgroundReset_Click(sender As Object, e As EventArgs) Handles BtnVideoBackgroundReset.Click
+        FormMain.VideoBackgroundReset()
+        Hint("已恢复静态壁纸！", HintType.Green)
+        RefreshVideoBackgroundLabel()
+    End Sub
+    Private Sub RefreshVideoBackgroundLabel()
+        Dim Path As String = Settings.Get(Of String)("UiVideoBackground")
+        LabVideoBackground.Text = If(String.IsNullOrEmpty(Path) OrElse Not IO.File.Exists(Path), "当前：静态壁纸", "当前：" & IO.Path.GetFileName(Path))
     End Sub
     ''' <summary>
     ''' 刷新背景图片及设置页 UI。

@@ -7,7 +7,7 @@
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{F184B08F-C81C-45F6-A57F-5ABD9991F28F}</ProjectTypeGuids>
     <OutputType>WinExe</OutputType>
     <RootNamespace>PCL</RootNamespace>
-    <AssemblyName>PCLPro</AssemblyName>
+    <AssemblyName>Plain Craft Launcher Pro</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <MyType>Custom</MyType>
     <IsWebBootstrapper>false</IsWebBootstrapper>
@@ -32,7 +32,6 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <Deterministic>true</Deterministic>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
-    <TargetFrameworkRootPath>C:\Users\wsdby\.nuget\packages\microsoft.netframework.referenceassemblies.net48\1.0.3\build\</TargetFrameworkRootPath>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies">
@@ -220,6 +219,8 @@
 
     <Compile Include="Controls\MyVirtualizingElement.vb" />
     <Compile Include="Modules\Base\PclLogger.vb" />
+    <Compile Include="Modules\Base\ModFirewall.vb" />
+    <Compile Include="Modules\Base\ModGlass.vb" />
     <Compile Include="Modules\Resource\LocalResourceFile.vb" />
     <Compile Include="Modules\Resource\ResourceProject.vb" />
     <Compile Include="Modules\Resource\ResourceVersion.vb" />
@@ -237,6 +238,7 @@
       <DependentUpon>MyLocalModItem.xaml</DependentUpon>
     </Compile>
     <Compile Include="Modules\ModEvent.vb" />
+    <Compile Include="Modules\ModOfficialSaveSync.vb" />
     <Compile Include="Controls\MyExtraButton.xaml.vb">
       <DependentUpon>MyExtraButton.xaml</DependentUpon>
     </Compile>
@@ -719,7 +721,6 @@
     <Compile Include="Modules\Base\MyBitmap.vb" />
     <Compile Include="Modules\ModMain.vb" />
     <Compile Include="Modules\Base\ModBase.vb" />
-    <Compile Include="Modules\Base\ModGlass.vb" />
     <Compile Include="My Project\AssemblyInfo.vb">
       <SubType>Code</SubType>
     </Compile>

@@ -9,6 +9,18 @@
             <local:MyCard Margin="0,15" Title="基础" x:Name="CardLauncher">
                 <Grid Margin="25,40,25,17">
                     <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="Name1" />
+                                <ColumnDefinition Width="1*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="界面样式" Margin="0,0,20,0" />
+                            <local:MyComboBox local:SettingService.Key="UiUiStyle" Grid.Column="1" Height="28" Width="160" HorizontalAlignment="Left"
+                                              ToolTip="简洁版为当前的平面样式；毛玻璃版使用半透明磨砂卡片与玻璃质感弹窗。切换后重启启动器可完全生效。">
+                                <local:MyComboBoxItem local:SettingService.Value="0" Content="简洁版" />
+                                <local:MyComboBoxItem local:SettingService.Value="1" Content="毛玻璃版" />
+                            </local:MyComboBox>
+                        </Grid>
                         <Grid Margin="0,0,0,6">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="Name1" />
@@ -102,6 +114,54 @@
                     </Border>
                 </Grid>
             </local:MyCard>
+            <local:MyCard x:Name="CardPersonalize" Margin="0,0,0,15" Title="个性化">
+                <StackPanel Margin="25,40,25,17">
+                    <Grid Height="28" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Name1" />
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="1*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="窗口圆角" Margin="0,0,20,0" />
+                        <local:MyComboBox local:SettingService.Key="UiWindowRadius" Grid.Column="1" Height="28" Width="140" HorizontalAlignment="Left">
+                            <local:MyComboBoxItem local:SettingService.Value="0" Content="直角" />
+                            <local:MyComboBoxItem local:SettingService.Value="6" Content="小圆角" />
+                            <local:MyComboBoxItem local:SettingService.Value="10" Content="中圆角" />
+                            <local:MyComboBoxItem local:SettingService.Value="14" Content="大圆角" />
+                        </local:MyComboBox>
+                        <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="动画速度" Margin="20,0,20,0" />
+                        <local:MyComboBox local:SettingService.Key="UiAnimationSpeed" Grid.Column="3" Height="28" Width="140" HorizontalAlignment="Left">
+                            <local:MyComboBoxItem local:SettingService.Value="0" Content="缓慢" />
+                            <local:MyComboBoxItem local:SettingService.Value="1" Content="标准" />
+                            <local:MyComboBoxItem local:SettingService.Value="2" Content="快速" />
+                            <local:MyComboBoxItem local:SettingService.Value="3" Content="关闭动画" />
+                        </local:MyComboBox>
+                    </Grid>
+                    <Grid Height="28" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Name1" />
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="1*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="窗口透明度" Margin="0,0,20,0" />
+                        <local:MyComboBox local:SettingService.Key="UiWindowOpacity" Grid.Column="1" Height="28" Width="140" HorizontalAlignment="Left">
+                            <local:MyComboBoxItem local:SettingService.Value="100" Content="不透明" />
+                            <local:MyComboBoxItem local:SettingService.Value="95" Content="轻微透明" />
+                            <local:MyComboBoxItem local:SettingService.Value="90" Content="半透明" />
+                            <local:MyComboBoxItem local:SettingService.Value="85" Content="更透明" />
+                        </local:MyComboBox>
+                        <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="标题栏高度" Margin="20,0,20,0" />
+                        <local:MyComboBox local:SettingService.Key="UiTitleBarHeight" Grid.Column="3" Height="28" Width="140" HorizontalAlignment="Left">
+                            <local:MyComboBoxItem local:SettingService.Value="40" Content="紧凑" />
+                            <local:MyComboBoxItem local:SettingService.Value="48" Content="标准" />
+                            <local:MyComboBoxItem local:SettingService.Value="56" Content="宽松" />
+                        </local:MyComboBox>
+                    </Grid>
+                    <local:MyCheckBox Height="22" Margin="-1,0,0,0" Text="启动器窗口始终置顶" local:SettingService.Key="UiWindowTopmost" />
+                </StackPanel>
+            </local:MyCard>
             <local:MyCard x:Name="CardBackground" Margin="0,0,0,15" Title="背景图片">
                 <StackPanel Margin="25,40,25,20">
                     <Grid x:Name="PanBackgroundSuit" Height="28" Margin="0,0,0,10" Visibility="Collapsed">
@@ -150,9 +210,25 @@
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                         </Grid.ColumnDefinitions>
-                        <local:MyButton x:Name="BtnBackgroundOpen" MinWidth="140" Text="打开文件夹" Padding="13,0" Margin="0,0,20,0" ToolTip="将背景图片放到该文件夹，PCL 将会在每次打开时随机加载其中的一张图片"/>
-                        <local:MyButton x:Name="BtnBackgroundRefresh" MinWidth="140" Text="刷新背景图片" Padding="13,0" Margin="0,0,20,0" ToolTip="随机加载文件夹内的一张背景图片" Grid.Column="1"/>
+                        <local:MyButton x:Name="BtnBackgroundPick" MinWidth="140" Text="选择图片壁纸…" Padding="13,0" Margin="0,0,20,0"
+                                        ToolTip="选择一个本地图片（png / jpg / jpeg / bmp / gif / webp）作为背景图片，会自动复制到启动器的图片文件夹。" />
+                        <local:MyButton x:Name="BtnBackgroundOpen" MinWidth="140" Text="打开图片文件夹" Padding="13,0" Margin="0,0,20,0" Grid.Column="1" ToolTip="将背景图片放到该文件夹，PCL 将会在每次打开时随机加载其中的一张图片"/>
+                        <local:MyButton x:Name="BtnBackgroundRefresh" MinWidth="140" Text="刷新背景图片" Padding="13,0" Margin="0,0,20,0" ToolTip="随机加载文件夹内的一张背景图片" Grid.Column="2"/>
+                    </Grid>
+                    <Grid Height="35" Margin="0,2,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
+                        </Grid.ColumnDefinitions>
+                        <local:MyButton x:Name="BtnVideoBackgroundPick" MinWidth="140" Text="选择视频背景…" Padding="13,0" Margin="0,0,20,0"
+                                        ToolTip="选择一个本地视频（mp4 / mkv / mov / webm）作为启动器动态背景。视频会被复制到启动器目录，原文件移动后也不会失效。" />
+                        <local:MyButton x:Name="BtnVideoBackgroundReset" MinWidth="140" Text="使用静态壁纸" Padding="13,0" Margin="0,0,20,0" ColorType="Red" Grid.Column="1"
+                                        ToolTip="关闭视频背景，恢复为背景图片或默认壁纸。" />
                         <local:MyButton x:Name="BtnBackgroundClear" MinWidth="140" Text="清空背景图片" Visibility="Collapsed" Padding="13,0" Margin="0,0,20,0" ColorType="Red" Grid.Column="2"/>
+                    </Grid>
+                    <Grid Height="20" Margin="0,0,0,0">
+                        <TextBlock x:Name="LabVideoBackground" VerticalAlignment="Center" HorizontalAlignment="Left" Opacity="0.7" FontSize="11" TextTrimming="CharacterEllipsis" />
                     </Grid>
                 </StackPanel>
             </local:MyCard>

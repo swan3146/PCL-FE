@@ -13,6 +13,29 @@ Public Class FormMain
         Dim FeatureList As New List(Of KeyValuePair(Of Integer, String))
         '统计更新日志条目
         If BuildType = BuildTypes.Release Then
+            If LastVersion < 427 Then 'Release 1.2.8
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：更新流程加入下载进度条，实时显示下载源、速度与已完成大小"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：首次启动时可选择简洁版或毛玻璃版界面，之后可在 设置 → 个性化 中随时切换"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "新增：版本设置 → 内容管理，显示截图、资源包、光影包、投影原理图的数量与大小，并可一键打开文件夹"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "新增：投影原理图预览，可读取 litematic / schematic / schem / nbt 的尺寸、名称与作者"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：更新并自动重启后，启动器窗口可能不显示（仅任务栏存在条目）的问题"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：陶瓦联机创建房间前检查游戏是否已启动"))
+            End If
+            If LastVersion < 419 Then 'Release 1.2.0
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "调整：为保持便捷开箱即用（无需安装），移除了内置动态壁纸，可前往作者群下载"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：视频壁纸选择改用启动器同款界面，并补上打开与关闭动画"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：设置 → 启动 中的存档同步，可自动检测官方版 PCL2 的存档并复制到当前游戏文件夹（同名存档不会被覆盖）"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "新增：设置 → 界面 中的动画削减开关（默认关闭），开启后过渡动画加速、背景模糊减弱，低配设备更流畅"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "新增：视频壁纸播放前自动压缩到 970p / 45 帧并缓存，降低高清壁纸的显卡占用"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：卡片与弹窗统一为单层毛玻璃材质，减少图层叠加，滚动与切页更跟手"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：窗口裁剪与控件边缘按整像素对齐，修掉窗口边缘发虚、缝隙与残影"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：游戏支持库与下载源加入真实速度测速，优先走更快的镜像，避免官方源抽风时龟速下载"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：启动加载与页面刷新减少重复重绘，提升流畅度与兼容性"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：陶瓦联机加入房间失败（房间码未补全 U/ 前缀、未复位到 Waiting 状态、单实例残留导致状态卡死）"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：陶瓦内置的公共节点已失效导致客人始终连不上房主，改为显式指定当前可用节点"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：启动器占用 UDP 4445 抢走陶瓦的局域网广播，导致房主房间建好却没有端口、客人必然连接失败"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：视频壁纸选择窗口与启动器风格不一致、关闭时没有过渡动画"))
+            End If
             If LastVersion < 415 Then 'Release 2.99.0.1
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：恢复 MC 版本下载、整合包安装与联机入口"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "新增：解锁全部主题配色与自定义主题"))
@@ -271,10 +294,10 @@ Public Class FormMain
         Dim ContentList As New List(Of String)
         Dim SortedFeatures = FeatureList.OrderByDescending(Function(f) f.Key).ToList
         If Not SortedFeatures.Any() AndAlso FeatureCount = 0 AndAlso BugCount = 0 Then ContentList.Add("没有更新日志……")
-        For i = 0 To Math.Min(9, SortedFeatures.Count - 1) '最多取 10 项
+        For i = 0 To Math.Min(14, SortedFeatures.Count - 1) '最多取 15 项
             ContentList.Add(SortedFeatures(i).Value)
         Next
-        If SortedFeatures.Count > 10 Then FeatureCount += SortedFeatures.Count - 10
+        If SortedFeatures.Count > 15 Then FeatureCount += SortedFeatures.Count - 15
         If FeatureCount > 0 OrElse BugCount > 0 Then
             ContentList.Add(If(FeatureCount > 0, FeatureCount & " 项小调整与修改", "") &
                 If(FeatureCount > 0 AndAlso BugCount > 0, "，", "") &
@@ -363,9 +386,13 @@ Public Class FormMain
         Handle = New WindowInteropHelper(Me).Handle
         '读取设置
         UpdateBackgroundAndTitleBar()
+        '毛玻璃：左侧背景板改为半透明磨砂，让壁纸透出来
+        If Settings.Get(Of Integer)("UiUiStyle") = 1 Then RectLeftBackground.Fill = GlassFrostBrush()
         PageSetupUI.HiddenRefresh()
         PageSetupUI.BackgroundRefresh(False, True)
         MusicRefreshPlay(False, True)
+        '读取设置后启用视频背景（没有设置时保持静态壁纸）
+        VideoBackgroundUpdate()
         '扩展按钮
         BtnExtraDownload.ShowCheck = AddressOf BtnExtraDownload_ShowCheck
         BtnExtraBack.ShowCheck = AddressOf BtnExtraBack_ShowCheck
@@ -388,6 +415,8 @@ Public Class FormMain
         End If
         '加载窗口
         ThemeRefreshMain()
+        WindowOpacityRefresh(Nothing)
+        TitleBarHeightRefresh(Nothing)
         Try
             Height = Settings.Get(Of Integer)("WindowHeight")
             Width = Settings.Get(Of Integer)("WindowWidth")
@@ -398,7 +427,7 @@ Public Class FormMain
         End Try
         'MinHeight = 50
         'MinWidth = 50
-        Topmost = False
+        Topmost = Settings.Get(Of Boolean)("UiWindowTopmost")
         '更改窗口
         Top = (GetWPFSize(My.Computer.Screen.WorkingArea.Height) - Height) / 2
         Left = (GetWPFSize(My.Computer.Screen.WorkingArea.Width) - Width) / 2
@@ -408,10 +437,9 @@ Public Class FormMain
         HwndSource.AddHook(New Interop.HwndSourceHook(AddressOf WndProc))
         AniStart({
             AaCode(Sub() AniControlEnabled -= 1, 50),
-            AaCode(Sub() ShowSplashLogo(), 140),
-            AaOpacity(Me, Settings.Get(Of Integer)("UiLauncherTransparent") / 1000 + 0.4, 320, 100, New AniEaseOutFluent(AniEasePower.Weak)),
-            AaDouble(Sub(i) TransformPos.Y += i, -TransformPos.Y, 1010, 120, New AniEaseOutSpring(AniEasePower.Strong)),
-            AaDouble(Sub(i) TransformRotate.Angle += i, -TransformRotate.Angle, 920, 120, New AniEaseOutSpring(AniEasePower.Middle)),
+            AaOpacity(Me, Settings.Get(Of Integer)("UiLauncherTransparent") / 1000 + 0.4, 250, 100),
+            AaDouble(Sub(i) TransformPos.Y += i, -TransformPos.Y, 600, 100, New AniEaseOutBack(AniEasePower.Weak)),
+            AaDouble(Sub(i) TransformRotate.Angle += i, -TransformRotate.Angle, 500, 100, New AniEaseOutBack(AniEasePower.Weak)),
             AaCode(
             Sub()
                 PanBack.RenderTransform = Nothing
@@ -422,6 +450,54 @@ Public Class FormMain
         'Timer 启动
         AniStart()
         TimerMainStart()
+        '更新重启后兜底显示窗口：避免自更新拉起的新实例窗口处于隐藏或最小化状态
+        If Not IsVisible Then Visibility = Visibility.Visible
+        If WindowState = WindowState.Minimized Then WindowState = WindowState.Normal
+        '仅改 WPF 的 Visibility 无法挽回以 SW_HIDE 状态创建的窗口，这里再调一次 Win32 强制显示
+        RunInNewThread(
+        Sub()
+            Thread.Sleep(600)
+            RunInUi(
+            Sub()
+                Try
+                    Dim Hwnd As IntPtr = New Interop.WindowInteropHelper(Me).Handle
+                    If Hwnd <> IntPtr.Zero Then
+                        ShowWindow(Hwnd, SW_SHOW)
+                        SetForegroundWindow(Hwnd)
+                        Logger.Info($"启动自检：已强制显示主窗口（句柄 {Hwnd}）")
+                    End If
+                Catch ex As Exception
+                    Logger.Warn(ex, "强制显示主窗口失败")
+                End Try
+            End Sub)
+        End Sub, "强制显示窗口")
+        '首次启动时选择界面风格
+        RunInNewThread(
+        Sub()
+            Thread.Sleep(1200)
+            RunInUi(
+            Sub()
+                Try
+                    If Settings.Get(Of Boolean)("UiUiStyleChosen") Then Return
+                    Settings.Set("UiUiStyleChosen", True)
+                    Dim Result As Integer = MyMsgBox("欢迎使用 PCL Pro！" & vbCrLf &
+                                                     "先选一个喜欢的界面风格，之后可以在 设置 → 个性化 → 基础 里随时切换。" & vbCrLf & vbCrLf &
+                                                     "简洁版：白色卡片，清爽直接。" & vbCrLf &
+                                                     "毛玻璃版：半透明磨砂卡片，壁纸会透出来。",
+                                                     "选择界面风格", "简洁版", "毛玻璃版")
+                    Settings.Set("UiUiStyle", If(Result = 2, 1, 0))
+                    RefreshUiStyle()
+                Catch ex As Exception
+                    Logger.Warn(ex, "显示界面风格引导失败")
+                End Try
+            End Sub)
+        End Sub, "界面风格引导")
+        '启动时检查更新（仅提示，不自动更新）
+        CheckUpdateAtStartup()
+        '启动后延迟检测官方版 PCL2 的存档
+        ModOfficialSaveSync.StartAutoCheck()
+        '首次启动时给出一次防火墙放行说明（陶瓦联机需要）
+        ModFirewall.CheckAtStartup()
         '调试：通过环境变量直接跳转到指定页面（PCL_DEBUG_PAGE=test/setup/download/link）
         '调试模式下跳过首次启动的协议弹窗，便于直接观察界面
         If Not String.IsNullOrEmpty(Environment.GetEnvironmentVariable("PCL_DEBUG_PAGE")) Then Settings.Set("SystemEulaVersion", 2)
@@ -707,12 +783,53 @@ Public Class FormMain
             Settings.Set("WindowWidth", Width)
         End If
         RectForm.Rect = New Rect(0, 0, BorderForm.ActualWidth, BorderForm.ActualHeight)
+        '窗口圆角
+        Dim Radius As Double = Settings.Get(Of Integer)("UiWindowRadius")
+        If RectForm.RadiusX <> Radius Then
+            RectForm.RadiusX = Radius
+            RectForm.RadiusY = Radius
+        End If
         PanForm.Width = BorderForm.ActualWidth + 0.001
         PanForm.Height = BorderForm.ActualHeight + 0.001
         PanMain.Width = PanForm.Width
         PanMain.Height = Math.Max(0, PanForm.Height - PanTitle.ActualHeight)
         If WindowState = WindowState.Maximized Then WindowState = WindowState.Normal '修复 #1938
     End Sub
+    ''' <summary>
+    ''' 立即应用窗口圆角设置。
+    ''' </summary>
+    Public Shared Sub WindowRadiusRefresh(Value As Object)
+        If FrmMain Is Nothing OrElse Not FrmMain.IsLoaded Then Return
+        Dim Radius As Double = Settings.Get(Of Integer)("UiWindowRadius")
+        FrmMain.RectForm.RadiusX = Radius
+        FrmMain.RectForm.RadiusY = Radius
+        FrmMain.RectForm.Rect = New Rect(0, 0, FrmMain.BorderForm.ActualWidth, FrmMain.BorderForm.ActualHeight)
+    End Sub
+    ''' <summary>
+    ''' 立即应用窗口置顶设置。
+    ''' </summary>
+    Public Shared Sub WindowTopmostRefresh(Value As Object)
+        If FrmMain Is Nothing Then Return
+        FrmMain.Topmost = CBool(Value)
+    End Sub
+    ''' <summary>
+    ''' 立即应用窗口透明度设置（作用于窗口内容，不影响入场动画）。
+    ''' </summary>
+    Public Shared Sub WindowOpacityRefresh(Value As Object)
+        If FrmMain Is Nothing Then Return
+        Dim OpacityValue As Integer = Settings.Get(Of Integer)("UiWindowOpacity")
+        FrmMain.PanBack.Opacity = If(OpacityValue <= 0 OrElse OpacityValue >= 100, 1, OpacityValue / 100)
+    End Sub
+    ''' <summary>
+    ''' 立即应用标题栏高度设置。
+    ''' </summary>
+    Public Shared Sub TitleBarHeightRefresh(Value As Object)
+        If FrmMain Is Nothing Then Return
+        Dim HeightValue As Integer = Settings.Get(Of Integer)("UiTitleBarHeight")
+        FrmMain.PanTitle.Height = If(HeightValue < 30, 48, HeightValue)
+        If FrmMain.IsLoaded Then FrmMain.FormMain_SizeChanged()
+    End Sub
+
 
     '最小化
     Private Sub BtnTitleMin_Click() Handles BtnTitleMin.Click
@@ -913,63 +1030,6 @@ Public Class FormMain
                 FrmLaunchLeft.LaunchButtonClick()
             End If
         End If
-    End Sub
-    ''' <summary>
-    ''' 启动动画：PCL Pro Logo 弹入、扫光、随后缩小上浮交棒给界面。
-    ''' </summary>
-    Private Sub ShowSplashLogo()
-        Try
-            PanSplash.Visibility = Visibility.Visible
-            PanSplash.Opacity = 1
-            SplashScale.ScaleX = 0.36
-            SplashScale.ScaleY = 0.36
-            SplashPos.Y = 16
-            ImgSplashLogo.Opacity = 0
-            LabSplashText.Opacity = 0
-            SplashShinePos.X = -180
-            AniStart({
-                AaOpacity(ImgSplashLogo, 1 - ImgSplashLogo.Opacity, 280, 80, New AniEaseOutFluent(AniEasePower.Weak)),
-                AaDouble(Sub(i) SplashScale.ScaleY += i, 1.08 - SplashScale.ScaleY, 640, 90, New AniEaseOutSpring(AniEasePower.Middle)),
-                AaDouble(Sub(i) SplashScale.ScaleX += i, 1.08 - SplashScale.ScaleX, 640, 90, New AniEaseOutSpring(AniEasePower.Middle)),
-                AaDouble(Sub(i) SplashPos.Y += i, 0 - SplashPos.Y, 640, 90, New AniEaseOutSpring(AniEasePower.Middle)),
-                AaDouble(Sub(i) SplashShinePos.X += i, 340 - SplashShinePos.X, 780, 300, New AniEaseOutFluent(AniEasePower.Middle)),
-                AaOpacity(LabSplashText, 1 - LabSplashText.Opacity, 320, 480, New AniEaseOutFluent(AniEasePower.Weak)),
-                AaCode(
-                Sub()
-                    '退场：Logo 缩小上浮，主界面随之浮现（动画播完后窗口内容才出现）
-                    BorderForm.RenderTransformOrigin = New Point(0.5, 0.5)
-                    BorderForm.RenderTransform = New TransformGroup() With {.Children =
-                        New TransformCollection({New ScaleTransform(0.955, 0.955), New TranslateTransform(0, 14)})}
-                    AniStart({
-                        AaDouble(Sub(i) SplashScale.ScaleY += i, 0.6 - SplashScale.ScaleY, 480, 40, New AniEaseInoutFluent(AniEasePower.Middle)),
-                        AaDouble(Sub(i) SplashScale.ScaleX += i, 0.6 - SplashScale.ScaleX, 480, 40, New AniEaseInoutFluent(AniEasePower.Middle)),
-                        AaDouble(Sub(i) SplashPos.Y += i, -Height * 0.27 - SplashPos.Y, 480, 40, New AniEaseInoutFluent(AniEasePower.Middle)),
-                        AaOpacity(LabSplashText, -LabSplashText.Opacity, 240, 40, New AniEaseOutFluent(AniEasePower.Weak)),
-                        AaOpacity(PanSplash, -PanSplash.Opacity, 400, 240, New AniEaseOutFluent(AniEasePower.Weak)),
-                        AaOpacity(BorderForm, 1 - BorderForm.Opacity, 360, 30, New AniEaseOutFluent(AniEasePower.Weak)),
-                        AaPop(BorderForm, 0.045, -14, 0, 900, 30, New AniEaseOutSpring(AniEasePower.Strong)),
-                        AaCode(Sub()
-                                   PanSplash.Visibility = Visibility.Collapsed
-                                   ImgSplashLogo.Opacity = 1
-                                   SplashPos.Y = 0
-                                   BorderForm.Opacity = 1
-                               End Sub, , True)
-                    }, "Splash Out")
-                End Sub, 1180)
-            }, "Splash In")
-        Catch ex As Exception
-            PanSplash.Visibility = Visibility.Collapsed
-            BorderForm.Opacity = 1
-            Logger.Error(ex, "启动动画播放失败")
-        End Try
-        '保底：无论如何确保主界面最终可见
-        RunInNewThread(
-        Sub()
-            Thread.Sleep(4000)
-            RunInUi(Sub()
-                        If BorderForm.Opacity < 0.05 Then BorderForm.Opacity = 1
-                    End Sub)
-        End Sub, "启动动画保底")
     End Sub
     Private Sub FormMain_MouseDown(sender As Object, e As MouseButtonEventArgs) Handles Me.MouseDown
         '鼠标侧键返回上一级
@@ -1272,7 +1332,7 @@ Public Class FormMain
             WindowState = WindowState.Normal
             Hidden = False
             Topmost = True '偶尔 SetForegroundWindow 失效
-            Topmost = False
+            Topmost = Settings.Get(Of Boolean)("UiWindowTopmost")
             SetForegroundWindow(Handle)
             Focus()
             Logger.Info($"窗口已置顶，位置：({Left}, {Top}), {Width} x {Height}")
@@ -1507,7 +1567,6 @@ Public Class FormMain
     ''' </summary>
     Private Sub BtnTitleSelect_Click(sender As MyRadioButton, raiseByMouse As Boolean) Handles BtnTitleSelect0.Check, BtnTitleSelect1.Check, BtnTitleSelect2.Check, BtnTitleSelect3.Check, BtnTitleSelect4.Check
         If IsChangingPage Then Return
-        If raiseByMouse Then sender.PopAnimation()
         PageChangeActual(Val(sender.Tag))
     End Sub
     ''' <summary>
@@ -1646,19 +1705,14 @@ Public Class FormMain
                 '把新页面添加进容器
                 PanMainLeft.Child = PageLeft
                 PageLeft.Opacity = 0
-                PageLeft.RenderTransform = New TranslateTransform(-18, 0)
                 PanMainLeft.Background = Nothing
                 AniControlEnabled -= 1
                 RunInUi(Sub() PanMainLeft_Resize(PanMainLeft.ActualWidth), True)
             End Sub, 110),
             AaCode(
             Sub()
-                '左页面从左侧以弹簧滑入并淡入，与右页面的右侧入场形成对称、连贯的切换
-                AniStart({
-                    AaOpacity(PageLeft, 1, 220,, New AniEaseOutFluent(AniEasePower.Weak)),
-                    AaTranslateX(PageLeft, 18, 560,, New AniEaseOutSpring(AniEasePower.Weak))
-                }, "FrmMain PageLeft Slide " & GetUuid())
                 '延迟触发页面通用动画，以使得在 Loaded 事件中加载的控件得以处理
+                PageLeft.Opacity = 1
                 PageLeft.TriggerShowAnimation()
             End Sub, 30, True)
         }, "FrmMain PageChangeLeft")
@@ -1670,19 +1724,14 @@ Public Class FormMain
                 '把新页面添加进容器
                 PanMainRight.Child = PageRight
                 PageRight.Opacity = 0
-                PageRight.RenderTransform = New TranslateTransform(26, 0)
                 PanMainRight.Background = Nothing
                 AniControlEnabled -= 1
                 RunInUi(Sub() BtnExtraBack.ShowRefresh(), True)
             End Sub, 110),
             AaCode(
             Sub()
-                '新页面从右侧以弹簧滑入并淡入，与页面内元素的弹簧入场叠加
-                AniStart({
-                    AaOpacity(PageRight, 1, 190,, New AniEaseOutFluent(AniEasePower.Weak)),
-                    AaTranslateX(PageRight, -26, 640,, New AniEaseOutSpring(AniEasePower.Weak))
-                }, "FrmMain PageRight Slide " & GetUuid())
                 '延迟触发页面通用动画，以使得在 Loaded 事件中加载的控件得以处理
+                PageRight.Opacity = 1
                 PageRight.PageOnEnter()
             End Sub, 30, True)
         }, "FrmMain PageChangeRight")
@@ -1847,6 +1896,195 @@ Public Class FormMain
     Public lastMouseArg As MouseEventArgs = Nothing
     Private Sub FormMain_MouseMove(sender As Object, e As MouseEventArgs) Handles Me.MouseMove
         lastMouseArg = e
+    End Sub
+
+#Region "视频背景"
+
+    ''' <summary>视频背景的本地存放目录：选择后会把视频复制进来，避免原文件被移动后失效。</summary>
+    Public ReadOnly Property VideoBackgroundFolder As String
+        Get
+            Return Paths.Base & "PCL\VideoBackground\"
+        End Get
+    End Property
+
+    Private _videoSrcPath As String = ""
+    Private _videoReady As Boolean = False
+    Private _videoPaused As Boolean = False
+    Private _videoImgHideTimer As System.Windows.Threading.DispatcherTimer
+
+    ''' <summary>设置改变后刷新视频背景（供 SettingService 的 OnChanged 调用）。</summary>
+    Public Shared Sub VideoBackgroundRefresh(Value As Object)
+        If FrmMain Is Nothing OrElse Not FrmMain.IsLoaded Then Return
+        RunInUi(Sub() FrmMain.VideoBackgroundUpdate())
+    End Sub
+
+    ''' <summary>应用一个视频文件作为背景（复制到本地目录再启用）。</summary>
+    Public Shared Function VideoBackgroundApply(SourcePath As String) As Boolean
+        Try
+            If String.IsNullOrEmpty(SourcePath) OrElse Not File.Exists(SourcePath) Then Return False
+            DirectoryUtils.Create(FrmMain.VideoBackgroundFolder)
+            Dim Target As String = FrmMain.VideoBackgroundFolder & New FileInfo(SourcePath).Name
+            If Not String.Equals(SourcePath, Target, StringComparison.OrdinalIgnoreCase) Then
+                If File.Exists(Target) Then FileUtils.Delete(Target)
+                FileUtils.Copy(SourcePath, Target)
+            End If
+            Settings.Set("UiVideoBackground", Target)
+            Return True
+        Catch ex As Exception
+            Logger.Error(ex, "应用视频背景失败")
+            Hint("应用视频背景失败，详情请查看日志。", HintType.Red)
+            Return False
+        End Try
+    End Function
+
+    ''' <summary>恢复静态壁纸（关闭视频背景）。</summary>
+    Public Shared Sub VideoBackgroundReset()
+        Settings.Set("UiVideoBackground", "")
+    End Sub
+
+    ''' <summary>根据设置启用或关闭视频背景。</summary>
+    Public Sub VideoBackgroundUpdate()
+        Try
+            Dim Path As String = Settings.Get(Of String)("UiVideoBackground")
+            If Not String.IsNullOrEmpty(Path) AndAlso File.Exists(Path) Then
+                VideoBackgroundPlay(Path)
+            Else
+                VideoBackgroundClear()
+            End If
+        Catch ex As Exception
+            Logger.Error(ex, "视频背景加载失败")
+            VideoBackgroundClear()
+        End Try
+    End Sub
+
+    Private Sub VideoBackgroundPlay(Path As String)
+        Try
+            If _videoSrcPath = Path AndAlso _videoReady Then
+                _videoPaused = False
+                VideoBack.Play()
+                Return
+            End If
+            _videoSrcPath = Path
+            _videoPaused = False
+            _videoReady = False
+            VideoBack.Stop()
+            VideoBack.Opacity = 0
+            VideoBack.Visibility = Visibility.Visible
+            VideoBack.Source = New Uri(Path)
+            VideoBack.Position = TimeSpan.Zero
+            VideoBack.Play()
+        Catch ex As Exception
+            Logger.Error(ex, "视频背景播放失败")
+            VideoBackgroundClear()
+        End Try
+    End Sub
+
+    Private Sub VideoBackgroundClear()
+        Try
+            _videoSrcPath = ""
+            _videoReady = False
+            _videoPaused = False
+            If _videoImgHideTimer IsNot Nothing Then _videoImgHideTimer.Stop()
+            VideoBack.Stop()
+            VideoBack.Source = Nothing
+            VideoBack.Opacity = 0
+            VideoBack.Visibility = Visibility.Collapsed
+            If ImgBack.Background IsNot Nothing Then ImgBack.Visibility = Visibility.Visible
+        Catch ex As Exception
+            Logger.Warn(ex, "关闭视频背景失败")
+        End Try
+    End Sub
+
+    Private Sub VideoBack_MediaOpened(sender As Object, e As RoutedEventArgs) Handles VideoBack.MediaOpened
+        Try
+            If _videoSrcPath = "" Then Return
+            _videoReady = True
+            VideoBack.Volume = 0
+            VideoBack.Visibility = Visibility.Visible
+            VideoBack.Opacity = 1
+            If Not _videoPaused Then VideoBack.Play()
+            Logger.Info($"视频背景已就绪：{VideoBack.NaturalVideoWidth}x{VideoBack.NaturalVideoHeight}")
+            VideoHideImgBackLater()
+        Catch ex As Exception
+            Logger.Warn(ex, "视频背景显示失败")
+        End Try
+    End Sub
+
+    '等第一帧真正上屏后再隐藏静态壁纸，避免开头一瞬间露出底色
+    Private Sub VideoHideImgBackLater()
+        If _videoImgHideTimer Is Nothing Then
+            _videoImgHideTimer = New System.Windows.Threading.DispatcherTimer With {.Interval = TimeSpan.FromMilliseconds(220)}
+            AddHandler _videoImgHideTimer.Tick,
+                Sub(s, e)
+                    _videoImgHideTimer.Stop()
+                    If _videoReady AndAlso VideoBack.Opacity > 0.99 Then ImgBack.Visibility = Visibility.Collapsed
+                End Sub
+        End If
+        _videoImgHideTimer.Stop()
+        _videoImgHideTimer.Start()
+    End Sub
+
+    Private Sub VideoBack_MediaEnded(sender As Object, e As RoutedEventArgs) Handles VideoBack.MediaEnded
+        Try
+            If _videoSrcPath = "" OrElse _videoPaused Then Return
+            VideoBack.Position = TimeSpan.Zero
+            VideoBack.Play()
+        Catch ex As Exception
+            Logger.Warn(ex, "视频背景循环播放失败")
+        End Try
+    End Sub
+
+    Private Sub VideoBack_MediaFailed(sender As Object, e As ExceptionRoutedEventArgs) Handles VideoBack.MediaFailed
+        Logger.Warn("视频背景播放失败：" & If(e Is Nothing OrElse e.ErrorException Is Nothing, "未知错误", e.ErrorException.Message))
+        VideoBackgroundClear()
+        Settings.Set("UiVideoBackground", "")
+        Hint("该视频无法播放，已切回静态壁纸。请换用 mp4（H.264）格式的视频。", HintType.Red)
+    End Sub
+
+    '最小化时暂停解码，还原后继续播放
+    Private Sub FormMain_StateChanged(sender As Object, e As EventArgs) Handles Me.StateChanged
+        Try
+            If WindowState = WindowState.Minimized Then
+                _videoPaused = True
+                VideoBack.Pause()
+            ElseIf _videoSrcPath <> "" Then
+                _videoPaused = False
+                If _videoReady Then VideoBack.Play()
+            End If
+        Catch
+        End Try
+    End Sub
+
+#End Region
+
+    ''' <summary>
+    ''' 界面样式设置变化时立即刷新已有界面。
+    ''' </summary>
+    Public Shared Sub UiStyleRefresh(Optional NewValue As Object = Nothing)
+        If FrmMain Is Nothing Then Return
+        FrmMain.RefreshUiStyle()
+    End Sub
+    ''' <summary>
+    ''' 按当前界面样式（简洁 / 毛玻璃）刷新侧栏背景板与所有已创建的卡片。
+    ''' </summary>
+    Public Sub RefreshUiStyle()
+        '侧栏背景板
+        If Settings.Get(Of Integer)("UiUiStyle") = 1 Then
+            RectLeftBackground.Fill = GlassFrostBrush()
+        Else
+            RectLeftBackground.SetResourceReference(Shapes.Rectangle.FillProperty, "ColorBrushBackgroundTransparentSidebar")
+        End If
+        '遍历可视化树，刷新所有卡片外观
+        Dim Stack As New Stack(Of DependencyObject)
+        Stack.Push(Me)
+        Do While Stack.Count > 0
+            Dim Current As DependencyObject = Stack.Pop()
+            Dim Card As MyCard = TryCast(Current, MyCard)
+            If Card IsNot Nothing Then Card.ApplyStyle()
+            For i As Integer = 0 To VisualTreeHelper.GetChildrenCount(Current) - 1
+                Stack.Push(VisualTreeHelper.GetChild(Current, i))
+            Next
+        Loop
     End Sub
 
 End Class

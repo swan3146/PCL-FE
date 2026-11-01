@@ -55,11 +55,9 @@ Public Class MyComboBox
     Private IsMouseDown As Boolean = False
     Private Sub MyComboBox_PreviewMouseLeftButtonDown(sender As Object, e As MouseButtonEventArgs) Handles Me.PreviewMouseLeftButtonDown
         IsMouseDown = True
-        LiquidPressIn(Me, "MyComboBox Press " & Uuid, 0.975)
     End Sub
     Private Sub MyComboBox_PreviewMouseLeftButtonUp(sender As Object, e As EventArgs) Handles Me.PreviewMouseLeftButtonUp, Me.MouseLeave
         IsMouseDown = False
-        LiquidPressOut(Me, "MyComboBox Press " & Uuid)
     End Sub
 
     '指向动画

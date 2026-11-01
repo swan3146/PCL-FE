@@ -13,7 +13,19 @@ Public Module ModAnimation
     Public ReadOnly Property AniSpeed As Double
         Get
             Dim Setting As Integer = Settings.Get(Of Integer)("SystemDebugAnim")
-            Return If(Setting >= 30, 200, (Setting * 0.1 + 0.1).Clamp(0.1, 3))
+            If Setting >= 30 Then Return 200
+            Dim Speed As Double = (Setting * 0.1 + 0.1).Clamp(0.1, 3)
+            '界面动画速度：0 缓慢、1 标准、2 快速、3 关闭
+            Select Case Settings.Get(Of Integer)("UiAnimationSpeed")
+                Case 0
+                    Return Speed * 0.6
+                Case 2
+                    Return Speed * 1.5
+                Case 3
+                    Return 200
+                Case Else
+                    Return Speed
+            End Select
         End Get
     End Property
     ''' <summary>
@@ -156,10 +168,6 @@ Public Module ModAnimation
         ''' 以 WPF 方式旋转控件。
         ''' </summary>
         RotateTransform
-        ''' <summary>
-        ''' 以 WPF 方式同时缩放与位移控件（Q 弹入场）。
-        ''' </summary>
-        Pop
     End Enum
     ''' <summary>
     ''' 动画扩展种类。
@@ -521,74 +529,6 @@ Public Module ModAnimation
     '特殊
 
     ''' <summary>
-    ''' 同时缩放与位移控件的动画（Q 弹入场）。这不会造成布局更新。
-    ''' </summary>
-    ''' <param name="Obj">动画的对象。</param>
-    ''' <param name="Scale">缩放的增量（如 0.06 表示放大 6%）。</param>
-    ''' <param name="TranslateY">Y 轴位移的增量（如 -24 表示向上移动 24px）。</param>
-    ''' <param name="TranslateX">X 轴位移的增量。</param>
-    ''' <remarks></remarks>
-    Public Function AaPop(Obj As Object, Scale As Double, TranslateY As Double, Optional TranslateX As Double = 0,
-                          Optional Time As Integer = 400, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing,
-                          Optional After As Boolean = False) As AniData
-        Return New AniData With {.TypeMain = AniType.Pop, .TimeTotal = Time, .Ease = If(Ease, New AniEaseOutBack),
-                                 .Obj = Obj, .Value = New Double() {Scale, TranslateY, TranslateX}, .IsAfter = After, .TimeFinished = -Delay}
-    End Function
-
-#Region "液体交互动画"
-
-    ''' <summary>
-    ''' 读取元素当前的（缩放, Y 位移）状态，避免连续动作造成漂移。
-    ''' </summary>
-    Public Function GetAniPopState(Control As FrameworkElement) As Double()
-        Dim Group = TryCast(Control.RenderTransform, TransformGroup)
-        If Group IsNot Nothing AndAlso Group.Children.Count = 2 AndAlso
-           TypeOf Group.Children(0) Is ScaleTransform AndAlso TypeOf Group.Children(1) Is TranslateTransform Then
-            Return New Double() {CType(Group.Children(0), ScaleTransform).ScaleX, CType(Group.Children(1), TranslateTransform).Y}
-        End If
-        Dim Single1 = TryCast(Control.RenderTransform, ScaleTransform)
-        If Single1 IsNot Nothing Then Return New Double() {Single1.ScaleX, 0}
-        Return New Double() {1, 0}
-    End Function
-
-    ''' <summary>
-    ''' 液体按压（按下）：像手按在水面上，轻微塌陷。
-    ''' </summary>
-    Public Sub LiquidPressIn(Control As FrameworkElement, Optional Key As String = "", Optional ScaleTo As Double = 0.94)
-        If Control Is Nothing Then Return
-        Dim State = GetAniPopState(Control)
-        AniStart({
-            AaPop(Control, ScaleTo - State(0), -State(1), 0, 170,, New AniEaseOutLiquid(AniEasePower.Weak))
-        }, "Liquid Press " & If(Key = "", GetUuid().ToString(), Key))
-    End Sub
-
-    ''' <summary>
-    ''' 液体回弹（松开）：像水面回涌，带一道柔和尾浪。
-    ''' </summary>
-    Public Sub LiquidPressOut(Control As FrameworkElement, Optional Key As String = "")
-        If Control Is Nothing Then Return
-        Dim State = GetAniPopState(Control)
-        AniStart({
-            AaPop(Control, 1 - State(0), -State(1), 0, 620,, New AniEaseOutLiquid(AniEasePower.Strong))
-        }, "Liquid Press " & If(Key = "", GetUuid().ToString(), Key))
-    End Sub
-
-    ''' <summary>
-    ''' 液体轻弹（点击完成时的果冻抖动），用于 RadioBox、CheckBox 这类需要确认反馈的控件。
-    ''' </summary>
-    Public Sub LiquidTap(Control As FrameworkElement, Optional Key As String = "", Optional Strength As Double = 0.05)
-        If Control Is Nothing Then Return
-        Dim State = GetAniPopState(Control)
-        Control.RenderTransformOrigin = New Point(0.5, 0.5)
-        AniStart({
-            AaPop(Control, Strength, 0, 0, 240,, New AniEaseOutLiquid(AniEasePower.ExtraStrong)),
-            AaPop(Control, -Strength, 0, 0, 520, 240, New AniEaseOutLiquid(AniEasePower.Middle))
-        }, "Liquid Tap " & If(Key = "", GetUuid().ToString(), Key))
-    End Sub
-
-#End Region
-
-    ''' <summary>
     ''' 将一个StackPanel中的各个项目依次显示。
     ''' </summary>
     ''' <remarks></remarks>
@@ -810,139 +750,6 @@ Public Module ModAnimation
         Public Overrides Function GetValue(t As Double) As Double
             t = 1 - t.Clamp(0, 1)
             Return 1 - t ^ ((p - 1) * 0.25) * Math.Cos((p - 3.5) * Math.PI * (1 - t) ^ 1.5)
-        End Function
-    End Class
-
-    'Spring / 欠阻尼弹簧（真·Q 弹）
-    ''' <summary>
-    ''' 欠阻尼弹簧结束。会越过目标值并来回震荡收敛，是最自然的 Q 弹手感。
-    ''' 数值越大，弹性越强、回弹次数越多。
-    ''' </summary>
-    Public Class AniEaseOutSpring
-        Inherits AniEase
-        Private ReadOnly Omega As Double, Zeta As Double
-        Public Sub New(Optional Power As AniEasePower = AniEasePower.Middle)
-            '节奏偏慢：降低角频率让回弹舒展，提高阻尼让震荡收敛得更干净
-            Select Case Power
-                Case AniEasePower.Weak : Omega = 8.6 : Zeta = 0.84
-                Case AniEasePower.Strong : Omega = 12.6 : Zeta = 0.68
-                Case AniEasePower.ExtraStrong : Omega = 15 : Zeta = 0.6
-                Case Else : Omega = 10.6 : Zeta = 0.74
-            End Select
-        End Sub
-        ''' <param name="Omega">角频率，越大震荡越快。</param>
-        ''' <param name="Zeta">阻尼比，越小回弹越久（小于 1 为欠阻尼）。</param>
-        Public Sub New(Omega As Double, Zeta As Double)
-            Me.Omega = Omega : Me.Zeta = Zeta
-        End Sub
-        Public Overrides Function GetValue(t As Double) As Double
-            Dim x As Double = t.Clamp(0, 1)
-            If x <= 0 Then Return 0
-            If x >= 1 Then Return 1
-            Dim wd As Double = Omega * Math.Sqrt(1 - Zeta * Zeta)
-            Return 1 - Math.Exp(-Zeta * Omega * x) * (Math.Cos(wd * x) + (Zeta * Omega / wd) * Math.Sin(wd * x))
-        End Function
-    End Class
-
-    'Liquid / 液体流动
-    ''' <summary>
-    ''' 液体流动结束。前半段像液体被推开一样快速涌出，随后带一道柔和的水波尾浪收拢，
-    ''' 没有生硬的起停，整体像一滴水在表面上摊开。
-    ''' </summary>
-    Public Class AniEaseOutLiquid
-        Inherits AniEase
-        Private ReadOnly Wave As Double
-        Public Sub New(Optional Power As AniEasePower = AniEasePower.Middle)
-            Select Case Power
-                Case AniEasePower.Weak : Wave = 0.06
-                Case AniEasePower.Strong : Wave = 0.2
-                Case AniEasePower.ExtraStrong : Wave = 0.3
-                Case Else : Wave = 0.12
-            End Select
-        End Sub
-        Public Overrides Function GetValue(t As Double) As Double
-            Dim x As Double = t.Clamp(0, 1)
-            If x <= 0 Then Return 0
-            If x >= 1 Then Return 1
-            '主体：三次衰减的涌出
-            Dim Main As Double = 1 - Math.Pow(1 - x, 3)
-            '尾浪：随时间衰减的正弦波，起点与终点均为 0，保证不跳变
-            Dim Ripple As Double = Wave * Math.Pow(1 - x, 1.4) * Math.Sin(x * Math.PI * 2.2)
-            Return Main + Ripple
-        End Function
-    End Class
-
-    'Bounce / 落地弹跳
-    ''' <summary>
-    ''' 落地弹跳结束。像球落地一样多次小幅反弹。
-    ''' </summary>
-    Public Class AniEaseOutBounce
-        Inherits AniEase
-        Public Overrides Function GetValue(t As Double) As Double
-            Dim x As Double = t.Clamp(0, 1)
-            Const n1 As Double = 7.5625, d1 As Double = 2.75
-            If x < 1 / d1 Then
-                Return n1 * x * x
-            ElseIf x < 2 / d1 Then
-                x -= 1.5 / d1 : Return n1 * x * x + 0.75
-            ElseIf x < 2.5 / d1 Then
-                x -= 2.25 / d1 : Return n1 * x * x + 0.9375
-            Else
-                x -= 2.625 / d1 : Return n1 * x * x + 0.984375
-            End If
-        End Function
-    End Class
-
-    'Expo / 丝滑
-    ''' <summary>
-    ''' 指数减速。起步极快、收尾极缓，非常顺滑。
-    ''' </summary>
-    Public Class AniEaseOutExpo
-        Inherits AniEase
-        Public Overrides Function GetValue(t As Double) As Double
-            Dim x As Double = t.Clamp(0, 1)
-            Return If(x >= 1, 1, 1 - Math.Pow(2, -10 * x))
-        End Function
-    End Class
-    ''' <summary>
-    ''' 圆形减速。短促而圆润。
-    ''' </summary>
-    Public Class AniEaseOutCirc
-        Inherits AniEase
-        Public Overrides Function GetValue(t As Double) As Double
-            Dim x As Double = t.Clamp(0, 1) - 1
-            Return Math.Sqrt(Math.Max(1 - x * x, 0))
-        End Function
-    End Class
-    ''' <summary>
-    ''' 五次减速。比平滑更利落的收尾。
-    ''' </summary>
-    Public Class AniEaseOutQuint
-        Inherits AniEase
-        Public Overrides Function GetValue(t As Double) As Double
-            Return 1 - Math.Pow(1 - t.Clamp(0, 1), 5)
-        End Function
-    End Class
-
-    'InOut Back / 对称回弹
-    ''' <summary>
-    ''' 回弹开始与结束。两端都会越过边界，适合“弹出又收回”的动作。
-    ''' </summary>
-    Public Class AniEaseInOutBack
-        Inherits AniEase
-        Private ReadOnly c2 As Double
-        Public Sub New(Optional Power As AniEasePower = AniEasePower.Middle)
-            c2 = 1.70158 * (1 + Power * 0.12)
-        End Sub
-        Public Overrides Function GetValue(t As Double) As Double
-            Dim x As Double = t.Clamp(0, 1)
-            If x < 0.5 Then
-                Dim v As Double = 2 * x
-                Return (v * v * ((c2 + 1) * v - c2)) / 2
-            Else
-                Dim v As Double = 2 * x - 2
-                Return (v * v * ((c2 + 1) * v + c2) + 2) / 2
-            End If
         End Function
     End Class
 
@@ -1259,26 +1066,6 @@ NextAni:
                     End If
                     Dim Delta As Double = MathUtils.Lerp(0, Ani.Value, Ani.Ease.GetDelta(Ani.TimeFinished / Ani.TimeTotal, Ani.TimePercent))
                     CType(Obj.RenderTransform, RotateTransform).Angle = CType(Obj.RenderTransform, RotateTransform).Angle + Delta
-
-                Case AniType.Pop
-                    Dim Obj As FrameworkElement = Ani.Obj
-                    Dim Group As TransformGroup = TryCast(Obj.RenderTransform, TransformGroup)
-                    If Group Is Nothing OrElse Group.Children.Count <> 2 OrElse
-                       Not TypeOf Group.Children(0) Is ScaleTransform OrElse Not TypeOf Group.Children(1) Is TranslateTransform Then
-                        If Obj.RenderTransformOrigin = New Point(0, 0) Then Obj.RenderTransformOrigin = New Point(0.5, 0.5)
-                        Group = New TransformGroup()
-                        Group.Children.Add(New ScaleTransform(1, 1))
-                        Group.Children.Add(New TranslateTransform(0, 0))
-                        Obj.RenderTransform = Group
-                    End If
-                    Dim PopDelta As Double = Ani.Ease.GetDelta(Ani.TimeFinished / Ani.TimeTotal, Ani.TimePercent)
-                    Dim PopValue As Double() = CType(Ani.Value, Double())
-                    Dim PopScale As ScaleTransform = CType(Group.Children(0), ScaleTransform)
-                    Dim PopMove As TranslateTransform = CType(Group.Children(1), TranslateTransform)
-                    PopScale.ScaleX = Math.Max(PopScale.ScaleX + PopValue(0) * PopDelta, 0)
-                    PopScale.ScaleY = Math.Max(PopScale.ScaleY + PopValue(0) * PopDelta, 0)
-                    PopMove.X += PopValue(2) * PopDelta
-                    PopMove.Y += PopValue(1) * PopDelta
 
             End Select
             Ani.TimePercent = Ani.TimeFinished / Ani.TimeTotal '修改执行百分比

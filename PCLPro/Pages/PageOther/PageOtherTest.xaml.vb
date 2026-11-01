@@ -115,31 +115,84 @@ Public Class PageOtherTest
     <System.Runtime.InteropServices.DllImport("psapi.dll")>
     Private Shared Function EmptyWorkingSet(hProcess As IntPtr) As Boolean
     End Function
+    <System.Runtime.InteropServices.DllImport("kernel32.dll")>
+    Private Shared Function OpenProcess(DesiredAccess As Integer, InheritHandle As Boolean, ProcessId As Integer) As IntPtr
+    End Function
+    <System.Runtime.InteropServices.DllImport("kernel32.dll")>
+    Private Shared Function CloseHandle(hObject As IntPtr) As Boolean
+    End Function
+    Private Const ProcessQueryInformation As Integer = &H400 'PROCESS_QUERY_INFORMATION
+    Private Const ProcessSetQuota As Integer = &H100 'PROCESS_SET_QUOTA
 
+    ''' <summary>
+    ''' 执行内存优化。与 PCL2 原版一致：清理的对象是整个系统的物理内存（不仅限于 PCL），
+    ''' 这需要管理员权限，所以通过带 UAC 的 --memory 子进程执行；已经以管理员身份运行时直接在本进程执行。
+    ''' </summary>
     Public Shared Sub MemoryOptimize(ShowHint As Boolean)
-        Dim Before As Long = Process.GetCurrentProcess().WorkingSet64
+        Dim Before As Long = My.Computer.Info.AvailablePhysicalMemory
+        Dim FreedKb As Long = 0
+        Dim Success As Boolean = False
+        If WindowsUtils.HasAdminRole() Then
+            Try
+                MemoryOptimizeInternal(False)
+                Success = True
+            Catch ex As Exception
+                Logger.Warn(ex, "内存优化失败")
+            End Try
+        Else
+            Try
+                '子进程的返回代码即清理的内存量（KB）
+                FreedKb = Math.Max(0, RunAsAdmin("--memory"))
+                Success = True
+            Catch ex As Exception
+                '用户在 UAC 提示中取消
+                Logger.Info($"内存优化未执行：{ex.Message}")
+            End Try
+        End If
+        If Not Success Then
+            If ShowHint Then Hint("已取消内存优化（需要管理员权限才能清理系统内存）。", HintType.Blue)
+            Return
+        End If
+        Dim Freed As Long = If(FreedKb > 0, FreedKb * 1024L, Math.Max(0L, CLng(My.Computer.Info.AvailablePhysicalMemory) - Before))
+        Logger.Info($"内存优化：清理了 {Math.Round(Freed / 1048576.0, 1)} MB 物理内存")
+        If ShowHint Then
+            Hint($"内存优化完成，共释放 {Math.Round(Freed / 1048576.0, 1)} MB 内存", HintType.Green)
+        End If
+        LastMemoryText = $"PCL 当前占用内存：{Math.Round(Process.GetCurrentProcess().WorkingSet64 / 1048576.0, 1)} MB"
+    End Sub
+
+    ''' <summary>
+    ''' 真正执行内存清理：把其它进程的工作集换出到页面文件，再回收本进程的托管与工作集内存。
+    ''' 逐进程的 EmptyWorkingSet 需要 SeDebugPrivilege，因此必须以管理员权限运行。
+    ''' </summary>
+    Public Shared Sub MemoryOptimizeInternal(ShowHint As Boolean)
+        Dim SelfId As Integer = Process.GetCurrentProcess().Id
+        For Each Proc As Process In Process.GetProcesses()
+            Try
+                If Proc.Id <> SelfId Then
+                    Dim Handle As IntPtr = OpenProcess(ProcessQueryInformation Or ProcessSetQuota, False, Proc.Id)
+                    If Handle <> IntPtr.Zero Then
+                        Try
+                            EmptyWorkingSet(Handle)
+                        Finally
+                            CloseHandle(Handle)
+                        End Try
+                    End If
+                End If
+            Catch ex As Exception
+                '受保护的系统进程无法访问，跳过即可
+            Finally
+                Proc.Dispose()
+            End Try
+        Next
         Try
             GC.Collect(2, GCCollectionMode.Forced, True)
             GC.WaitForPendingFinalizers()
             GC.Collect(2, GCCollectionMode.Forced, True)
-            Try
-                EmptyWorkingSet(Process.GetCurrentProcess().Handle)
-            Catch ex As Exception
-                Logger.Trace(ex, "清空工作集失败")
-            End Try
+            EmptyWorkingSet(Process.GetCurrentProcess().Handle)
         Catch ex As Exception
-            Logger.Warn(ex, "内存优化失败")
+            Logger.Trace(ex, "清空工作集失败")
         End Try
-        Dim After As Long = Process.GetCurrentProcess().WorkingSet64
-        Dim Freed As Double = Math.Max(0, (Before - After)) / 1048576.0
-        Logger.Info($"内存优化：{Math.Round(Before / 1048576.0, 1)} MB → {Math.Round(After / 1048576.0, 1)} MB")
-        If ShowHint Then
-            Hint($"内存优化完成：{Math.Round(Before / 1048576.0, 1)} MB → {Math.Round(After / 1048576.0, 1)} MB，释放 {Math.Round(Freed, 1)} MB", HintType.Green)
-        End If
-        LastMemoryText = $"PCL 当前占用内存：{Math.Round(After / 1048576.0, 1)} MB"
-    End Sub
-    Public Shared Sub MemoryOptimizeInternal(ShowHint As Boolean)
-        MemoryOptimize(ShowHint)
     End Sub
 
     ''' <summary>

@@ -104,6 +104,9 @@ Public Class MyResourceItem
                 Case FormMain.PageSubType.DownloadShader
                     TargetType = ResourceTypes.Shader
                     TargetInstance = FrmDownloadShader.Content.Loader.Input.GameVersion
+                Case FormMain.PageSubType.DownloadMap
+                    TargetType = ResourceTypes.Map
+                    TargetInstance = FrmDownloadMap.Content.Loader.Input.GameVersion
             End Select
         Else
             '从详情页进入（查看前置）

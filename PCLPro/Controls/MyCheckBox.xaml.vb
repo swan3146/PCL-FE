@@ -137,14 +137,11 @@ Public Class MyCheckBox
         MouseDowned = False
         SetChecked(Not Checked, True)
         AniStart(AaColor(ShapeBorder, Border.BackgroundProperty, "ColorBrushHalfWhite", 100), "MyCheckBox Background " & Uuid)
-        LiquidPressOut(Me, "MyCheckBox Press " & Uuid)
-        LiquidTap(ShapeBorder, "MyCheckBox Tap " & Uuid, 0.12)
     End Sub
     Private Sub Checkbox_MouseDown() Handles Me.MouseLeftButtonDown
         If Not AllowMouseDown Then Return
         MouseDowned = True
         Focus()
-        LiquidPressIn(Me, "MyCheckBox Press " & Uuid, 0.96)
         AniStart(AaColor(ShapeBorder, Border.BackgroundProperty, "ColorBrushBg1", 100), "MyCheckBox Background " & Uuid)
         If Checked Then
             AniStart({

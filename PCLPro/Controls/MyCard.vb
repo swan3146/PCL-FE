@@ -36,10 +36,6 @@ Public Class MyCard
 
     '属性
     Public Uuid As Integer = GetUuid()
-    ''' <summary>
-    ''' 卡片表面的柔光，会跟随鼠标位置流动。
-    ''' </summary>
-    Private ReadOnly MouseShine As RadialGradientBrush = GlassCreateMouseShine()
     Public ReadOnly Property Inlines As InlineCollection
         Get
             Return MainTextBlock.Inlines
@@ -67,39 +63,37 @@ Public Class MyCard
 
     'UI 建立
     Public Sub New()
-        MainChrome = New MyDropShadow With {
-            .Margin = New Thickness(-5, -5, -5, -5 - GetWPFSize(1)), .ShadowRadius = 11, .Opacity = DropShadowIdleOpacity, .CornerRadius = New CornerRadius(12)}
+        MainChrome = New MyDropShadow With {.Opacity = DropShadowIdleOpacity}
         MainChrome.SetResourceReference(MyDropShadow.ColorProperty, "ColorObject1")
         Children.Insert(0, MainChrome)
-        Dim GlassBrush As New LinearGradientBrush(
-            Color.FromArgb(158, 255, 255, 255),
-            Color.FromArgb(108, 236, 244, 255),
-            New Point(0, 0), New Point(0.3, 1))
-        GlassBrush.Freeze()
-        Dim GlassEdge As New SolidColorBrush(Color.FromArgb(158, 255, 255, 255))
-        GlassEdge.Freeze()
-        '液态玻璃表面：边缘色散 + 镜面反光 + 随鼠标流动的柔光 + 厚度描边
-        Dim GlassInner As New Grid With {.IsHitTestVisible = False}
-        GlassInner.Children.Add(New Shapes.Rectangle With {.Fill = GlassChroma(), .IsHitTestVisible = False})
-        GlassInner.Children.Add(New Shapes.Rectangle With {.Fill = GlassSpecular(), .IsHitTestVisible = False})
-        GlassInner.Children.Add(New Shapes.Rectangle With {.Fill = MouseShine, .IsHitTestVisible = False})
-        GlassInner.Children.Add(New Border With {
-            .BorderThickness = New Thickness(1), .CornerRadius = New CornerRadius(11), .IsHitTestVisible = False,
-            .BorderBrush = New SolidColorBrush(Color.FromArgb(52, 255, 255, 255))})
-        GlassInner.Children.Add(New Border With {
-            .Margin = New Thickness(1), .BorderThickness = New Thickness(1), .CornerRadius = New CornerRadius(10), .IsHitTestVisible = False,
-            .BorderBrush = New SolidColorBrush(Color.FromArgb(14, 40, 60, 92))})
-        MainBorder = New Border With {
-            .CornerRadius = New CornerRadius(12),
-            .IsHitTestVisible = False,
-            .Background = GlassBrush,
-            .BorderThickness = New Thickness(1),
-            .BorderBrush = GlassEdge,
-            .Child = GlassInner
-        }
+        MainBorder = New Border With {.IsHitTestVisible = False}
         Children.Insert(1, MainBorder)
+        ApplyStyle()
         MainGrid = New Grid
         Children.Add(MainGrid)
+    End Sub
+    ''' <summary>
+    ''' 按当前界面样式（简洁 / 毛玻璃）重新套用卡片外观。
+    ''' </summary>
+    Public Sub ApplyStyle()
+        If Settings.Get(Of Integer)("UiUiStyle") = 1 Then
+            '毛玻璃版：半透明磨砂表面 + 亮边，让底层背景透上来
+            MainChrome.Margin = New Thickness(-9, -4, -9, -11)
+            MainChrome.ShadowRadius = 14
+            MainChrome.CornerRadius = New CornerRadius(15)
+            MainBorder.Background = GlassFrostBrush()
+            MainBorder.CornerRadius = New CornerRadius(15)
+            MainBorder.BorderThickness = New Thickness(1)
+            MainBorder.BorderBrush = New SolidColorBrush(Color.FromArgb(52, 255, 255, 255))
+        Else
+            MainChrome.Margin = New Thickness(-3, -3, -3, -3 - GetWPFSize(1))
+            MainChrome.ShadowRadius = 3
+            MainChrome.CornerRadius = New CornerRadius(5)
+            MainBorder.Background = New SolidColorBrush(Color.FromArgb(245, 255, 255, 255))
+            MainBorder.CornerRadius = New CornerRadius(5)
+            MainBorder.BorderThickness = New Thickness(0)
+            MainBorder.BorderBrush = Nothing
+        End If
     End Sub
     Private IsLoad As Boolean = False
     Private Sub Init() Handles Me.Loaded
@@ -164,53 +158,30 @@ Public Class MyCard
     End Sub
 
     '动画
-    Private Const DropShadowIdleOpacity As Double = 0.1
-    Private Const DropShadowHoverOpacity As Double = 0.32
-    '悬停时的缩放比例与纵向位移（向上为负）
-    Private Const CardHoverScale As Double = 1.016
-    Private Const CardHoverOffset As Double = -8
+    Private Const DropShadowIdleOpacity As Double = 0.07
+    Private Const DropShadowHoverOpacity As Double = 0.4
     Public Property HasMouseAnimation As Boolean = True
-    ''' <summary>
-    ''' 读取卡片当前的缩放与纵向位移，用于把动画精确推进到目标值（可随时打断）。
-    ''' </summary>
-    Private Function GetPopState() As Double()
-        Dim Group = TryCast(Me.RenderTransform, TransformGroup)
-        If Group IsNot Nothing AndAlso Group.Children.Count = 2 AndAlso
-           TypeOf Group.Children(0) Is ScaleTransform AndAlso TypeOf Group.Children(1) Is TranslateTransform Then
-            Return New Double() {CType(Group.Children(0), ScaleTransform).ScaleX, CType(Group.Children(1), TranslateTransform).Y}
-        End If
-        Return New Double() {1, 0}
-    End Function
     Private Sub MyCard_MouseEnter(sender As Object, e As MouseEventArgs) Handles Me.MouseEnter
         If Not HasMouseAnimation Then Return
         Dim AniList As New List(Of AniData)
-        If Not IsNothing(MainTextBlock) Then AniList.Add(AaColor(MainTextBlock, TextBlock.ForegroundProperty, "ColorBrush2", 130))
-        If Not IsNothing(MainSwap) Then AniList.Add(AaColor(MainSwap, Shapes.Path.FillProperty, "ColorBrush2", 130))
+        If Not IsNothing(MainTextBlock) Then AniList.Add(AaColor(MainTextBlock, TextBlock.ForegroundProperty, "ColorBrush2", 90))
+        If Not IsNothing(MainSwap) Then AniList.Add(AaColor(MainSwap, Shapes.Path.FillProperty, "ColorBrush2", 90))
         AniList.AddRange({
-            AaColor(MainChrome, MyDropShadow.ColorProperty, "ColorObject4", 130),
-            AaOpacity(MainChrome, DropShadowHoverOpacity - MainChrome.Opacity, 130)
+            AaColor(MainChrome, MyDropShadow.ColorProperty, "ColorObject4", 90),
+            AaOpacity(MainChrome, DropShadowHoverOpacity - MainChrome.Opacity, 90)
         })
         AniStart(AniList, "MyCard Mouse " & Uuid)
     End Sub
     Private Sub MyCard_MouseLeave(sender As Object, e As MouseEventArgs) Handles Me.MouseLeave
         If Not HasMouseAnimation Then Return
         Dim AniList As New List(Of AniData)
-        If Not IsNothing(MainTextBlock) Then AniList.Add(AaColor(MainTextBlock, TextBlock.ForegroundProperty, "ColorBrush1", 130))
-        If Not IsNothing(MainSwap) Then AniList.Add(AaColor(MainSwap, Shapes.Path.FillProperty, "ColorBrush1", 130))
+        If Not IsNothing(MainTextBlock) Then AniList.Add(AaColor(MainTextBlock, TextBlock.ForegroundProperty, "ColorBrush1", 90))
+        If Not IsNothing(MainSwap) Then AniList.Add(AaColor(MainSwap, Shapes.Path.FillProperty, "ColorBrush1", 90))
         AniList.AddRange({
-            AaColor(MainChrome, MyDropShadow.ColorProperty, "ColorObject1", 130),
-            AaOpacity(MainChrome, DropShadowIdleOpacity - MainChrome.Opacity, 130)
+            AaColor(MainChrome, MyDropShadow.ColorProperty, "ColorObject1", 90),
+            AaOpacity(MainChrome, DropShadowIdleOpacity - MainChrome.Opacity, 90)
         })
         AniStart(AniList, "MyCard Mouse " & Uuid)
-    End Sub
-
-    ''' <summary>按压形变：液态玻璃被按下时会像果冻一样轻微凹陷（Lens 的 spring deformation）。</summary>
-    Private Sub MyCard_Press(sender As Object, e As MouseButtonEventArgs) Handles Me.PreviewMouseLeftButtonDown
-        '板块不做动画：已移除卡片按压形变，避免变换动画引发错误
-    End Sub
-    ''' <summary>松开回弹。</summary>
-    Private Sub MyCard_Release(sender As Object, e As MouseButtonEventArgs) Handles Me.PreviewMouseLeftButtonUp
-        '板块不做动画：已移除卡片回弹形变
     End Sub
 
 #Region "高度改变动画"
@@ -234,14 +205,34 @@ Public Class MyCard
         Dim AnimList As New List(Of AniData)
         Dim AbsDelta = Math.Abs(Delta)
 
-        '更慢、更柔和的单段缓出，让展开/收起丝滑不跳跃
-        If AbsDelta <= 1400 Then
-            '中短距离：延长时长并用柔和的缓出
-            AnimList.Add(AaHeight(Me, Delta, 520,, New AniEaseOutFluent(AniEasePower.Weak)))
+        If AbsDelta <= 800 Then
+            '短距离，直接使用 150ms 的缓动动画
+            AnimList.Add(AaHeight(Me, Delta, 150,, New AniEaseOutFluent(AniEasePower.ExtraStrong)))
         Else
-            '长距离：时长随距离增长（开方缓和），整体放慢，落点更柔
-            Dim Duration As Integer = CInt(Math.Min(1100, 520 + Math.Sqrt(AbsDelta) * 7))
-            AnimList.Add(AaHeight(Me, Delta, Duration,, New AniEaseOutFluent(AniEasePower.Weak)))
+            Dim EaseLength As Integer, EaseTime As Integer
+            Dim InitSpeed As Integer '到达缓动区前的初速度
+            If Delta < 0 AndAlso AbsDelta - EaseLength > 5000 * 0.1 Then
+                '收回距离过长 (>0.1s)，强制以 100ms 完成匀速段，然后让减速段更长
+                EaseLength = 200
+                EaseTime = 150
+                InitSpeed = (AbsDelta - EaseLength) / 0.1
+            ElseIf Delta > 0 AndAlso AbsDelta - EaseLength > 5000 * 0.6 Then
+                '展开距离过长 (>0.6s)，以 5000 速度展示 300ms 匀速段，剩下的距离全部归入减速段
+                InitSpeed = 5000
+                EaseLength = AbsDelta - InitSpeed * 0.3
+                EaseTime = 400
+            Else
+                '中程，匀速地快速展开（或收回）
+                EaseLength = 150
+                EaseTime = 200
+                InitSpeed = 4000
+            End If
+            '匀速段
+            AnimList.Add(AaHeight(Me, (AbsDelta - EaseLength) * Math.Sign(Delta),
+                (AbsDelta - EaseLength) / InitSpeed * 1000))
+            '减速段
+            AnimList.Add(AaHeight(Me, EaseLength * Math.Sign(Delta),
+                EaseTime,, New AniEaseOutFluentWithInitial(InitSpeed, EaseTime / 1000, EaseLength), True))
         End If
 
         AnimList.Add(AaCode(
@@ -289,8 +280,6 @@ Public Class MyCard
             If Not IsLoaded Then Return
             '更新样式
             SwapControl.Visibility = Visibility.Visible
-            SwapControl.Opacity = 0
-            AniStart({AaOpacity(SwapControl, 1, 360,, New AniEaseOutFluent(AniEasePower.Weak))}, "MyCard SwapContent " & Uuid)
             TriggerForceResize()
             UpdateCursorStyle()
             '改变箭头
@@ -352,12 +341,6 @@ Public Class MyCard
         IsSwapMouseDown = False
     End Sub
     Private Sub UpdateCursorStyle() Handles Me.MouseMove
-        '柔光跟随鼠标：液态玻璃的高光会随视角流动
-        If MouseShine IsNot Nothing AndAlso ActualWidth > 0 AndAlso ActualHeight > 0 Then
-            Dim ShinePos = Mouse.GetPosition(Me)
-            MouseShine.Center = New Point(ShinePos.X / ActualWidth, ShinePos.Y / ActualHeight)
-            MouseShine.GradientOrigin = MouseShine.Center
-        End If
         If _MainSwap Is Nothing Then Cursor = Nothing : Return
         Dim Pos As Double = Mouse.GetPosition(Me).Y
         Cursor = If(MainSwap.Visibility = Visibility.Visible AndAlso (IsSwapped OrElse (Pos <= SwapedHeight - 6 AndAlso Not (Pos = 0 AndAlso Not IsMouseDirectlyOver))),

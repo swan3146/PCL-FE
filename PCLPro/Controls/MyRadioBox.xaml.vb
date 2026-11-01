@@ -174,13 +174,10 @@ Public Class MyRadioBox
         SetChecked(True, True)
         MouseDowned = False
         AniStart(AaColor(ShapeBorder, Ellipse.FillProperty, "ColorBrushHalfWhite", 100), "MyRadioBox Background " & Uuid)
-        LiquidPressOut(Me, "MyRadioBox Press " & Uuid)
-        LiquidTap(ShapeBorder, "MyRadioBox Tap " & Uuid, 0.12)
     End Sub
     Private Sub Radiobox_MouseDown() Handles Me.MouseLeftButtonDown
         MouseDowned = True
         Focus()
-        LiquidPressIn(Me, "MyRadioBox Press " & Uuid, 0.96)
         AniStart(AaColor(ShapeBorder, Ellipse.FillProperty, "ColorBrushBg1", 100), "MyRadioBox Background " & Uuid)
         If Not Checked Then
             AniStart(AaScale(ShapeBorder, 16.5 - ShapeBorder.Width, 1000, , New AniEaseOutFluent(AniEasePower.Strong), Absolute:=True), "MyRadioBox Border " & Uuid)

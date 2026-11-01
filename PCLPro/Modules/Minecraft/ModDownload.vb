@@ -247,11 +247,12 @@ Public Module ModDownload
         Try
             Dim Versions As JArray = Json("versions")
             If Versions.Count < 200 Then Throw New Exception("获取到的版本列表长度不足（" & Json.ToString & "）")
-            '确定官方源是否可用
-            If Not DlPreferMojang Then
-                Dim DeltaTime = GetTimeMs() - StartTime
-                DlPreferMojang = DeltaTime < 4000
-                Logger.Info($"Mojang 官方源加载耗时：{DeltaTime}ms，{If(DlPreferMojang, "可优先使用官方源", "不优先使用官方源")}")
+            '确定官方源是否可用：不能只看版本清单的加载耗时
+            Static ProbeOnce As Boolean = False
+            If Not ProbeOnce Then
+                ProbeOnce = True
+                Logger.Info($"Mojang 版本清单加载耗时：{GetTimeMs() - StartTime}ms")
+                DlProbeSourceSpeed()
             End If
             '返回
             Loader.Output = New DlClientListResult With {.IsOfficial = True, .SourceName = "Mojang 官方源", .Value = Json}
@@ -1224,6 +1225,45 @@ Public Module ModDownload
 #Region "DlSource | 镜像下载源"
 
     Private DlPreferMojang As Boolean = False
+    Private DlProbeTime As Long = 0
+    Private DlProbeStarted As Boolean = False
+    ''' <summary>
+    ''' 实测官方源与镜像源的下载延迟，决定实际下载文件时优先使用哪个源。
+    ''' 官方源与镜像源的资源服务器（piston-data.mojang.com /
+    ''' libraries.minecraft.net / resources.download.minecraft.net）链路完全不同：
+    ''' 只看清单加载耗时（往往 1 秒内）会把「清单快、资源慢」误判成官方源可用，
+    ''' 结果就是支持库文件下载龟速。
+    ''' </summary>
+    Private Sub DlProbeSourceSpeed()
+        '同一进程内 10 分钟只测一次，避免每次开页面都重新探测
+        If DlProbeTime > 0 AndAlso GetTimeMs() - DlProbeTime < 600000 Then Return
+        DlProbeTime = GetTimeMs()
+        '用同一个真实存在的库文件探测，索引文件太小、代表性差
+        Const ProbePath As String = "/com/google/guava/guava/31.1-jre/guava-31.1-jre.pom"
+        '单次探测受 TLS 握手影响极大，各测两次取较小值
+        Dim OfficialMs As Long = Math.Min(DlProbeLatency("https://libraries.minecraft.net" & ProbePath),
+                                          DlProbeLatency("https://libraries.minecraft.net" & ProbePath))
+        Dim MirrorMs As Long = Math.Min(DlProbeLatency("https://bmclapi2.bangbang93.com/libraries" & ProbePath),
+                                        DlProbeLatency("https://bmclapi2.bangbang93.com/libraries" & ProbePath))
+        '只有官方源明显更快（快一倍以上）才优先官方：延迟低不代表吞吐高，
+        '而国内环境下镜像的带宽优势往往比几毫秒的延迟重要得多
+        DlPreferMojang = OfficialMs > 0 AndAlso OfficialMs < 1200 AndAlso
+                         MirrorMs > 0 AndAlso OfficialMs * 2 < MirrorMs
+        Logger.Info($"下载源测速：官方源 {(If(OfficialMs > 0, OfficialMs & "ms", "不可用"))}，镜像源 {(If(MirrorMs > 0, MirrorMs & "ms", "不可用"))}，" &
+                    If(DlPreferMojang, "优先使用官方源", "优先使用 BMCLAPI 镜像源"))
+    End Sub
+    ''' <summary>
+    ''' 探测单个下载地址的响应耗时，失败返回 -1。
+    ''' </summary>
+    Private Function DlProbeLatency(Url As String) As Long
+        Dim Start As Long = GetTimeMs()
+        Try
+            NetRequestByClient(Url, Timeout:=6000, MakeLog:=False)
+            Return GetTimeMs() - Start
+        Catch
+            Return -1
+        End Try
+    End Function
     ''' <summary>
     ''' 下载文件（而非获取版本列表）的时候，是否优先使用官方源。
     ''' </summary>
@@ -1236,6 +1276,12 @@ Public Module ModDownload
     ''' 下载文件（而非获取版本列表）的时候，根据是否优先使用官方源决定使用 Url 的顺序。
     ''' </summary>
     Public Function DlSourceOrder(OfficialUrls As IEnumerable(Of String), MirrorUrls As IEnumerable(Of String)) As IEnumerable(Of String)
+        '没走过版本清单分支时（比如直接走镜像加载清单），下载开始时补一次后台测速，
+        '保证支持库下载也能按实测速度选源，而不是永远吃默认值
+        If Not DlProbeStarted Then
+            DlProbeStarted = True
+            RunInNewThread(Sub() DlProbeSourceSpeed(), "下载源测速")
+        End If
         Return If(DlSourcePreferMojang, OfficialUrls.Union(MirrorUrls), MirrorUrls.Union(OfficialUrls))
     End Function
     ''' <summary>

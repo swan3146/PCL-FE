@@ -163,14 +163,14 @@ Public Class MyButton
         If Not IsMouseDown Then Return
         IsMouseDown = False
         AniStart({
-               AaScaleTransform(PanFore, 1 - CType(PanFore.RenderTransform, ScaleTransform).ScaleX, 560, 14, New AniEaseOutSpring(AniEasePower.Strong))
+               AaScaleTransform(PanFore, 1 - CType(PanFore.RenderTransform, ScaleTransform).ScaleX, 300, 10, New AniEaseOutFluent(AniEasePower.Middle))
            }, "MyButton Scale " & Uuid)
     End Sub
     Private Sub Button_MouseLeave() Handles Me.MouseLeave
-        AniStart(AaColor(PanFore, BackgroundProperty, "ColorBrushGlassButton", AnimationColorOut), "MyButton Background " & Uuid)
+        AniStart(AaColor(PanFore, BackgroundProperty, "ColorBrushHalfWhite", AnimationColorOut), "MyButton Background " & Uuid)
         If Not IsMouseDown Then Return
         IsMouseDown = False
-        AniStart(AaScaleTransform(PanFore, 1 - CType(PanFore.RenderTransform, ScaleTransform).ScaleX, 620,, New AniEaseOutSpring(AniEasePower.Middle)), "MyButton Scale " & Uuid)
+        AniStart(AaScaleTransform(PanFore, 1 - CType(PanFore.RenderTransform, ScaleTransform).ScaleX, 800,, New AniEaseOutFluent(AniEasePower.Strong)), "MyButton Scale " & Uuid)
     End Sub
 
 End Class

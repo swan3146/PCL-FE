@@ -165,23 +165,6 @@ Public Class MyRadioButton
 
     Private Const AnimationTimeOfMouseIn As Integer = 90 '鼠标指向动画长度
     Private Const AnimationTimeOfMouseOut As Integer = 150 '鼠标移出动画长度
-    ''' <summary>
-    ''' 播放一次 Q 弹反馈动画：先快速回缩，再用欠阻尼弹簧弹回原位。
-    ''' </summary>
-    Public Sub PopAnimation()
-        If Not IsLoaded OrElse AniControlEnabled > 0 Then Return
-        Dim Cur As Double = 1
-        Dim Group = TryCast(Me.RenderTransform, TransformGroup)
-        If Group IsNot Nothing AndAlso Group.Children.Count = 2 AndAlso TypeOf Group.Children(0) Is ScaleTransform Then
-            Cur = CType(Group.Children(0), ScaleTransform).ScaleX
-        End If
-        AniStart({
-            AaPop(Me, 0.94 - Cur, 0, 0, 120,, New AniEaseOutFluent(AniEasePower.Middle)),
-            AaPop(Me, 1.09 - 0.94, 0, 0, 470, 120, New AniEaseOutSpring(AniEasePower.Strong)),
-            AaPop(Me, 1 - 1.09, 0, 0, 540, 590, New AniEaseOutSpring(AniEasePower.Weak))
-        }, "MyRadioButton Pop " & Uuid, True)
-    End Sub
-
     Private Const AnimationTimeOfCheck As Integer = 120 '勾选状态变更动画长度
     Private Sub RefreshColor(Optional obj = Nothing, Optional e = Nothing) Handles Me.MouseEnter, Me.MouseLeave, Me.Loaded
         Try

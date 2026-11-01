@@ -18,7 +18,7 @@ Public Class MyListItem
             If _RectBack Is Nothing Then
                 Dim Rect As New Border With {
                     .Name = "RectBack",
-                    .CornerRadius = New CornerRadius(If(IsScaleAnimationEnabled OrElse Height > 40, 11, 0)),
+                    .CornerRadius = New CornerRadius(If(IsScaleAnimationEnabled OrElse Height > 40, 6, 0)),
                     .RenderTransform = If(IsScaleAnimationEnabled, New ScaleTransform(0.8, 0.8), Nothing),
                     .RenderTransformOrigin = New Point(0.5, 0.5),
                     .BorderThickness = New Thickness(GetWPFSize(1)),
@@ -93,7 +93,7 @@ Public Class MyListItem
         End Get
         Set
             _IsScaleAnimationEnabled = Value
-            If _RectBack IsNot Nothing Then RectBack.CornerRadius = New CornerRadius(If(Value, 11, 0))
+            If _RectBack IsNot Nothing Then RectBack.CornerRadius = New CornerRadius(If(Value, 6, 0))
         End Set
     End Property
     Private _IsScaleAnimationEnabled As Boolean = True
@@ -581,12 +581,11 @@ Public Class MyListItem
                              AaOpacity(RectBack, 1 - RectBack.Opacity, Time,, New AniEaseOutFluent)
                          })
                 If IsScaleAnimationEnabled Then
-                    '背景块用欠阻尼弹簧展开，会略微撑过边界再收回
-                    Ani.Add(AaScaleTransform(RectBack, 1 - CType(RectBack.RenderTransform, ScaleTransform).ScaleX, Time * 3.1,, New AniEaseOutSpring(AniEasePower.Strong)))
+                    Ani.Add(AaScaleTransform(RectBack, 1 - CType(RectBack.RenderTransform, ScaleTransform).ScaleX, Time * 1.6,, New AniEaseOutFluent))
                     If IsMouseDown Then
                         Ani.Add(AaScaleTransform(Me, 0.98 - CType(Me.RenderTransform, ScaleTransform).ScaleX, Time * 0.9,, New AniEaseOutFluent))
                     Else
-                        Ani.Add(AaScaleTransform(Me, 1 - CType(Me.RenderTransform, ScaleTransform).ScaleX, Time * 2.1,, New AniEaseOutSpring(AniEasePower.Weak)))
+                        Ani.Add(AaScaleTransform(Me, 1 - CType(Me.RenderTransform, ScaleTransform).ScaleX, Time * 1.2,, New AniEaseOutFluent))
                     End If
                 End If
             Else

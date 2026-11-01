@@ -1,8 +1,8 @@
 Public Class PageOtherFeedback
 
     Private Sub BtnCopyQQ_Click(sender As Object, e As RoutedEventArgs) Handles BtnCopyQQ.Click
-        ClipboardSet("3549074169")
-        Hint("已复制作者 QQ 号", HintType.Green)
+        ClipboardSet("1125298021")
+        Hint("已复制作者 QQ 群号", HintType.Green)
     End Sub
 
     Private Sub BtnOpenLog_Click(sender As Object, e As RoutedEventArgs) Handles BtnOpenLog.Click

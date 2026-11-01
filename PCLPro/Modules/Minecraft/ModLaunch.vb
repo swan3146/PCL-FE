@@ -211,27 +211,6 @@ NextInner:
 
     Private Sub McLaunchMemoryOptimize(Loader As LoaderTask(Of Integer, Integer))
         McLaunchLog("内存优化开始")
-        If Settings.Get(Of Boolean)("LaunchQuickStart") Then
-            '启动加速：内存优化不再阻塞启动，最多等待 1.5 秒，剩余部分在后台继续
-            Dim FinishedQuick As Boolean = False
-            RunInNewThread(
-            Sub()
-                Try
-                    PageOtherTest.MemoryOptimize(False)
-                Catch ex As Exception
-                    Logger.Warn(ex, "后台内存优化失败")
-                End Try
-                FinishedQuick = True
-            End Sub, "Launch Memory Optimize (Quick)")
-            Dim WaitStart As Long = GetTimeMs()
-            Do While Not FinishedQuick AndAlso Not Loader.IsCanceled AndAlso GetTimeMs() - WaitStart < 1500
-                Loader.Progress = Math.Min(1, (GetTimeMs() - WaitStart) / 1500)
-                Thread.Sleep(50)
-            Loop
-            Loader.Progress = 1
-            If Not FinishedQuick Then McLaunchLog("内存优化已转入后台继续执行，不阻塞启动")
-            Return
-        End If
         Dim Finished As Boolean = False
         RunInNewThread(
         Sub()

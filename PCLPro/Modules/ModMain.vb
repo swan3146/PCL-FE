@@ -108,9 +108,9 @@ Public Module ModMain
                     End If
                     '开始动画
                     Animations.AddRange({
-                        AaX(NewHintControl, 30, 460, , New AniEaseOutSpring(AniEasePower.Strong)),
+                        AaX(NewHintControl, 30, 400, , New AniEaseOutElastic(AniEasePower.Weak)),
                         AaX(NewHintControl, 20, 220, , New AniEaseOutFluent),
-                        AaOpacity(NewHintControl, 1, 140,, New AniEaseOutFluent(AniEasePower.Weak)),
+                        AaOpacity(NewHintControl, 1, 100),
                         AaDouble(Sub(i)
                                      Percent += i
                                      Dim Gradient As LinearGradientBrush = NewHintControl.Background
@@ -560,6 +560,10 @@ EndHint:
     End Sub
     Public Declare Function FindWindow Lib "user32" Alias "FindWindowA" (ClassName As String, WindowName As String) As IntPtr
     Public Declare Function SetForegroundWindow Lib "user32" (hWnd As IntPtr) As Integer
+    Public Declare Function ShowWindow Lib "user32" (hWnd As IntPtr, nCmdShow As Integer) As Boolean
+    Public Const SW_SHOW As Integer = 5
+    Public Const SW_RESTORE As Integer = 9
+    Public Const SW_MAXIMIZE As Integer = 3
     Private Declare Function PostMessage Lib "user32" Alias "PostMessageA" (hWnd As IntPtr, msg As UInteger, wParam As Long, lParam As Long) As Boolean
 
     ''' <summary>

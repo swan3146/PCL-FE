@@ -18,15 +18,9 @@
             </Ellipse.RenderTransform>
         </Ellipse>
         <Popup Name="Popup" AllowsTransparency="True" IsHitTestVisible="False" PopupAnimation="Fade" VerticalOffset="38" HorizontalOffset="{Binding Margin.Left, ElementName=ShapeDot}" Placement="Center" PlacementRectangle="8,0,0,0">
-            <Border BorderBrush="#96FFFFFF" BorderThickness="1" CornerRadius="7" MaxWidth="500" Margin="0,0,4,4" SnapsToDevicePixels="True">
-                <Border.Background>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0.25,1">
-                        <GradientStop Color="#D8FFFFFF" Offset="0" />
-                        <GradientStop Color="#B4F0F6FF" Offset="1" />
-                    </LinearGradientBrush>
-                </Border.Background>
+            <Border BorderBrush="{DynamicResource ColorBrush1}" BorderThickness="1.5" CornerRadius="3" MaxWidth="500" Background="White" Margin="0,0,4,4" SnapsToDevicePixels="True">
                 <Border.Effect>
-                    <DropShadowEffect Color="#1C2634" Opacity="0.3" BlurRadius="16" ShadowDepth="3" RenderingBias="Performance" />
+                    <DropShadowEffect Opacity="0.4" BlurRadius="4" ShadowDepth="2" />
                 </Border.Effect>
                 <TextBlock Name="TextHint" TextWrapping="Wrap" Foreground="{DynamicResource ColorBrush1}" Margin="7,5" FontSize="12"/>
             </Border>

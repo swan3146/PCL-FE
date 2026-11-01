@@ -80,6 +80,10 @@ Public Class PageDownloadResourceDetail
     '筛选类型相同的结果（Modrinth 会返回 Mod、服务端插件、数据包混合的列表）
     Private Function GetResults() As List(Of ResourceVersion)
         Dim Results As List(Of ResourceVersion) = ResourceFileLoader.Output
+        If TargetResourceType = CType(0, ResourceTypes) Then
+            '未指定目标类型（例如从其他页面直接打开详情），此时不按类型过滤，避免版本列表被全部筛空
+            Return Results.Where(Function(r) r.ResourceType <> ResourceTypes.Plugin).ToList
+        End If
         Select Case TargetResourceType
             Case ResourceTypes.Any
                 Results = Results.Where(Function(r) r.ResourceType <> ResourceTypes.Plugin).ToList
@@ -88,6 +92,11 @@ Public Class PageDownloadResourceDetail
             Case Else
                 Results = Results.Where(Function(r) r.ResourceType = TargetResourceType).ToList
         End Select
+        '兜底：若按类型过滤后什么都不剩（例如项目类型判定与文件实际类型不一致），退回展示全部版本，避免版本列表空白
+        If Results.Count = 0 Then
+            Logger.Warn($"按类型 {TargetResourceType} 过滤后版本列表为空，已退回展示全部版本")
+            Results = ResourceFileLoader.Output.Where(Function(r) r.ResourceType <> ResourceTypes.Plugin).ToList
+        End If
         Return Results
     End Function
     Private Sub Load_OnFinish()

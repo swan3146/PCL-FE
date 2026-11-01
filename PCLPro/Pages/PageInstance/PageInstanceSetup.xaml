@@ -268,6 +268,58 @@
                     </StackPanel>
                 </Grid>
             </local:MyCard>
+            <local:MyCard x:Name="CardContent" Margin="0,0,0,15" Title="内容管理">
+                <StackPanel Margin="25,40,25,15">
+                    <Grid Height="32">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="截图" Margin="0,0,25,0" />
+                        <TextBlock x:Name="LabContentScreenshot" Grid.Column="1" VerticalAlignment="Center" Opacity="0.65" FontSize="12" TextTrimming="CharacterEllipsis" />
+                        <local:MyButton x:Name="BtnContentScreenshotOpen" Grid.Column="2" MinWidth="120" Text="打开文件夹"
+                                        ToolTip="打开该版本的 screenshots 文件夹" />
+                    </Grid>
+                    <Grid Height="32" Margin="0,6,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="资源包" Margin="0,0,25,0" />
+                        <TextBlock x:Name="LabContentResourcePack" Grid.Column="1" VerticalAlignment="Center" Opacity="0.65" FontSize="12" TextTrimming="CharacterEllipsis" />
+                        <local:MyButton x:Name="BtnContentResourcePackOpen" Grid.Column="2" MinWidth="120" Text="打开文件夹"
+                                        ToolTip="打开该版本的 resourcepacks 文件夹，把资源包放入后即可在游戏中启用" />
+                    </Grid>
+                    <Grid Height="32" Margin="0,6,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="光影包" Margin="0,0,25,0" />
+                        <TextBlock x:Name="LabContentShaderPack" Grid.Column="1" VerticalAlignment="Center" Opacity="0.65" FontSize="12" TextTrimming="CharacterEllipsis" />
+                        <local:MyButton x:Name="BtnContentShaderPackOpen" Grid.Column="2" MinWidth="120" Text="打开文件夹"
+                                        ToolTip="打开该版本的 shaderpacks 文件夹，需要安装 Iris 或 OptiFine 才能生效" />
+                    </Grid>
+                    <Grid Height="32" Margin="0,6,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="投影原理图" Margin="0,0,25,0" />
+                        <TextBlock x:Name="LabContentSchematic" Grid.Column="1" VerticalAlignment="Center" Opacity="0.65" FontSize="12" TextTrimming="CharacterEllipsis" />
+                        <StackPanel Grid.Column="2" Orientation="Horizontal">
+                            <local:MyButton x:Name="BtnContentSchematicOpen" MinWidth="100" Text="打开文件夹"
+                                            ToolTip="打开该版本的 schematics 文件夹" />
+                            <local:MyButton x:Name="BtnContentSchematicPreview" MinWidth="90" Margin="10,0,0,0" Text="预览…" ColorType="Highlight"
+                                            ToolTip="选择投影文件，读取其尺寸、名称与作者信息" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </local:MyCard>
             <local:MyExtraTextButton HorizontalAlignment="Center" Margin="0,-5,0,0"
                 x:Name="BtnSwitch" Text="全局设置"
                 LogoScale="0.9" Logo="M73 584L920 584 608 896C579 925 579 972 608 1001 637 1030 683 1030 712 1001L1149 565C1164 550 1170 531 1170 511 1170 492 1164 472 1149 457L712 21C683-7 637-7 608 21 579 50 579 97 608 126L920 438 73 438C33 438 0 471 0 511 0 551 33 584 73 584Z" />

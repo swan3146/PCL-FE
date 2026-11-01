@@ -3,14 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              FocusVisualStyle="{x:Null}" x:Name="PanBack"
              Focusable="True" UseLayoutRounding="False" SnapsToDevicePixels="False" Background="{StaticResource ColorBrushSemiTransparent}">
-    <Border CornerRadius="12" x:Name="PanFore" BorderThickness="1" BorderBrush="{DynamicResource ColorBrush1}" RenderTransformOrigin="0.5,0.5">
-        <Border.Background>
-            <LinearGradientBrush StartPoint="0,0" EndPoint="0.35,1">
-                <GradientStop Color="#7AFFFFFF" Offset="0" />
-                <GradientStop Color="#3CF2F8FF" Offset="0.55" />
-                <GradientStop Color="#63FFFFFF" Offset="1" />
-            </LinearGradientBrush>
-        </Border.Background>
+    <Border CornerRadius="3" x:Name="PanFore" BorderThickness="1" BorderBrush="{DynamicResource ColorBrush1}" RenderTransformOrigin="0.5,0.5" Background="{StaticResource ColorBrushHalfWhite}">
         <Border.RenderTransform>
             <ScaleTransform />
         </Border.RenderTransform>

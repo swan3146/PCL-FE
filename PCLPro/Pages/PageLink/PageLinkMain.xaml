@@ -80,6 +80,7 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="1*" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
                                 <Path Height="23" Width="23" Margin="0,-1,9,0" Stretch="Uniform" Fill="{DynamicResource ColorBrush3}"
@@ -91,7 +92,15 @@
                             </StackPanel>
                             <TextBlock Grid.Row="1" Margin="1,10,4,0" Text="邀请朋友加入你的单人游戏。开始前，先在游戏内暂停菜单选择「对局域网开放」。" FontSize="13" LineHeight="19" TextWrapping="Wrap" Foreground="{StaticResource ColorBrushGray3}" />
                             <TextBlock Grid.Row="2" Margin="1,14,4,0" Text="无需填写端口：创建后由陶瓦自动扫描游戏端口，并生成 U/XXXX-XXXX-XXXX-XXXX 房间码。" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Foreground="{StaticResource ColorBrushGray4}" />
-                            <local:MyButton x:Name="BtnCreate" Grid.Row="4" Text="创建房间" ColorType="Highlight" Height="34" Margin="1,16,4,0" />
+                            <StackPanel Grid.Row="4" Margin="1,16,4,0">
+                                <Grid>
+                                    <TextBlock Text="联机节点" FontSize="12.5" Foreground="{StaticResource ColorBrushGray3}" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="LabNodeStatus" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource ColorBrushGray4}" Text="正在测速……" />
+                                </Grid>
+                                <local:MyComboBox x:Name="ComboCreateNode" Height="32" Margin="0,6,0,0" FontSize="12.5"
+                                                  Loaded="ComboCreateNode_Loaded" SelectionChanged="ComboCreateNode_SelectionChanged" />
+                            </StackPanel>
+                            <local:MyButton x:Name="BtnCreate" Grid.Row="5" Text="创建房间" ColorType="Highlight" Height="34" Margin="1,14,4,0" />
                         </Grid>
                     </local:MyCard>
 

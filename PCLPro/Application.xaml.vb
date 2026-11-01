@@ -106,7 +106,6 @@ RetryCacheCheck:
             If Environment.OSVersion.Version < New Version(6, 2) Then 'Windows 7 回退（#8519）
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 Or SecurityProtocolType.Tls Or SecurityProtocolType.Tls11 Or SecurityProtocolType.Tls12
             End If
-            '设置初始窗口（启动动画由主窗口内的 PanSplash 播放，不再使用系统 SplashScreen 小图标）
             '基础信息
             Logger.Info($"程序版本：{VersionDisplay} ({VersionCode}{If(CommitHash = "", "", $"，#{CommitHash}")})")
             If BuildType = BuildTypes.Snapshot Then
@@ -160,9 +159,17 @@ RetryCacheCheck:
                 End Try
             End If
             '将已有的 PCL 窗口拖出来
-            Dim WindowHwnd As IntPtr = FindWindow(Nothing, "PCL Pro　")
-            If WindowHwnd = IntPtr.Zero Then WindowHwnd = FindWindow(Nothing, "PCL Pro　")
-            If WindowHwnd <> IntPtr.Zero Then ShowWindowToTop(WindowHwnd)
+            '注意：主窗口标题是 "Plain Craft Launcher Pro　"，旧版这里误用了 "PCL Pro　"，导致永远找不到窗口，
+            '表现为双击图标没反应（自更新重启后卡死时尤其明显）。
+            Dim WindowHwnd As IntPtr = FindWindow(Nothing, "Plain Craft Launcher Pro　")
+            If WindowHwnd = IntPtr.Zero Then WindowHwnd = FindPclWindowHwnd()
+            If WindowHwnd <> IntPtr.Zero Then
+                '已有实例的窗口可能是被隐藏创建的，必须先让 Win32 窗口真正显示，再置顶
+                ShowWindow(WindowHwnd, SW_SHOW)
+                ShowWindowToTop(WindowHwnd)
+            Else
+                Logger.Warn("未找到已有 PCL 实例的窗口，可能该实例启动失败或正在启动")
+            End If
             '播放提示音并退出
             Beep()
             Environment.[Exit](ProcessReturnValues.Cancel)
@@ -170,6 +177,23 @@ RetryCacheCheck:
             Logger.Warn(ex, "单例检查失败")
         End Try
     End Sub
+    ''' <summary>
+    ''' 按进程名查找已有 PCL 实例的主窗口句柄，作为按标题查找的兜底方案。
+    ''' </summary>
+    Private Shared Function FindPclWindowHwnd() As IntPtr
+        Try
+            For Each Proc As Diagnostics.Process In Diagnostics.Process.GetProcessesByName("Plain Craft Launcher Pro")
+                Try
+                    Dim Hwnd As IntPtr = Proc.MainWindowHandle
+                    If Hwnd <> IntPtr.Zero Then Return Hwnd
+                Catch
+                End Try
+            Next
+        Catch ex As Exception
+            Logger.Warn(ex, "按进程名查找已有窗口失败")
+        End Try
+        Return IntPtr.Zero
+    End Function
     Private Shared PclMutex As Mutex
 
     '结束

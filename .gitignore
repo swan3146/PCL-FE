@@ -345,3 +345,9 @@ MaskFiles/
 
 # 本地备份目录
 _backup_*/
+
+# 本地开发记录（不随仓库发布）
+DEV_NOTES.md
+
+# 本地打包产物
+dist/

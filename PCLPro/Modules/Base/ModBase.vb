@@ -6,12 +6,12 @@ Public Module ModBase
 #Region "声明"
 
     '下列版本信息由更新器自动修改
-    Public Const VersionBaseName As String = "1.0.2" '显示用版本名
+    Public Const VersionBaseName As String = "1.2.8" '显示用版本名
     Public Const CommitHash As String = "" 'Commit Hash，由 GitHub Workflow 自动替换
 #If RELEASE Then
-    Public Const VersionCode As Integer = 418 '正式版
+    Public Const VersionCode As Integer = 427 '正式版
 #Else
-    Public Const VersionCode As Integer = 418 '快照版
+    Public Const VersionCode As Integer = 427 '快照版
 #End If
 
     '版本信息
@@ -1233,6 +1233,478 @@ Public Module ModBase
             Yield RawCopy(i)
             RawCopy.RemoveAt(i)
         Loop
+    End Function
+
+#End Region
+
+#Region "自动更新检查"
+
+    '更新源：自己的 GitHub 仓库（公开仓库，无需 token）
+    Private Const UpdateRepo As String = "swan3146/PCL-PRO"
+    Private Const UpdateApi As String = "https://api.github.com/repos/" & UpdateRepo & "/releases/latest"
+    '网络不佳时的 GitHub 加速镜像，下载与 API 都会依次尝试
+    Private ReadOnly UpdateMirrors As String() = {"https://ghfast.top/", "https://gh-proxy.com/", "https://ghproxy.net/"}
+
+    Public Class UpdateRelease
+        Public VersionName As String = ""
+        Public Changelog As String = ""
+        Public AssetName As String = ""
+        Public AssetUrl As String = ""
+        Public AssetSize As Long = 0
+        Public IsInstaller As Boolean = False
+    End Class
+
+    ''' <summary>
+    ''' 启动时检查 GitHub 上的最新版本；仅提示，不会自动更新。
+    ''' </summary>
+    Public Sub CheckUpdateAtStartup()
+        If BuildType = BuildTypes.Debug Then Return
+        If Not String.IsNullOrEmpty(Environment.GetEnvironmentVariable("PCL_DEBUG_PAGE")) Then Return
+        If Not Settings.Get(Of Boolean)("UiCheckUpdateAtStartup") Then Return
+        RunInNewThread(
+        Sub()
+            Thread.Sleep(4000)
+            Try
+                Dim Release As UpdateRelease = FetchLatestRelease()
+                If Release Is Nothing Then
+                    Logger.Info("检查更新：无法获取最新版本信息，本次跳过")
+                    Return
+                End If
+                If CompareVersion(Release.VersionName, VersionBaseName) <= 0 Then
+                    Logger.Info($"检查更新：已是最新版本（{VersionBaseName}）")
+                    Return
+                End If
+                Logger.Info($"检查更新：发现新版本 {Release.VersionName}，当前 {VersionBaseName}")
+                Dim Desc As String = ""
+                If Not String.IsNullOrWhiteSpace(Release.Changelog) Then Desc = vbCrLf & vbCrLf & "更新内容：" & vbCrLf & Release.Changelog.Trim
+                RunInUi(
+                Sub()
+                    If MyMsgBox($"检测到新版本 {Release.VersionName}，当前版本 {VersionBaseName}。" & vbCrLf & "是否立即下载并更新？" & Desc,
+                                "发现新版本", "立即更新", "稍后") = 1 Then
+                        DownloadUpdate(Release)
+                    End If
+                End Sub)
+            Catch ex As Exception
+                Logger.Warn(ex, "检查更新失败")
+            End Try
+        End Sub, "Update Checker")
+    End Sub
+
+    ''' <summary>
+    ''' 手动检查更新（设置页与关于页的「检查更新」按钮）。
+    ''' 与启动时检查共用同一套直连 + 镜像逻辑，但无论有没有新版本都会给出提示。
+    ''' </summary>
+    Public Sub CheckUpdateManually()
+        RunInNewThread(
+        Sub()
+            Try
+                Logger.Info("手动检查更新：开始")
+                Dim Release As UpdateRelease = FetchLatestRelease()
+                If Release Is Nothing Then
+                    RunInUi(Sub() MyMsgBox("无法获取最新版本信息。" & vbCrLf &
+                                           "请检查网络后重试，或稍后前往 GitHub Releases 查看。",
+                                           "检查更新", IsWarn:=True))
+                    Return
+                End If
+                If CompareVersion(Release.VersionName, VersionBaseName) <= 0 Then
+                    Logger.Info($"手动检查更新：已是最新版本（{VersionBaseName}）")
+                    RunInUi(Sub() Hint($"当前版本 {VersionBaseName} 已是最新版本！", HintType.Green))
+                    Return
+                End If
+                Logger.Info($"手动检查更新：发现新版本 {Release.VersionName}，当前 {VersionBaseName}")
+                Dim Desc As String = ""
+                If Not String.IsNullOrWhiteSpace(Release.Changelog) Then Desc = vbCrLf & vbCrLf & "更新内容：" & vbCrLf & Release.Changelog.Trim
+                RunInUi(
+                Sub()
+                    If MyMsgBox($"检测到新版本 {Release.VersionName}，当前版本 {VersionBaseName}。" & vbCrLf & "是否立即下载并更新？" & Desc,
+                                "发现新版本", "立即更新", "稍后") = 1 Then
+                        DownloadUpdate(Release)
+                    End If
+                End Sub)
+            Catch ex As Exception
+                Logger.Warn(ex, "手动检查更新失败")
+                RunInUi(Sub() MyMsgBox("检查更新失败：" & ex.Message & vbCrLf & $"可前往 https://github.com/{UpdateRepo}/releases 手动查看。", "检查更新", IsWarn:=True))
+            End Try
+        End Sub, "Update Checker Manual")
+    End Sub
+
+    Private Function FetchLatestRelease() As UpdateRelease
+        Dim Raw As String = Nothing
+        For Each Prefix As String In UpdatePrefixOrder()
+            Try
+                Raw = UpdateHttpGet(Prefix & UpdateApi)
+                If Raw IsNot Nothing Then Exit For
+            Catch ex As Exception
+                Logger.Info($"检查更新：{If(Prefix, "直连")}失败：{ex.Message}")
+            End Try
+        Next
+        If String.IsNullOrEmpty(Raw) Then Return Nothing
+        Dim Json As Newtonsoft.Json.Linq.JObject
+        Try
+            Json = Newtonsoft.Json.Linq.JObject.Parse(Raw)
+        Catch ex As Exception
+            Return Nothing
+        End Try
+        Dim Tag As String = If(Json("tag_name")?.ToString, "").Trim.TrimStart("v"c, "V"c)
+        If Tag = "" Then Return Nothing
+        Dim Rel As New UpdateRelease With {.VersionName = Tag}
+        Dim Body As String = If(Json("body")?.ToString, "")
+        If Body.Length > 500 Then Body = Body.Substring(0, 500) & "……"
+        Rel.Changelog = FilterUpdateChangelog(Body)
+        '选择下载资源：优先便携 exe，其次安装包，最后退化为 Releases 页面
+        Dim Assets = TryCast(Json("assets"), Newtonsoft.Json.Linq.JArray)
+        If Assets IsNot Nothing Then
+            Dim ExeAssets = Assets.Cast(Of Newtonsoft.Json.Linq.JObject)().
+                Where(Function(a) If(a("name")?.ToString, "").ToLower.EndsWith(".exe")).ToList
+            Dim Chosen = ExeAssets.FirstOrDefault(Function(a) Not IsInstallerName(a("name")?.ToString))
+            If Chosen Is Nothing Then Chosen = ExeAssets.FirstOrDefault()
+            If Chosen IsNot Nothing Then
+                Rel.AssetName = Chosen("name")?.ToString
+                Rel.AssetUrl = Chosen("browser_download_url")?.ToString
+                Long.TryParse(Chosen("size")?.ToString, Rel.AssetSize)
+                Rel.IsInstaller = IsInstallerName(Rel.AssetName)
+            End If
+        End If
+        If String.IsNullOrEmpty(Rel.AssetUrl) Then Rel.AssetUrl = $"https://github.com/{UpdateRepo}/releases"
+        Return Rel
+    End Function
+
+    Private Function IsInstallerName(Name As String) As Boolean
+        If String.IsNullOrEmpty(Name) Then Return False
+        Name = Name.ToLower
+        Return Name.Contains("setup") OrElse Name.Contains("install")
+    End Function
+
+    '更新日志只保留摘要，避免弹窗过长
+    Private Function FilterUpdateChangelog(Body As String) As String
+        If String.IsNullOrWhiteSpace(Body) Then Return ""
+        Dim Lines = Body.Replace(vbCrLf, vbLf).Split(ControlChars.Lf).
+            Where(Function(l) Not String.IsNullOrWhiteSpace(l) AndAlso Not l.StartsWith("PCL Pro（")).ToArray
+        Return String.Join(vbCrLf, Lines.Take(8))
+    End Function
+
+    '提示并下载更新
+    Private Sub DownloadUpdate(Release As UpdateRelease)
+        '没有可下载的便携版时，直接引导用户去 Releases 页面
+        If String.IsNullOrEmpty(Release.AssetName) Then
+            If MyMsgBox($"发现新版本 {Release.VersionName}，但该版本没有提供可下载的程序文件。" & vbCrLf &
+                        "是否打开 GitHub Releases 页面手动下载？", "发现新版本", "打开页面", "稍后") = 1 Then
+                OpenWebsite($"https://github.com/{UpdateRepo}/releases")
+            End If
+            Return
+        End If
+        Dim SizeText As String = If(Release.AssetSize > 0, $"（约 {Math.Round(Release.AssetSize / 1048576.0, 1)} MB）", "")
+        If MyMsgBox($"即将从 GitHub 下载更新{SizeText}。" & vbCrLf & "网络不佳时会自动切换加速镜像；全部失败可稍后重试或手动前往 Releases 下载。",
+                    "开始更新", "开始下载", "取消") <> 1 Then Return
+        RunInNewThread(
+        Sub()
+            Try
+                UpdateProgressShow("正在下载更新")
+                Dim Dir As String = IO.Path.Combine(PathTemp, "Update")
+                IO.Directory.CreateDirectory(Dir)
+                Dim Target As String = IO.Path.Combine(Dir, Release.AssetName)
+                If Not UpdateDownloadFile(Release.AssetUrl, Target) Then Throw New Exception("直连与所有镜像均下载失败")
+                UpdateProgressSet(100, "下载完成")
+                '校验下载结果：镜像偶尔会返回网页而不是真正的程序文件
+                Dim Info As New IO.FileInfo(Target)
+                If Info.Length < 512 * 1024 Then Throw New Exception($"下载到的文件只有 {Info.Length} 字节，可能不是有效的更新包")
+                Logger.Info($"更新包已下载：{Target}（{Math.Round(Info.Length / 1048576.0, 1)} MB）")
+                RunInUi(
+                Sub()
+                    UpdateProgressClose()
+                    If Release.IsInstaller Then
+                        If MyMsgBox("更新包已下载完成，将启动安装程序。" & vbCrLf & "安装过程中请按提示操作，安装完成后启动器会退出。",
+                                    "更新就绪", "启动安装程序", "稍后") = 1 Then
+                            Diagnostics.Process.Start(Target)
+                            Application.Current.Shutdown()
+                        End If
+                    Else
+                        If MyMsgBox("更新包已下载完成，是否立即替换当前版本并重启？", "更新就绪", "立即重启更新", "稍后") = 1 Then
+                            RunSelfUpdate(Target)
+                        End If
+                    End If
+                End Sub)
+            Catch ex As Exception
+                UpdateProgressClose()
+                Logger.Warn(ex, "下载更新包失败")
+                RunInUi(Sub() MyMsgBox("更新包下载失败：" & ex.Message & vbCrLf & $"可前往 https://github.com/{UpdateRepo}/releases 手动下载。", "更新失败", IsWarn:=True))
+            End Try
+        End Sub, "Update Downloader")
+    End Sub
+
+    '便携版自替换：改名旧 exe → 写入新 exe → 重启 → 清理
+    Private Sub RunSelfUpdate(NewExe As String)
+        Try
+            Dim CurExe As String = PathExe
+            Dim Script As String = IO.Path.Combine(PathTemp, "PCLProUpdate.cmd")
+            Dim Lines As New List(Of String) From {
+                "@echo off",
+                "chcp 65001 >nul",
+                $"del /Q ""{CurExe}.old"" >nul 2>nul",
+                ":waitlock",
+                $"move /Y ""{CurExe}"" ""{CurExe}.old"" >nul 2>nul",
+                "if errorlevel 1 (ping 127.0.0.1 -n 2 >nul & goto waitlock)",
+                $"move /Y ""{NewExe}"" ""{CurExe}"" >nul 2>nul",
+                "if errorlevel 1 goto restore",
+                $"powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command ""Start-Process -FilePath '{CurExe}' -ArgumentList '--wait' -WindowStyle Normal""",
+                "ping 127.0.0.1 -n 3 >nul",
+                $"del /Q ""{CurExe}.old"" >nul 2>nul",
+                "goto cleanup",
+                ":restore",
+                $"move /Y ""{CurExe}.old"" ""{CurExe}"" >nul 2>nul",
+                ":cleanup",
+                "del /Q ""%~f0"" >nul 2>nul"
+            }
+            IO.File.WriteAllText(Script, String.Join(vbCrLf, Lines), Text.Encoding.Default)
+            Dim Proc As Diagnostics.Process = Diagnostics.Process.Start(New Diagnostics.ProcessStartInfo("cmd.exe", "/c """ & Script & """") With {
+                .CreateNoWindow = True, .UseShellExecute = False, .WindowStyle = Diagnostics.ProcessWindowStyle.Hidden})
+            Logger.Info($"已启动自更新脚本，等待当前进程退出：PID {Proc.Id}")
+            '直接结束当前进程，避免走关闭动画或被“还有下载任务”的确认框卡住，导致进程常驻、单例互斥锁不释放
+            FormMain.EndProgramForce()
+        Catch ex As Exception
+            Logger.Warn(ex, "启动自更新脚本失败")
+            MyMsgBox("自动替换失败：" & ex.Message & vbCrLf & $"请手动下载并覆盖：https://github.com/{UpdateRepo}/releases", "更新失败", IsWarn:=True)
+        End Try
+    End Sub
+
+    '文本请求（8 秒超时）
+    Private Function UpdateHttpGet(Url As String) As String
+        Dim Req As Net.HttpWebRequest = CType(Net.WebRequest.Create(Url), Net.HttpWebRequest)
+        Req.UserAgent = "PCLPro-Updater"
+        Req.Timeout = 8000
+        Req.ReadWriteTimeout = 8000
+        Req.AutomaticDecompression = Net.DecompressionMethods.GZip Or Net.DecompressionMethods.Deflate
+        Using Resp As Net.HttpWebResponse = CType(Req.GetResponse(), Net.HttpWebResponse)
+            Using Reader As New IO.StreamReader(Resp.GetResponseStream(), Text.Encoding.UTF8)
+                Return Reader.ReadToEnd()
+            End Using
+        End Using
+    End Function
+
+    ''' <summary>按实测延迟排序的下载源前缀缓存，最快在前。</summary>
+    Private UpdatePrefixOrderCache As String() = Nothing
+
+    ''' <summary>
+    ''' 对每个下载源并行做一次 HEAD 测速，按响应时间升序返回；不通的源排在最后。
+    ''' </summary>
+    Private Function UpdatePrefixOrder() As String()
+        If UpdatePrefixOrderCache IsNot Nothing Then Return UpdatePrefixOrderCache
+        Dim Prefixes As String() = {"", UpdateMirrors(0), UpdateMirrors(1), UpdateMirrors(2)}
+        Dim Costs(Prefixes.Length - 1) As Long
+        Dim Probes As New List(Of Threading.Thread)
+        For i As Integer = 0 To Prefixes.Length - 1
+            Dim Index As Integer = i
+            Dim Probe As New Threading.Thread(Sub()
+                                                  Costs(Index) = Long.MaxValue
+                                                  Try
+                                                      Dim Req As Net.HttpWebRequest = CType(Net.WebRequest.Create(Prefixes(Index) & "https://github.com/" & UpdateRepo), Net.HttpWebRequest)
+                                                      Req.Method = "HEAD"
+                                                      Req.UserAgent = "PCLPro-Updater"
+                                                      Req.Timeout = 4000
+                                                      Req.AllowAutoRedirect = True
+                                                      Dim Start As Long = GetTimeMs()
+                                                      Using Resp As Net.WebResponse = Req.GetResponse()
+                                                          Costs(Index) = GetTimeMs() - Start
+                                                      End Using
+                                                  Catch ex As Exception
+                                                      Logger.Info($"下载源测速失败（{If(String.IsNullOrEmpty(Prefixes(Index)), "直连", Prefixes(Index).TrimEnd("/"c))}）：{ex.Message}")
+                                                  End Try
+                                              End Sub)
+            Probe.IsBackground = True
+            Probes.Add(Probe)
+            Probe.Start()
+        Next
+        For Each Probe As Threading.Thread In Probes
+            Probe.Join()
+        Next
+        Dim Measured As New List(Of Tuple(Of Long, String))
+        For i As Integer = 0 To Prefixes.Length - 1
+            Measured.Add(Tuple.Create(Costs(i), Prefixes(i)))
+        Next
+        UpdatePrefixOrderCache = Measured.OrderBy(Function(t) t.Item1).Select(Function(t) t.Item2).ToArray()
+        Logger.Info("下载源测速结果：" & String.Join(" → ", Measured.OrderBy(Function(t) t.Item1).
+            Select(Function(t) If(String.IsNullOrEmpty(t.Item2), "直连", t.Item2.TrimEnd("/"c)) & "(" & If(t.Item1 = Long.MaxValue, "不可用", t.Item1 & "ms") & ")")))
+        Return UpdatePrefixOrderCache
+    End Function
+
+    '更新进度窗口
+    Private UpdateProgressWindow As Window = Nothing
+    Private UpdateProgressBar As ProgressBar = Nothing
+    Private UpdateProgressLabel As TextBlock = Nothing
+
+    Private Sub UpdateProgressShow(Title As String)
+        RunInUi(Sub()
+                    Try
+                        If UpdateProgressWindow IsNot Nothing Then Return
+                        Dim W As New Window With {
+                            .Title = Title, .Width = 420, .Height = 150, .ResizeMode = ResizeMode.NoResize,
+                            .WindowStyle = WindowStyle.ToolWindow, .ShowInTaskbar = False,
+                            .WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                            .Background = Brushes.White}
+                        If FrmMain IsNot Nothing AndAlso FrmMain.IsLoaded Then W.Owner = FrmMain
+                        Dim Pan As New StackPanel With {.Margin = New Thickness(25, 24, 25, 20)}
+                        UpdateProgressLabel = New TextBlock With {.Text = "正在准备下载…", .FontSize = 13, .TextTrimming = TextTrimming.CharacterEllipsis}
+                        UpdateProgressBar = New ProgressBar With {.Height = 9, .Margin = New Thickness(0, 14, 0, 0), .Minimum = 0, .Maximum = 100}
+                        Pan.Children.Add(UpdateProgressLabel)
+                        Pan.Children.Add(UpdateProgressBar)
+                        W.Content = Pan
+                        UpdateProgressWindow = W
+                        W.Show()
+                    Catch ex As Exception
+                        Logger.Warn(ex, "显示更新进度窗口失败")
+                    End Try
+                End Sub)
+    End Sub
+
+    Private Sub UpdateProgressSet(Percent As Integer, Text As String)
+        RunInUi(Sub()
+                    Try
+                        If UpdateProgressBar Is Nothing Then Return
+                        If Percent >= 0 Then UpdateProgressBar.Value = Math.Min(100, Percent)
+                        If Text IsNot Nothing Then UpdateProgressLabel.Text = Text
+                    Catch
+                    End Try
+                End Sub)
+    End Sub
+
+    Private Sub UpdateProgressClose()
+        RunInUi(Sub()
+                    Try
+                        UpdateProgressWindow?.Close()
+                    Catch
+                    End Try
+                    UpdateProgressWindow = Nothing
+                    UpdateProgressBar = Nothing
+                    UpdateProgressLabel = Nothing
+                End Sub)
+    End Sub
+
+    '下载文件，按测速结果从最快源开始尝试
+    Private Function UpdateDownloadFile(Url As String, Target As String) As Boolean
+        For Each Prefix As String In UpdatePrefixOrder()
+            Dim TempFile As String = Target & ".part"
+            Dim SourceText As String = If(String.IsNullOrEmpty(Prefix), "直连", Prefix.TrimEnd("/"c))
+            Try
+                Dim Req As Net.HttpWebRequest = CType(Net.WebRequest.Create(Prefix & Url), Net.HttpWebRequest)
+                Req.UserAgent = "PCLPro-Updater"
+                Req.Timeout = 20000
+                Req.ReadWriteTimeout = 60000
+                Req.AllowAutoRedirect = True
+                Using Resp As Net.HttpWebResponse = CType(Req.GetResponse(), Net.HttpWebResponse)
+                    Dim Total As Long = Resp.ContentLength
+                    Dim Done As Long = 0
+                    UpdateProgressSet(0, $"正在从 {SourceText} 下载…")
+                    Using Input As IO.Stream = Resp.GetResponseStream(), Output As New IO.FileStream(TempFile, IO.FileMode.Create, IO.FileAccess.Write)
+                        Dim Buffer(8191) As Byte
+                        Do
+                            Dim Count As Integer = Input.Read(Buffer, 0, Buffer.Length)
+                            If Count <= 0 Then Exit Do
+                            Output.Write(Buffer, 0, Count)
+                            Done += Count
+                            If Total > 0 Then
+                                UpdateProgressSet(CInt(Math.Floor(Done * 100.0 / Total)),
+                                                  $"正在从 {SourceText} 下载… {Math.Round(Done / 1048576.0, 1)} / {Math.Round(Total / 1048576.0, 1)} MB")
+                            Else
+                                UpdateProgressSet(-1, $"正在从 {SourceText} 下载… 已下载 {Math.Round(Done / 1048576.0, 1)} MB")
+                            End If
+                        Loop
+                    End Using
+                End Using
+                If IO.File.Exists(Target) Then IO.File.Delete(Target)
+                IO.File.Move(TempFile, Target)
+                Logger.Info($"更新包下载成功：{If(String.IsNullOrEmpty(Prefix), "直连", "镜像 " & Prefix)}")
+                Return True
+            Catch ex As Exception
+                Logger.Info($"更新包下载失败（{If(String.IsNullOrEmpty(Prefix), "直连", "镜像 " & Prefix)}）：{ex.Message}")
+                Try
+                    If IO.File.Exists(TempFile) Then IO.File.Delete(TempFile)
+                Catch
+                End Try
+            End Try
+        Next
+        Return False
+    End Function
+
+    '陶瓦联机模块在 Release 中的资产名
+    Private Const TerracottaAssetName As String = "Terracotta_Module.zip"
+
+    ''' <summary>
+    ''' 从最新 Release 下载并解压陶瓦联机模块到指定目录。
+    ''' </summary>
+    ''' <param name="TargetFolder">解压目标文件夹，例如 启动器目录\Terracotta\。</param>
+    Public Function DownloadTerracottaModule(TargetFolder As String) As Boolean
+        '1. 从最新 Release 的资产列表里找模块压缩包
+        Dim Raw As String = Nothing
+        For Each Prefix As String In UpdatePrefixOrder()
+            Try
+                Raw = UpdateHttpGet(Prefix & UpdateApi)
+                If Raw IsNot Nothing Then Exit For
+            Catch ex As Exception
+                Logger.Info($"获取联机模块信息失败（{If(String.IsNullOrEmpty(Prefix), "直连", "镜像 " & Prefix)}）：{ex.Message}")
+            End Try
+        Next
+        If String.IsNullOrEmpty(Raw) Then Return False
+        Dim Url As String = Nothing
+        Try
+            Dim Assets = TryCast(Newtonsoft.Json.Linq.JObject.Parse(Raw)("assets"), Newtonsoft.Json.Linq.JArray)
+            If Assets IsNot Nothing Then
+                Dim Found = Assets.Cast(Of Newtonsoft.Json.Linq.JObject)().
+                    FirstOrDefault(Function(a) If(a("name")?.ToString, "") = TerracottaAssetName)
+                If Found IsNot Nothing Then Url = Found("browser_download_url")?.ToString
+            End If
+        Catch ex As Exception
+            Logger.Warn(ex, "解析联机模块资产失败")
+        End Try
+        If String.IsNullOrEmpty(Url) Then
+            Logger.Warn($"最新 Release 中未找到联机模块资产（{TerracottaAssetName}）")
+            Return False
+        End If
+        '2. 下载压缩包
+        Dim ZipPath As String = PathTemp & "Terracotta_Module.zip"
+        If Not UpdateDownloadFile(Url, ZipPath) Then Return False
+        '3. 解压到目标目录
+        Try
+            DirectoryUtils.Create(TargetFolder)
+            Using Zip As IO.Compression.ZipArchive = IO.Compression.ZipFile.OpenRead(ZipPath)
+                For Each Entry As IO.Compression.ZipArchiveEntry In Zip.Entries
+                    If String.IsNullOrEmpty(Entry.Name) Then Continue For '跳过目录项
+                    Dim Dest As String = IO.Path.Combine(TargetFolder, Entry.Name)
+                    Entry.ExtractToFile(Dest, True)
+                Next
+            End Using
+            Logger.Info($"陶瓦联机模块已下载并解压：{TargetFolder}")
+            Return True
+        Catch ex As Exception
+            Logger.Warn(ex, "解压陶瓦联机模块失败")
+            Return False
+        Finally
+            Try
+                If IO.File.Exists(ZipPath) Then IO.File.Delete(ZipPath)
+            Catch
+            End Try
+        End Try
+    End Function
+
+    '比较版本号（按数字段），NewVer > OldVer 返回 1
+    Private Function CompareVersion(NewVer As String, OldVer As String) As Integer
+        Dim A As Integer() = ParseVersionParts(NewVer)
+        Dim B As Integer() = ParseVersionParts(OldVer)
+        For i As Integer = 0 To 2
+            If A(i) <> B(i) Then Return If(A(i) > B(i), 1, -1)
+        Next
+        Return 0
+    End Function
+    Private Function ParseVersionParts(Ver As String) As Integer()
+        Dim Parts As New List(Of Integer)
+        For Each Seg As String In Ver.Split("."c)
+            Dim Num As Integer = 0
+            Integer.TryParse(New String(Seg.Where(Function(c) Char.IsDigit(c)).ToArray()), Num)
+            Parts.Add(Num)
+        Next
+        Do While Parts.Count < 3
+            Parts.Add(0)
+        Loop
+        Return New Integer() {Parts(0), Parts(1), Parts(2)}
     End Function
 
 #End Region

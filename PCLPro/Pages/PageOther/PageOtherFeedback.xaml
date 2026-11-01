@@ -15,32 +15,29 @@
                     </StackPanel>
                     <TextBlock Margin="0,10,0,0" LineHeight="24" TextWrapping="Wrap"
                                Text="PCL Pro 修改版的作者，长期维护本版本的联机、界面与各类实用功能。&#xa;本版本所有的改动、适配与功能设计均由作者本人完成，如果你的使用体验有什么不顺，直接找作者本人吐槽最有效。" />
+                    <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                        <TextBlock Text="swan3146" FontSize="16" FontWeight="Bold" VerticalAlignment="Center" />
+                        <TextBlock Text="（GitHub）" FontSize="12.5" VerticalAlignment="Center" Margin="6,2,0,0"
+                                   Foreground="{StaticResource ColorBrushGray3}" />
+                    </StackPanel>
+                    <TextBlock Margin="0,10,0,0" LineHeight="24" TextWrapping="Wrap"
+                               Text="本版本的构建与发布维护者，负责启动器的编译、打包以及部分功能适配。" />
                 </StackPanel>
             </local:MyCard>
             <local:MyCard Margin="0,0,0,15" Title="建议与反馈">
-                <Grid Margin="25,42,25,22">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-                    <Border Grid.Column="0" Width="196" Height="196" Background="White" CornerRadius="4"
-                            BorderBrush="{DynamicResource ColorBrushGray2}" BorderThickness="1">
-                        <Image Source="/Plain Craft Launcher Pro;component/Images/Heads/PaopaoQQ.jpg" Margin="4" Stretch="Uniform" />
-                    </Border>
-                    <StackPanel Grid.Column="1" Margin="22,4,0,0">
-                        <TextBlock Text="扫码加作者好友" FontSize="14.5" FontWeight="Bold" />
-                        <TextBlock Margin="0,10,0,0" LineHeight="24" TextWrapping="Wrap"
-                                   Text="功能建议、Bug 反馈、兼容性问题，或者只是想催更，都可以直接用 QQ 联系作者。&#xa;反馈时如果能附上日志（设置 → 启动器 → 反馈 / 日志文件夹）和复现步骤，问题会好处理得多。" />
-                        <TextBlock Margin="0,12,0,0" FontSize="13">
-                            <Run Text="QQ：" Foreground="{StaticResource ColorBrushGray3}" />
-                            <Run Text="3549074169" FontWeight="Bold" />
-                        </TextBlock>
-                        <StackPanel Orientation="Horizontal" Height="34" HorizontalAlignment="Left" Margin="0,14,0,0">
-                            <local:MyButton Text="复制 QQ 号" Width="120" Padding="13,0" x:Name="BtnCopyQQ" />
-                            <local:MyButton Text="打开日志文件夹" Width="140" Padding="13,0" Margin="14,0,0,0" x:Name="BtnOpenLog" />
-                        </StackPanel>
+                <StackPanel Margin="25,42,25,22">
+                    <TextBlock Text="加入作者 QQ 群" FontSize="14.5" FontWeight="Bold" />
+                    <TextBlock Margin="0,10,0,0" LineHeight="24" TextWrapping="Wrap"
+                               Text="功能建议、Bug 反馈、兼容性问题，或者只是想催更，都可以加群直接联系作者。&#xa;反馈时如果能附上日志（设置 → 启动器 → 反馈 / 日志文件夹）和复现步骤，问题会好处理得多。" />
+                    <TextBlock Margin="0,12,0,0" FontSize="13">
+                        <Run Text="QQ 群：" Foreground="{StaticResource ColorBrushGray3}" />
+                        <Run Text="1125298021" FontWeight="Bold" />
+                    </TextBlock>
+                    <StackPanel Orientation="Horizontal" Height="34" HorizontalAlignment="Left" Margin="0,16,0,0">
+                        <local:MyButton Text="复制群号" Width="120" Padding="13,0" x:Name="BtnCopyQQ" />
+                        <local:MyButton Text="打开日志文件夹" Width="140" Padding="13,0" Margin="14,0,0,0" x:Name="BtnOpenLog" />
                     </StackPanel>
-                </Grid>
+                </StackPanel>
             </local:MyCard>
         </StackPanel>
     </local:MyScrollViewer>

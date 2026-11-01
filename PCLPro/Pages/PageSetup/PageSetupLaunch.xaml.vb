@@ -110,6 +110,26 @@ Public Class PageSetupLaunch
     Private Sub BtnSkinCache_Click(sender As Object, e As EventArgs) Handles BtnSkinCache.Click
         MySkin.RefreshCache(Nothing)
     End Sub
+    Private IsSyncingSaves As Boolean = False
+    Private Sub BtnSyncSavesNow_Click(sender As Object, e As EventArgs) Handles BtnSyncSavesNow.Click
+        If IsSyncingSaves Then Return
+        IsSyncingSaves = True
+        BtnSyncSavesNow.IsEnabled = False
+        RunInNewThread(
+            Sub()
+                Try
+                    RunInUiWait(Sub() ModOfficialSaveSync.CheckAndSync(True))
+                Catch ex As Exception
+                    Logger.Warn(ex, "手动同步存档失败")
+                Finally
+                    RunInUi(
+                    Sub()
+                        IsSyncingSaves = False
+                        BtnSyncSavesNow.IsEnabled = True
+                    End Sub)
+                End Try
+            End Sub, "存档同步")
+    End Sub
 
     Public Shared Sub UpdateSkinType()
         PageLaunchLeft.SkinLegacy.Start()

@@ -42,17 +42,17 @@ Public Class MyMsgSelect
     Private Sub Load(sender As Object, e As EventArgs) Handles MyBase.Loaded
         Try
 
-            '液态玻璃
-            GlassAttachDialog(PanBorder)
+            '毛玻璃弹窗
+            If Settings.Get(Of Integer)("UiUiStyle") = 1 Then GlassAttachDialog(PanBorder)
             'UI 初始化
             If Btn2.IsVisible AndAlso Not Btn1.ColorType = MyButton.ColorState.Red Then Btn1.ColorType = MyButton.ColorState.Highlight
             '动画
             Opacity = 0
-            AniStart(AaColor(FrmMain.PanMsg, Grid.BackgroundProperty, If(MyConverter.IsWarn, New MyColor(140, 80, 0, 0), New MyColor(90, 0, 0, 0)) - FrmMain.PanMsg.Background, 280), "PanMsg Background")
+            AniStart(AaColor(FrmMain.PanMsg, Grid.BackgroundProperty, If(MyConverter.IsWarn, New MyColor(140, 80, 0, 0), New MyColor(90, 0, 0, 0)) - FrmMain.PanMsg.Background, 200), "PanMsg Background")
             AniStart({
-                AaOpacity(Me, 1, 240, 90, New AniEaseOutFluent(AniEasePower.Weak)),
-                AaDouble(Sub(i) TransformPos.Y += i, -TransformPos.Y, 680, 90, New AniEaseOutSpring(AniEasePower.Strong)),
-                AaDouble(Sub(i) TransformRotate.Angle += i, -TransformRotate.Angle, 740, 90, New AniEaseOutBack(AniEasePower.Weak))
+                AaOpacity(Me, 1, 120, 60),
+                AaDouble(Sub(i) TransformPos.Y += i, -TransformPos.Y, 300, 60, New AniEaseOutBack(AniEasePower.Weak)),
+                AaDouble(Sub(i) TransformRotate.Angle += i, -TransformRotate.Angle, 300, 60, New AniEaseOutFluent(AniEasePower.Weak))
             }, "MyMsgBox " & Uuid)
             '记录日志
             Logger.Info($"选择弹窗：{LabTitle.Text}")
@@ -70,12 +70,12 @@ Public Class MyMsgSelect
             AaCode(
             Sub()
                 If Not WaitingMyMsgBox.Any() Then
-                    AniStart(AaColor(FrmMain.PanMsg, Grid.BackgroundProperty, New MyColor(0, 0, 0, 0) - FrmMain.PanMsg.Background, 280, Ease:=New AniEaseOutFluent(AniEasePower.Weak)))
+                    AniStart(AaColor(FrmMain.PanMsg, Grid.BackgroundProperty, New MyColor(0, 0, 0, 0) - FrmMain.PanMsg.Background, 200, Ease:=New AniEaseOutFluent(AniEasePower.Weak)))
                 End If
             End Sub, 30),
-            AaOpacity(Me, -Opacity, 110, 25),
-            AaDouble(Sub(i) TransformPos.Y += i, 24 - TransformPos.Y, 230, 0, New AniEaseInFluent(AniEasePower.Middle)),
-            AaDouble(Sub(i) TransformRotate.Angle += i, 6 - TransformRotate.Angle, 200, 0, New AniEaseInFluent(AniEasePower.Weak)),
+            AaOpacity(Me, -Opacity, 80, 20),
+            AaDouble(Sub(i) TransformPos.Y += i, 20 - TransformPos.Y, 150, 0, New AniEaseOutFluent),
+            AaDouble(Sub(i) TransformRotate.Angle += i, 6 - TransformRotate.Angle, 150, 0, New AniEaseInFluent(AniEasePower.Weak)),
             AaCode(Sub() CType(Parent, Grid).Children.Remove(Me), , True)
         }, "MyMsgBox " & Uuid)
     End Sub

@@ -8,7 +8,7 @@ PCL Pro 是基于 [PCL2（Plain Craft Launcher 2）](https://github.com/Meloong-
 
 - 内置陶瓦联机（Terracotta），开房即用，房间码形如 `U/XXXX-XXXX-XXXX-XXXX`，无需端口映射
 - 外置登录（Authlib-Injector）与微软登录流程修复
-- 精简冗余模块，界面统一（MyCard／圆角／阴影规范一致）
+- 精简冗余模块，界面与动效保持 PCL2 原版（不做额外玻璃/发光特效）
 - 材质下载回退、地图壁纸支持
 - 移除动态视频壁纸（避免随包分发素材的版权与体积问题），仅保留原生静态壁纸
 
@@ -31,7 +31,11 @@ msbuild PCLPro.sln -t:Restore -p:Configuration=Release
 msbuild PCLPro\PCLPro.vbproj -p:Configuration=Release
 ```
 
-输出位于 `PCLPro\bin\PCLPro.exe`。
+输出位于 `PCLPro\bin\Plain Craft Launcher Pro.exe`。
+
+## 分发
+
+与 PCL2 一致，只发布单个 exe：直接运行即为便携版，不使用独立的安装器或补丁机制（避免杀软误报）。
 
 ## 说明
 
