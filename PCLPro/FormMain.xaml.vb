@@ -444,14 +444,6 @@ Public Class FormMain
         ModGlass.GlassWatchWallpaper(Sub() RefreshUiStyle(True))
         RefreshUiStyle()
         ScheduleBackgroundBlurCache()
-        '---- 临时自测（验证完必须删除）：25 秒后自动切换一次界面样式 ----
-        Dim SwitchTmr As New Windows.Threading.DispatcherTimer With {.Interval = TimeSpan.FromSeconds(25)}
-        AddHandler SwitchTmr.Tick,
-            Sub(s2, e2)
-                SwitchTmr.Stop()
-                Settings.Set("UiUiStyle", If(Settings.Get(Of Integer)("UiUiStyle") = 1, 0, 1))
-            End Sub
-        SwitchTmr.Start()
     End Sub
     Public Sub New()
         ApplicationStartTick = GetTimeMs()

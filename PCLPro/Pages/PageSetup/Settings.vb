@@ -146,7 +146,7 @@ Public Class Settings
         New Setting("UiStartAnimation", True),
         New Setting("UiUiBlur", 18, OnChanged:=AddressOf FormMain.GlassStyleRefresh),
         New Setting("UiGlassCorner", 16, OnChanged:=AddressOf FormMain.GlassStyleRefresh),
-        New Setting("UiGlassCardOpacity", 100, OnChanged:=AddressOf FormMain.GlassStyleRefresh),
+        New Setting("UiGlassCardOpacity", 0, OnChanged:=AddressOf FormMain.GlassStyleRefresh),
         New Setting("UiWindowTopmost", False, OnChanged:=AddressOf FormMain.WindowTopmostRefresh),
         New Setting("UiWindowOpacity", 100, OnChanged:=AddressOf FormMain.WindowOpacityRefresh),
         New Setting("UiTitleBarHeight", 48, OnChanged:=AddressOf FormMain.TitleBarHeightRefresh),
