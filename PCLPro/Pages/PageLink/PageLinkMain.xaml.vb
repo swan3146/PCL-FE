@@ -192,14 +192,31 @@ Public Class PageLinkMain
         '短时间内重复点击去重
         If Math.Abs(GetTimeMs() - LastCreateTrigger) < 500 Then Return
         LastCreateTrigger = GetTimeMs()
-        '与 HMCL 一致：先确认游戏已经在运行，否则陶瓦扫不到局域网端口
+        '与 HMCL 一致：先确认游戏已经在运行
         If Not TcGameRunning() Then
             If MyMsgBox("还没有检测到正在运行的游戏。" & vbCrLf &
-                        "陶瓦联机需要在游戏里选择「对局域网开放」之后才能扫描到端口，" & vbCrLf &
-                        "建议先进入存档并开放局域网，再创建房间。" & vbCrLf & vbCrLf &
+                        "请先进入存档并在游戏里选择「对局域网开放」，聊天栏会显示本地游戏端口。" & vbCrLf &
+                        "记下端口后再创建房间，朋友才能连进来。" & vbCrLf & vbCrLf &
                         "是否仍然创建房间？", "创建联机房间", "仍然创建", "取消") = 2 Then Return
         End If
-        '基础信息（使用陶瓦联机的房间码体系，游戏端口由陶瓦自动扫描，不需要用户填写）
+        '精确端口：陶瓦本身不提供端口参数，改为用户填写后由启动器广播给陶瓦
+        Dim PortInput As String = MyMsgBoxInput("输入游戏端口",
+            "请填写游戏聊天栏「本地游戏已在端口 XXXXX 上开放」里的端口号。" & vbCrLf &
+            "启动器会把这个端口直接告诉陶瓦，不再依赖自动扫描。",
+            DefaultInput:=If(HostPort > 0, HostPort.ToString(), "25565"),
+            ValidateRules:=New Collection(Of Validate) From {New ValidateInteger(1, 65535)})
+        If PortInput Is Nothing Then Return
+        Dim NewPort As Integer
+        If Not Integer.TryParse(PortInput.Trim(), NewPort) OrElse NewPort <= 0 OrElse NewPort > 65535 Then Return
+        Dim PortAlive As Boolean = TcGamePortAlive(NewPort)
+        If Not PortAlive Then
+            If MyMsgBox($"端口 {NewPort} 现在没有在监听。" & vbCrLf &
+                        "请确认游戏里已经选择了「对局域网开放」，并且端口没有填错。" & vbCrLf & vbCrLf &
+                        "是否仍然用这个端口创建房间？", "端口未在监听", "仍然创建", "取消", IsWarn:=True) = 2 Then Return
+        End If
+        ManualPort = NewPort
+        Logger.Info($"手动指定游戏端口 {NewPort}（当前监听：{PortAlive}）")
+        '基础信息（房间码使用陶瓦体系，游戏端口由上面的输入决定）
         IsServerSide = True
         '记录创建房间时选中的公共节点
         Dim NodeItem = TryCast(ComboCreateNode.SelectedItem, MyComboBoxItem)
@@ -512,6 +529,7 @@ Public Class PageLinkMain
         If FrmLinkMain Is Nothing Then Return
         Dim Alive As Boolean = HostPort > 0 AndAlso TcGamePortAlive(HostPort)
         Dim Text As String = $"把房间码发给朋友，让大家加入房间吧！{vbCrLf}房间码：{GetInviteCode()}{vbCrLf}节点：{HostNodeText}"
+        If ManualPort > 0 Then Text &= vbCrLf & $"游戏端口：{ManualPort}（手动指定）"
         If HostPort > 0 AndAlso Not Alive Then
             Text &= vbCrLf & vbCrLf &
                     "注意：还没有检测到游戏端口。请现在进入游戏并选择「对局域网开放」，否则朋友会一直卡在「连接房主」。"
@@ -532,11 +550,15 @@ Public Class PageLinkMain
         '代际 +1：上一次建房留下的观察线程会在下一次循环时自动退出
         HostGuideToken += 1
         Dim MyToken As Integer = HostGuideToken
+        '立刻广播一次，陶瓦只需 5 秒内的广播，晚了会先猜一个端口
+        If ManualPort > 0 Then TcBroadcastPort(ManualPort)
         RunInNewThread(
         Sub()
             For i = 1 To 600 '每 3 秒一次，最多观察 30 分钟
                 Thread.Sleep(3000)
                 If MyToken <> HostGuideToken OrElse LinkState <> LinkStates.Finished Then Exit For
+                '每轮重申端口：陶瓦只接受 5 秒内的广播，需要持续喂给它
+                If ManualPort > 0 Then TcBroadcastPort(ManualPort)
                 '跟随陶瓦上报的端口（扫描到新端口时它会自己重建 EasyTier）
                 Dim Json As JObject = TcGetStateJson(1500)
                 Dim Port As Integer = 0
@@ -567,6 +589,35 @@ Public Class PageLinkMain
             Return False
         End Try
     End Function
+
+    ''' <summary>
+    ''' 把用户填写的游戏端口直接告诉陶瓦。陶瓦没有端口参数，只监听 UDP 4445 上的 MC 局域网广播，
+    ''' 所以这里伪造一条 [MOTD]…[/MOTD][AD]端口[/AD] 广播发到本机各网卡（陶瓦绑定在这些网卡的 4445）。
+    ''' </summary>
+    Private Shared Sub TcBroadcastPort(Port As Integer)
+        If Port <= 0 OrElse Port > 65535 Then Return
+        Try
+            Dim Payload As Byte() = System.Text.Encoding.UTF8.GetBytes($"[MOTD]PCL FE 精确端口[/MOTD][AD]{Port}[/AD]")
+            Using Udp As New UdpClient()
+                Udp.EnableBroadcast = True
+                For Each Ip As System.Net.IPAddress In System.Net.Dns.GetHostAddresses(System.Net.Dns.GetHostName())
+                    If Ip.AddressFamily <> AddressFamily.InterNetwork OrElse System.Net.IPAddress.IsLoopback(Ip) Then Continue For
+                    If Ip.ToString().StartsWithF("10.144.144.") Then Continue For '陶瓦自己的 EasyTier 网段会被排除
+                    Try
+                        Udp.Send(Payload, Payload.Length, New System.Net.IPEndPoint(Ip, 4445))
+                    Catch
+                    End Try
+                Next
+                Try
+                    Udp.Send(Payload, Payload.Length, New System.Net.IPEndPoint(System.Net.IPAddress.Parse("224.0.2.60"), 4445))
+                Catch
+                End Try
+            End Using
+        Catch ex As Exception
+            Logger.Warn(ex, $"向陶瓦广播游戏端口失败（{Port}）")
+        End Try
+    End Sub
+
 
     ''' <summary>最近一次由启动器启动的游戏是否还在运行（建房前的检查，与 HMCL 的 countManagedProcesses 对应）。</summary>
     Private Shared Function TcGameRunning() As Boolean
@@ -605,6 +656,8 @@ Public Class PageLinkMain
     Private ClientAddress As String = Nothing
     ''' <summary>房主房间使用的游戏端口，由陶瓦上报；未上报时为 0。</summary>
     Private HostPort As Integer = 0
+    ''' <summary>建房时用户手动指定的游戏端口，0 表示未指定。</summary>
+    Private ManualPort As Integer = 0
     ''' <summary>完成页展示的节点文本（提前取好，避免后台刷新时重复请求网络）。</summary>
     Private HostNodeText As String = ""
     ''' <summary>完成页「等待游戏开放」检测的停止标记。</summary>

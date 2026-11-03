@@ -144,7 +144,7 @@ Public Class Settings
         New Setting("UiWindowRadius", 6, OnChanged:=AddressOf FormMain.WindowRadiusRefresh),
         New Setting("UiAnimationSpeed", 1),
         New Setting("UiStartAnimation", True),
-        New Setting("UiUiBlur", 34, OnChanged:=AddressOf FormMain.GlassStyleRefresh),
+        New Setting("UiUiBlur", 18, OnChanged:=AddressOf FormMain.GlassStyleRefresh),
         New Setting("UiGlassCorner", 16, OnChanged:=AddressOf FormMain.GlassStyleRefresh),
         New Setting("UiGlassCardOpacity", 100, OnChanged:=AddressOf FormMain.GlassStyleRefresh),
         New Setting("UiWindowTopmost", False, OnChanged:=AddressOf FormMain.WindowTopmostRefresh),
@@ -156,7 +156,7 @@ Public Class Settings
         New Setting("UiFirewallGuideShown", False),
         New Setting("UiBackgroundColorful", True, OnChanged:=Sub() ThemeRefresh()), '不传入参数
         New Setting("UiBackgroundOpacity", 1000, OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
-        New Setting("UiBackgroundBlur", 32, OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
+        New Setting("UiBackgroundBlur", 0, OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
         New Setting("UiBackgroundSuit", 0, OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
         New Setting("UiBackgroundCurrent", ""),
         New Setting("UiCustomType", 0, OnChanged:=AddressOf PageSetupUI.OnMainPageTypeChanged),
