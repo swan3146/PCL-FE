@@ -2,10 +2,8 @@ Public Class PageSetupLink
 
     Private Sub PageSetupLink_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
 
-        
         PanBack.ScrollToHome()
 
-        
         Static IsLoaded As Boolean = False
         If IsLoaded Then Return
         IsLoaded = True
@@ -19,7 +17,6 @@ Public Class PageSetupLink
         SettingService.RefreshSettings(Me)
     End Sub
 
-    
     Public Sub Reset()
         Try
             SettingService.ResetSettings(Me)

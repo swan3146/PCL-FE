@@ -1,21 +1,21 @@
 Public Class PageSetupLeft
 
     Private IsLoad As Boolean = False
-    Private IsPageSwitched As Boolean = False 
+    Private IsPageSwitched As Boolean = False
     Private Sub PageSetupLeft_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
-        
+
         Dim IsHiddenPage As Boolean = False
         If ItemLaunch.Checked AndAlso Settings.Get(Of Boolean)("UiHiddenSetupLaunch") Then IsHiddenPage = True
         If ItemUI.Checked AndAlso Settings.Get(Of Boolean)("UiHiddenSetupUi") Then IsHiddenPage = True
         If ItemSystem.Checked AndAlso Settings.Get(Of Boolean)("UiHiddenSetupSystem") Then IsHiddenPage = True
         If ItemLink.Checked AndAlso Settings.Get(Of Boolean)("UiHiddenSetupLink") Then IsHiddenPage = True
         If PageSetupUI.HiddenForceShow Then IsHiddenPage = False
-        
+
         If IsLoad AndAlso Not IsHiddenPage Then Return
         IsLoad = True
-        
+
         PageSetupUI.HiddenRefresh()
-        
+
         If IsPageSwitched Then Return
         If Not Settings.Get(Of Boolean)("UiHiddenSetupLaunch") Then
             ItemLaunch.SetChecked(True, False, False)
@@ -35,13 +35,10 @@ Public Class PageSetupLeft
 
 #Region "页面切换"
 
-    
-    
-    
     Public PageID As FormMain.PageSubType
     Public Sub New()
         InitializeComponent()
-        
+
         If Not Settings.Get(Of Boolean)("UiHiddenSetupLaunch") Then
             PageID = FormMain.PageSubType.SetupLaunch
         ElseIf Not Settings.Get(Of Boolean)("UiHiddenSetupUi") Then
@@ -55,18 +52,11 @@ Public Class PageSetupLeft
         End If
     End Sub
 
-    
-    
-    
     Private Sub PageCheck(sender As MyListItem, e As EventArgs) Handles ItemLaunch.Check, ItemSystem.Check, ItemUI.Check, ItemLink.Check
-        
-        
+
         If sender.Tag IsNot Nothing Then PageChange(Val(sender.Tag))
     End Sub
 
-    
-    
-    
     Public Function PageGet(Optional ID As FormMain.PageSubType = -1)
         If ID = -1 Then ID = PageID
         Select Case ID
@@ -87,9 +77,6 @@ Public Class PageSetupLeft
         End Select
     End Function
 
-    
-    
-    
     Public Sub PageChange(ID As FormMain.PageSubType)
         If PageID = ID Then Return
         AniControlEnabled += 1
@@ -121,7 +108,7 @@ Public Class PageSetupLeft
         End Try
     End Sub
     Private Shared Sub PageChangeRun(Target As MyPageRight)
-        AniStop("FrmMain PageChangeRight") 
+        AniStop("FrmMain PageChangeRight")
         If Target.Parent IsNot Nothing Then Target.SetValue(ContentPresenter.ContentProperty, Nothing)
         FrmMain.PageRight = Target
         CType(FrmMain.PanMainRight.Child, MyPageRight).PageOnExit()
@@ -134,7 +121,7 @@ Public Class PageSetupLeft
             End Sub, 130),
             AaCode(
             Sub()
-                
+
                 FrmMain.PageRight.Opacity = 1
                 FrmMain.PageRight.PageOnEnter()
             End Sub, 30, True)

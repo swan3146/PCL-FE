@@ -1,9 +1,7 @@
 Public Class PageSetupSystem
 
-
     Private Sub PageSetupSystem_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
 
-        
         PanBack.ScrollToHome()
 
         If BuildType = BuildTypes.Release Then
@@ -13,7 +11,6 @@ Public Class PageSetupSystem
             ItemSystemUpdateDownload.Content = "在有新版本时自动下载（更新快照版前需要先输入土豆码）"
         End If
 
-        
         Static IsLoaded As Boolean = False
         If IsLoaded Then Return
         IsLoaded = True
@@ -38,7 +35,6 @@ Public Class PageSetupSystem
         Reload()
     End Sub
 
-    
     Private Sub SliderLoad()
         SliderDownloadThread.GetHintText = Function(v) v + 1
         SliderDownloadSpeed.GetHintText =
@@ -65,7 +61,6 @@ Public Class PageSetupSystem
         End If
     End Sub
 
-    
     Private Sub BtnSystemIdentify_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnSystemIdentify.Click
         PageOtherAbout.CopyIdentify()
     End Sub
@@ -73,12 +68,10 @@ Public Class PageSetupSystem
         InputPotatoCode(False)
     End Sub
 
-    
     Private Sub CheckDebugMode_Change() Handles CheckDebugMode.Change
         If AniControlEnabled = 0 Then Hint("部分调试信息将在刷新或启动器重启后切换显示！",, False)
     End Sub
 
-    
     Private Sub ComboSystemActivity_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboSystemActivity.SelectionChanged
         If AniControlEnabled <> 0 Then Return
         If ComboSystemActivity.SelectedIndex <> 2 Then Return
@@ -102,16 +95,13 @@ Public Class PageSetupSystem
     Private Sub BtnSystemUpdate_Click(sender As Object, e As EventArgs) Handles BtnSystemUpdate.Click
         UpdateCheckByButton()
     End Sub
-    
-    
-    
-    
+
     Public Shared Function IsLauncherNewest() As Boolean?
         Try
-            
+
             Dim ServerContent As String = If(FileUtils.TryReadAsString(PathTemp & "Cache\Notice.cfg"), "")
             If ServerContent.Split("|").Count < 3 Then Return Nothing
-            
+
             Return ServerContent.Split("|")(If(BuildType = BuildTypes.Release, 2, 1)) <= VersionCode
         Catch ex As Exception
             Logger.Error(ex, "确认启动器更新失败")

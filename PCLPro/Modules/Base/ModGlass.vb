@@ -1,31 +1,11 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 Imports System.Threading.Tasks
 Imports System.Windows.Media.Effects
 Imports System.Windows.Media.Imaging
 
-
 Public Interface IGlassPanel
-    
+
     Sub GlassRefreshBackdrop()
 End Interface
-
 
 Friend Class GlassDialogPanel
     Implements IGlassPanel
@@ -43,7 +23,6 @@ End Class
 
 Public Module ModGlass
 
-    
     Friend ReadOnly GlassHostTag As New Object
 
 #Region "参数"
@@ -51,44 +30,28 @@ Public Module ModGlass
     Private Const CornerDefault As Double = 16
     Private Const UiBlurDefault As Double = 34
 
-    
-    
-    
-    
     Private Const MaxSurfacePixels As Double = 4200000
 
-    
-    
-    
-    
-    
-    
     Friend Function SnapshotScale(Element As FrameworkElement, Width As Double, Height As Double) As Double
-        
-        
-        
-        
+
         Dim Scale As Double = 0
         Try
             Scale = VisualTreeHelper.GetDpi(Element).DpiScaleX
         Catch
         End Try
-        
-        
+
         Try
             Scale = Math.Max(Scale, DPI / 96.0)
         Catch
         End Try
         If Double.IsNaN(Scale) OrElse Scale < 1.0 Then Scale = 1.0
         Scale = Math.Min(Scale, 3.0)
-        
-        
+
         Dim Pixels As Double = Math.Max(1, Width) * Math.Max(1, Height) * Scale * Scale
         If Pixels > MaxSurfacePixels Then Scale *= Math.Sqrt(MaxSurfacePixels / Pixels)
         Return Math.Max(1.0, Scale)
     End Function
 
-    
     Public ReadOnly Property GlassCornerRadius As Double
         Get
             Dim Value As Integer = CornerDefault
@@ -100,7 +63,6 @@ Public Module ModGlass
         End Get
     End Property
 
-    
     Public ReadOnly Property GlassUiBlur As Double
         Get
             Dim Value As Integer = UiBlurDefault
@@ -112,7 +74,6 @@ Public Module ModGlass
         End Get
     End Property
 
-    
     Public ReadOnly Property GlassCardOpacity As Integer
         Get
             Try
@@ -129,15 +90,11 @@ Public Module ModGlass
 
     Private _Frost As Brush = Nothing
     Private _FrostKey As Integer = -1
-    
-    
-    
-    
+
     Public Function GlassCardTint() As Brush
-        
-        
+
         Dim Factor As Integer = Math.Max(0, Math.Min(100, GlassCardOpacity))
-        If Factor <= 0 Then Return Nothing 
+        If Factor <= 0 Then Return Nothing
         If _Frost IsNot Nothing AndAlso _FrostKey = Factor Then Return _Frost
         Dim Brush As New LinearGradientBrush With {.StartPoint = New Point(0, 0), .EndPoint = New Point(0.35, 1)}
         Brush.GradientStops.Add(New GradientStop(Color.FromArgb(CByte(22 * Factor \ 100), 255, 255, 255), 0))
@@ -151,7 +108,7 @@ Public Module ModGlass
     End Function
 
     Private _DialogTint As Brush = Nothing
-    
+
     Public Function GlassDialogTint() As Brush
         If _DialogTint IsNot Nothing Then Return _DialogTint
         Dim Brush As New LinearGradientBrush(Color.FromArgb(150, 255, 255, 255), Color.FromArgb(120, 246, 250, 255), New Point(0, 0), New Point(0.3, 1))
@@ -161,7 +118,7 @@ Public Module ModGlass
     End Function
 
     Private _SolidTint As Brush = Nothing
-    
+
     Public Function GlassSolidTint() As Brush
         If _SolidTint IsNot Nothing Then Return _SolidTint
         Dim Brush As New SolidColorBrush(Color.FromArgb(242, 255, 255, 255))
@@ -171,33 +128,31 @@ Public Module ModGlass
     End Function
 
     Private _VideoTint As Brush = Nothing
-    Private _VideoTintBlur As Double = -1
-    
-    
-    
-    
-    
-    
+    Private _VideoTintKey As String = ""
+
     Public Function GlassVideoTint() As Brush
-        Dim B As Double = Math.Max(0, Math.Min(60, GlassUiBlur))
-        If _VideoTintBlur = B AndAlso (_VideoTint IsNot Nothing OrElse B <= 0.5) Then Return _VideoTint
-        _VideoTintBlur = B
-        If B <= 0.5 Then
-            
+
+        Dim Blur As Double = Math.Max(0, Math.Min(60, GlassUiBlur))
+        Dim Factor As Integer = Math.Max(0, Math.Min(100, GlassCardOpacity))
+        Dim Key As String = $"{CInt(Blur)}|{Factor}"
+        If _VideoTintKey = Key AndAlso (_VideoTint IsNot Nothing OrElse Blur <= 0.5 OrElse Factor <= 0) Then Return _VideoTint
+        _VideoTintKey = Key
+        If Blur <= 0.5 OrElse Factor <= 0 Then
             _VideoTint = Nothing
             Return Nothing
         End If
-        Dim K As Double = (B - 1) / 59.0
+
+        Dim K As Double = (Blur - 1) / 59.0
+        Dim Scale As Double = Factor / 100.0
         Dim Brush As New LinearGradientBrush With {.StartPoint = New Point(0, 0), .EndPoint = New Point(0.4, 1)}
-        Brush.GradientStops.Add(New GradientStop(Color.FromArgb(CByte(Math.Round(5 + 21 * K)), 255, 255, 255), 0))
-        Brush.GradientStops.Add(New GradientStop(Color.FromArgb(CByte(Math.Round(7 + 27 * K)), 250, 251, 253), 0.5))
-        Brush.GradientStops.Add(New GradientStop(Color.FromArgb(CByte(Math.Round(10 + 34 * K)), 244, 247, 252), 1))
+        Brush.GradientStops.Add(New GradientStop(Color.FromArgb(CByte(Math.Round((5 + 21 * K) * Scale)), 255, 255, 255), 0))
+        Brush.GradientStops.Add(New GradientStop(Color.FromArgb(CByte(Math.Round((7 + 27 * K) * Scale)), 250, 251, 253), 0.5))
+        Brush.GradientStops.Add(New GradientStop(Color.FromArgb(CByte(Math.Round((10 + 34 * K) * Scale)), 244, 247, 252), 1))
         Brush.Freeze()
         _VideoTint = Brush
         Return Brush
     End Function
 
-    
     Public ReadOnly Property IsVideoBackdrop As Boolean
         Get
             Try
@@ -209,7 +164,7 @@ Public Module ModGlass
     End Property
 
     Private _Edge As Brush = Nothing
-    
+
     Public Function GlassEdgeBrush() As Brush
         If _Edge IsNot Nothing Then Return _Edge
         Dim Brush As New SolidColorBrush(Color.FromArgb(76, 255, 255, 255))
@@ -219,7 +174,7 @@ Public Module ModGlass
     End Function
 
     Private _CardEdge As Brush = Nothing
-    
+
     Public Function GlassCardEdgeBrush() As Brush
         If _CardEdge IsNot Nothing Then Return _CardEdge
         Dim Brush As New SolidColorBrush(Color.FromArgb(52, 255, 255, 255))
@@ -232,13 +187,6 @@ Public Module ModGlass
 
 #Region "离屏模糊"
 
-    
-    
-    
-    
-    
-    
-    
     Private Function SnapshotVisual(Element As FrameworkElement, Width As Double, Height As Double, Scale As Double, PixelWidth As Integer, PixelHeight As Integer) As RenderTargetBitmap
         Dim Shot As New RenderTargetBitmap(Math.Max(1, PixelWidth), Math.Max(1, PixelHeight), 96 * Scale, 96 * Scale, PixelFormats.Pbgra32)
         Dim Wrap As New DrawingVisual()
@@ -255,13 +203,6 @@ Public Module ModGlass
         Return Shot
     End Function
 
-    
-    
-    
-    
-    
-    
-    
     Private Function Blur(Source As BitmapSource, Radius As Double, PixelWidth As Integer, PixelHeight As Integer) As BitmapSource
         If Radius <= 0.35 Then Return Source
         Dim W As Integer = Math.Max(1, PixelWidth)
@@ -272,7 +213,7 @@ Public Module ModGlass
             Dim Flat As BitmapSource = Source
             If Flat.Format <> PixelFormats.Pbgra32 Then Flat = New FormatConvertedBitmap(Source, PixelFormats.Pbgra32, Nothing, 0)
             Flat.CopyPixels(Raw, Stride, 0)
-            
+
             Dim BoxRadius As Integer = Math.Max(1, CInt(Math.Round(Radius * 0.5)))
             Dim Plane(W * H - 1) As Byte
             Dim Temp(W * H - 1) As Byte
@@ -305,13 +246,11 @@ Public Module ModGlass
         End Try
     End Function
 
-    
     Private Sub BlurPlane(Plane() As Byte, Temp() As Byte, W As Integer, H As Integer, R As Integer)
         Dim Count As Integer = R * 2 + 1
         Dim LastW As Integer = W - 1
         Dim LastH As Integer = H - 1
-        
-        
+
         Parallel.For(0, H,
             Sub(Y As Integer)
                 Dim Base As Integer = Y * W
@@ -337,7 +276,6 @@ Public Module ModGlass
             End Sub)
     End Sub
 
-    
     Private Function BlurByEffect(Source As BitmapSource, Radius As Double, W As Integer, H As Integer) As BitmapSource
         Dim Draw As New DrawingVisual()
         Draw.Effect = New BlurEffect With {.Radius = Radius, .KernelType = KernelType.Gaussian, .RenderingBias = RenderingBias.Performance}
@@ -354,16 +292,11 @@ Public Module ModGlass
 
 #Region "壁纸快照（卡片 / 侧栏）"
 
-    
-    
-    
-    
     Public GlassReady As Boolean = False
 
     Private _Wall As BitmapSource = Nothing
     Private _WallKey As String = ""
 
-    
     Public Sub GlassInvalidate()
         _Wall = Nothing
         _WallKey = ""
@@ -373,10 +306,7 @@ Public Module ModGlass
     End Sub
 
     Private _Revision As Integer = 0
-    
-    
-    
-    
+
     Public ReadOnly Property SurfaceRevision As Integer
         Get
             Return _Revision
@@ -389,19 +319,16 @@ Public Module ModGlass
         Dim RawEffect As Effects.Effect = Nothing
         Dim Cleaned As Boolean = False
         Try
-            If Not GlassReady Then Return Nothing 
+            If Not GlassReady Then Return Nothing
             If FrmMain Is Nothing OrElse FrmMain.ImgBack Is Nothing Then Return Nothing
             Img = FrmMain.ImgBack
             If Img.Visibility <> Visibility.Visible OrElse Img.ActualWidth < 32 OrElse Img.ActualHeight < 32 Then Return Nothing
-            
+
             If Img.Opacity <= 0.01 Then Return Nothing
-            
-            
+
             Dim Radius As Double = GlassUiBlur
             If Radius <= 0.5 Then Return Nothing
-            
-            
-            
+
             Dim SourceHash As Integer = 0
             Try
                 Dim WallBrush = TryCast(Img.Background, ImageBrush)
@@ -410,9 +337,7 @@ Public Module ModGlass
             End Try
             Dim Key As String = $"{CInt(Img.ActualWidth) \ 64}x{CInt(Img.ActualHeight) \ 64}|{CInt(Radius)}|{CInt(Img.Opacity * 100)}|{SourceHash}|{If(Img.Effect Is Nothing, 0, 1)}|{CInt(Img.Margin.Left)}|{If(Img.Background Is Nothing, 0, Img.Background.GetHashCode())}"
             If _Wall IsNot Nothing AndAlso _WallKey = Key Then Return _Wall
-            
-            
-            
+
             RawOpacity = Img.Opacity
             RawEffect = Img.Effect
             If RawOpacity < 0.999 OrElse RawEffect IsNot Nothing Then
@@ -435,7 +360,7 @@ Public Module ModGlass
             Logger.Info($"[Glass] 壁纸快照失败：{ex.Message}")
             Return Nothing
         Finally
-            
+
             If Cleaned AndAlso Img IsNot Nothing Then
                 Try
                     Img.Opacity = RawOpacity
@@ -454,20 +379,14 @@ Public Module ModGlass
     Private _SnapshotGeneration As Integer = -1
     Private _Generation As Integer = 0
 
-    
     Public Sub GlassInvalidateSnapshot()
         _Generation += 1
     End Sub
 
-    
-    
-    
-    
-    
     Private Function SnapshotBitmap() As BitmapSource
         Try
-            If Not GlassReady Then Return Nothing 
-            If GlassUiBlur <= 0.5 Then Return Nothing 
+            If Not GlassReady Then Return Nothing
+            If GlassUiBlur <= 0.5 Then Return Nothing
             If FrmMain Is Nothing Then Return Nothing
             Dim PanForm = FrmMain.PanForm
             If PanForm Is Nothing Then Return Nothing
@@ -495,10 +414,6 @@ Public Module ModGlass
 
 #Region "对齐"
 
-    
-    
-    
-    
     Public Function CreateSurfaceBrush() As ImageBrush
         Return New ImageBrush With {
             .Stretch = Stretch.Fill,
@@ -509,19 +424,9 @@ Public Module ModGlass
             .TileMode = TileMode.None}
     End Function
 
-    
     Public GlassDiagLog As Boolean = False
     Private _DiagCount As Integer = 0
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
     Public Function AlignSurfaceBrush(Brush As ImageBrush, Element As FrameworkElement, Optional UseSnapshot As Boolean = False, Optional RequireLaidOut As Boolean = False) As Boolean
         Try
             If Brush Is Nothing OrElse Element Is Nothing OrElse FrmMain Is Nothing Then Return False
@@ -535,9 +440,7 @@ Public Module ModGlass
                 Bitmap = WallBitmapCached()
             End If
             If Bitmap Is Nothing OrElse Reference Is Nothing Then Return False
-            
-            
-            
+
             If RequireLaidOut AndAlso (Element.ActualWidth < 1 OrElse Element.ActualHeight < 1) Then Return False
             Dim Offset As Point
             Try
@@ -550,8 +453,7 @@ Public Module ModGlass
                 Brush.ImageSource = Bitmap
                 Brush.Viewbox = New Rect(0, 0, Bitmap.PixelWidth, Bitmap.PixelHeight)
             End If
-            
-            
+
             Dim BiasX As Double = 0, BiasY As Double = 0
             Dim Bd As Border = TryCast(Element, Border)
             If Bd IsNot Nothing Then
@@ -573,9 +475,6 @@ Public Module ModGlass
         End Try
     End Function
 
-    
-    
-    
     Public Function GlassSurfaceBrush(Element As FrameworkElement, Optional UseSnapshot As Boolean = False) As Brush
         Try
             Dim Brush As ImageBrush = CreateSurfaceBrush()
@@ -587,16 +486,11 @@ Public Module ModGlass
         End Try
     End Function
 
-    
-    
-    
-    
     Public Function WallBitmapCached() As BitmapSource
         If _Wall IsNot Nothing Then Return _Wall
         Return WallBitmap()
     End Function
 
-    
     Public Sub GlassRefreshFill(Element As Shapes.Shape)
         If Element Is Nothing Then Return
         Try
@@ -604,12 +498,10 @@ Public Module ModGlass
             If Brush IsNot Nothing Then
                 Element.Fill = Brush
             ElseIf IsVideoBackdrop Then
-                
+
                 Element.Fill = GlassVideoTint()
             ElseIf GlassReady Then
-                
-                
-                
+
                 Element.Fill = Nothing
             End If
         Catch
@@ -620,14 +512,10 @@ Public Module ModGlass
 
 #Region "壁纸变化监视（自愈）"
 
-    
-    
-    
     Private _WatchTimer As Windows.Threading.DispatcherTimer = Nothing
     Private _WatchSignature As String = ""
     Private _OnWallpaperChanged As Action = Nothing
 
-    
     Public Sub GlassWatchWallpaper(OnChanged As Action)
         _OnWallpaperChanged = OnChanged
         If _WatchTimer IsNot Nothing Then Return
@@ -667,19 +555,13 @@ Public Module ModGlass
 
     Private ReadOnly _Pending As New List(Of WeakReference)
     Private _FlushTimer As Windows.Threading.DispatcherTimer = Nothing
-    
+
     Private _SuspendCount As Integer = 0
 
-    
-    
-    
     Public Sub SuspendRefresh()
         _SuspendCount += 1
     End Sub
 
-    
-    
-    
     Public Sub ResumeRefresh()
         If _SuspendCount > 0 Then _SuspendCount -= 1
         If _SuspendCount > 0 Then Return
@@ -692,9 +574,6 @@ Public Module ModGlass
         _FlushTimer.Start()
     End Sub
 
-    
-    
-    
     Public Sub GlassQueueRefresh(Panel As IGlassPanel)
         If Panel Is Nothing Then Return
         SyncLock _Pending
@@ -703,7 +582,7 @@ Public Module ModGlass
             Next
             _Pending.Add(New WeakReference(Panel))
         End SyncLock
-        
+
         If _SuspendCount > 0 Then Return
         If _FlushTimer Is Nothing Then
             _FlushTimer = New Windows.Threading.DispatcherTimer With {.Interval = TimeSpan.FromMilliseconds(90)}
@@ -735,17 +614,11 @@ Public Module ModGlass
 
 #Region "弹窗"
 
-    
-    
-    
-    
-    
     Public Sub GlassAttachDialog(Border As Border)
         If Border Is Nothing OrElse FrmMain Is Nothing Then Return
         Dim Content As UIElement = Border.Child
         If Content Is Nothing Then Return
-        
-        
+
         If TypeOf Content Is Grid AndAlso CType(Content, Grid).Tag Is GlassHostTag Then Return
         Try
             Dim Corner As Double = Math.Max(0, GlassCornerRadius)
@@ -758,11 +631,9 @@ Public Module ModGlass
             Border.BorderThickness = New Thickness(1)
             Border.BorderBrush = GlassEdgeBrush()
 
-            
             Dim RawVisibility As Visibility = Border.Visibility
             Border.Visibility = Visibility.Collapsed
-            
-            
+
             Dim RawMask As Brush = Nothing
             Dim MaskTouched As Boolean = False
             Try
@@ -774,7 +645,7 @@ Public Module ModGlass
             Catch
             End Try
             Try
-                GlassInvalidateSnapshot() 
+                GlassInvalidateSnapshot()
                 FrmMain.PanForm.UpdateLayout()
                 Backdrop.Fill = GlassSurfaceBrush(Border, True)
             Finally
@@ -793,11 +664,53 @@ Public Module ModGlass
             Host.Children.Add(Content)
             Border.Child = Host
 
-            
             Dim Target As New GlassDialogPanel(Border, Backdrop)
             AddHandler Host.SizeChanged, Sub() GlassQueueRefresh(Target)
         Catch ex As Exception
             Logger.Info($"[Glass] 弹窗玻璃化失败：{ex.Message}")
+        End Try
+    End Sub
+
+    Public Sub GlassRefreshDialogs()
+        If FrmMain Is Nothing OrElse FrmMain.PanMsg Is Nothing Then Return
+        Dim WantGlass As Boolean = Settings.Get(Of Integer)("UiUiStyle") = 1
+        Dim Stack As New Stack(Of DependencyObject)
+        Stack.Push(FrmMain.PanMsg)
+        Do While Stack.Count > 0
+            Dim Current As DependencyObject = Stack.Pop()
+            Dim B As Border = TryCast(Current, Border)
+            If B IsNot Nothing AndAlso B.Name = "PanBorder" Then
+                If WantGlass Then
+                    GlassAttachDialog(B)
+                Else
+                    GlassDetachDialog(B)
+                End If
+            End If
+            For i As Integer = 0 To VisualTreeHelper.GetChildrenCount(Current) - 1
+                Stack.Push(VisualTreeHelper.GetChild(Current, i))
+            Next
+        Loop
+    End Sub
+
+    Public Sub GlassDetachDialog(Border As Border)
+        If Border Is Nothing Then Return
+        Dim Host As Grid = TryCast(Border.Child, Grid)
+        If Host Is Nothing OrElse Host.Tag IsNot GlassHostTag Then Return
+        Try
+            Dim Content As UIElement = Nothing
+            For Each Child As UIElement In Host.Children
+                If TypeOf Child Is Shapes.Rectangle Then Continue For
+                Content = Child
+            Next
+            If Content Is Nothing Then Return
+            Host.Children.Clear()
+            Border.Child = Content
+            Border.Background = New SolidColorBrush(Color.FromRgb(&HFB, &HFB, &HFB))
+            Border.CornerRadius = New CornerRadius(7)
+            Border.BorderThickness = New Thickness(0)
+            Border.BorderBrush = Nothing
+        Catch ex As Exception
+            Logger.Warn(ex, "[Glass] 还原弹窗外观失败")
         End Try
     End Sub
 

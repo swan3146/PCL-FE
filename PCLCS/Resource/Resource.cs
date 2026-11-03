@@ -1,11 +1,8 @@
 namespace PCLCS;
 public static class Resource {
 
-    
-    
-    
     public static ModLoaders FromCurseForgeModLoaderType(int modLoaderType) => modLoaderType switch {
-        
+
         1 => ModLoaders.Forge,
         3 => ModLoaders.LiteLoader,
         4 => ModLoaders.Fabric,
@@ -13,9 +10,6 @@ public static class Resource {
         _ => ModLoaders.None,
     };
 
-    
-    
-    
     public static int ToCurseForgeModLoaderType(ModLoaders loaders) {
         if (loaders == ModLoaders.None) return 0;
         if (!loaders.Flags().IsSingle()) throw new ArgumentException($"传入的枚举值 {loaders} 并非单个 Mod Loader", nameof(loaders));

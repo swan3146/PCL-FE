@@ -3,10 +3,8 @@ Imports System.Windows.Markup
 <ContentProperty("Inlines")>
 Public Class MyExtraTextButton
 
-    
-    Public Event Click(sender As Object, e As MouseButtonEventArgs) 
+    Public Event Click(sender As Object, e As MouseButtonEventArgs)
 
-    
     Public Uuid As Integer = GetUuid()
     Private _Logo As String = ""
     Public Property Logo As String
@@ -29,7 +27,7 @@ Public Class MyExtraTextButton
             If Path IsNot Nothing Then Path.RenderTransform = New ScaleTransform With {.ScaleX = LogoScale, .ScaleY = LogoScale}
         End Set
     End Property
-    
+
     Public ReadOnly Property Inlines As InlineCollection
         Get
             Return LabText.Inlines
@@ -48,7 +46,6 @@ Public Class MyExtraTextButton
         If sender IsNot Nothing Then CType(sender, MyExtraTextButton).LabText.Text = e.NewValue
     End Sub)))
 
-    
     Private _Show As Boolean = False
     Public Property Show As Boolean
         Get
@@ -60,7 +57,7 @@ Public Class MyExtraTextButton
             RunInUi(
             Sub()
                 If value Then
-                    
+
                     Opacity = 0
                     AniStart({
                         AaOpacity(Me, 1 - Opacity, 80, 50),
@@ -68,18 +65,17 @@ Public Class MyExtraTextButton
                         AaScaleTransform(Me, 0.85, 160, 50, New AniEaseOutFluent(AniEasePower.Middle))
                     }, "MyExtraTextButton MainScale " & Uuid)
                 Else
-                    
+
                     AniStart({
                         AaOpacity(Me, -Opacity, 50, 50),
                         AaScaleTransform(Me, -CType(RenderTransform, ScaleTransform).ScaleX, 100,, New AniEaseInFluent(AniEasePower.Weak))
                     }, "MyExtraTextButton MainScale " & Uuid)
                 End If
-                IsHitTestVisible = value 
+                IsHitTestVisible = value
             End Sub)
         End Set
     End Property
 
-    
     Private Sub Button_LeftMouseUp(sender As Object, e As MouseButtonEventArgs) Handles PanClick.MouseLeftButtonUp
         If Not IsLeftMouseHeld Then Return
         Logger.Info($"按下附加图标按钮：{Text}")
@@ -89,7 +85,6 @@ Public Class MyExtraTextButton
         Button_LeftMouseUp()
     End Sub
 
-    
     Private IsLeftMouseHeld As Boolean = False
     Private Sub Button_LeftMouseDown(sender As Object, e As MouseButtonEventArgs) Handles PanClick.MouseLeftButtonDown
         If Not IsLeftMouseHeld Then
@@ -106,7 +101,7 @@ Public Class MyExtraTextButton
             AaScaleTransform(PanScale, 1 - CType(PanScale.RenderTransform, ScaleTransform).ScaleX, 300,, New AniEaseOutBack)
         }, "MyExtraTextButton Scale " & Uuid)
         IsLeftMouseHeld = False
-        RefreshColor() 
+        RefreshColor()
     End Sub
     Private Sub Button_RightMouseUp() Handles PanClick.MouseRightButtonUp
         If Not IsLeftMouseHeld Then
@@ -114,32 +109,30 @@ Public Class MyExtraTextButton
                 AaScaleTransform(PanScale, 1 - CType(PanScale.RenderTransform, ScaleTransform).ScaleX, 300,, New AniEaseOutBack)
             }, "MyExtraTextButton Scale " & Uuid)
         End If
-        RefreshColor() 
+        RefreshColor()
     End Sub
     Private Sub Button_MouseLeave() Handles PanClick.MouseLeave
         IsLeftMouseHeld = False
         AniStart({
             AaScaleTransform(PanScale, 1 - CType(PanScale.RenderTransform, ScaleTransform).ScaleX, 500,, New AniEaseOutFluent)
         }, "MyExtraTextButton Scale " & Uuid)
-        RefreshColor() 
+        RefreshColor()
     End Sub
 
-    
-    
     Private Const AnimationColorIn As Integer = 120
     Private Const AnimationColorOut As Integer = 150
     Public Sub RefreshColor() Handles PanClick.MouseEnter, PanClick.MouseLeave, Me.Loaded, Me.IsEnabledChanged
         Try
-            If IsLoaded AndAlso AniControlEnabled = 0 Then 
+            If IsLoaded AndAlso AniControlEnabled = 0 Then
 
                 If Not IsEnabled Then
-                    
+
                     AniStart(AaColor(PanColor, BackgroundProperty, "ColorBrushGray4", AnimationColorIn), "MyExtraTextButton Color " & Uuid)
                 ElseIf IsMouseOver Then
-                    
+
                     AniStart(AaColor(PanColor, BackgroundProperty, "ColorBrush4", AnimationColorIn), "MyExtraTextButton Color " & Uuid)
                 Else
-                    
+
                     AniStart(AaColor(PanColor, BackgroundProperty, "ColorBrush3", AnimationColorOut), "MyExtraTextButton Color " & Uuid)
                 End If
 

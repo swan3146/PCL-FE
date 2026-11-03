@@ -1,30 +1,23 @@
-
-
-
 Public Class PageDownloadModify
     Inherits PageDownloadInstall
 
     Private InitLoader As LoaderTask(Of McInstance, Object)
     Private ForgeVersionLoader As LoaderTask(Of String, List(Of DlForgeVersionEntry))
-    Private InitialTarget As McComponents 
-    
-    
-    
+    Private InitialTarget As McComponents
+
     Private IsVanillaVersionReliable As Boolean
     Private OriginalName As String
     Private CustomLogo As String
-    
-    
-    
+
     Private ReadOnly PendingComponents As New Dictionary(Of MyLoading, String)
     Private IsRestoringComponents As Boolean
 
-    Public Overrides Sub LoaderInit() 
+    Public Overrides Sub LoaderInit()
         ControlInit()
         InitLoader = New LoaderTask(Of McInstance, Object)("初始化版本修改", AddressOf LoadInstance)
         PageLoaderInit(LoadMinecraft, PanLoad, PanAllBack, Nothing, InitLoader, AddressOf LoadInstanceFinished, Function() PageInstanceLeft.Instance)
     End Sub
-    Public Overrides Sub Init() 
+    Public Overrides Sub Init()
         PanBack.ScrollToHome()
         Static IsLoad As Boolean = False
         If IsLoad Then PageLoaderRestart()
@@ -34,12 +27,8 @@ Public Class PageDownloadModify
         InitLoader.Cancel()
     End Sub
 
-    
-    
-    
     Private Sub LoadInstance(Task As LoaderTask(Of McInstance, Object))
 
-        
         RunInUiWait(
         Sub()
             AniStop("FrmDownloadInstall SelectPageSwitch")
@@ -52,7 +41,6 @@ Public Class PageDownloadModify
         End Sub)
         Task.Input.Config.DiscardCache()
 
-        
         Dim Manifest = Configs.McInstallManifest.Get(Task.Input.Config)
         If Manifest IsNot Nothing AndAlso Manifest.SchemaVersion > Versions.McInstallManifestVersion Then
             Logger.Warn($"安装清单由更新版本的 PCL 创建（清单版本：{Manifest.SchemaVersion}，当前版本：{Versions.McInstallManifestVersion}）")
@@ -69,12 +57,12 @@ Public Class PageDownloadModify
         Dim Components As McComponents
         Dim OptiFineVersion As String = Nothing
         If Manifest IsNot Nothing Then
-            
+
             Components = Manifest.Components
             If Components Is Nothing Then Throw New Exception("安装清单缺少组件信息，无法还原已安装组件。")
             IsVanillaVersionReliable = True
         Else
-            
+
             Dim VersionInfo = New McInstance(Task.Input.PathVersion).Version
             If VersionInfo.VanillaName = "Unknown" Then Throw New Exception("无法确定 Minecraft 版本，无法修改")
             Dim UnknownLoaders = VersionInfo.ModLoaderVersions.
@@ -87,7 +75,7 @@ Public Class PageDownloadModify
         End If
         Dim MinecraftVersion = Components.MinecraftVersion
         If String.IsNullOrWhiteSpace(MinecraftVersion) Then Throw New Exception("无法确定当前 Minecraft 版本，请检查版本文件")
-        
+
         Dim LoaderList As New Dictionary(Of String, LoaderBase) From {
             {"Minecraft", DlClientListLoader}, {"OptiFine", DlOptiFineListLoader}, {"LiteLoader", DlLiteLoaderListLoader},
             {"NeoForge", DlNeoForgeListLoader}, {"Fabric", DlFabricListLoader}, {"Fabric API", DlFabricApiLoader}, {"OptiFabric", DlOptiFabricLoader}}
@@ -104,7 +92,7 @@ Public Class PageDownloadModify
             For Each Pair In LoaderList
                 Dim Loader = Pair.Value
                 If Loader.State = LoadState.Failed Then
-                    If Loader Is ForgeLoader AndAlso Loader.Error.Message = "无" Then Continue For 
+                    If Loader Is ForgeLoader AndAlso Loader.Error.Message = "无" Then Continue For
                     Throw New Exception($"获取 {Pair.Key} 版本列表失败，请稍后再试，或使用 VPN 改善网络环境", Loader.Error)
                 ElseIf Loader.State = LoadState.Canceled Then
                     Throw New Exception($"获取 {Pair.Key} 版本列表被中断，请稍后再试，或使用 VPN 改善网络环境")
@@ -116,17 +104,17 @@ Public Class PageDownloadModify
         Loop
         If Task.IsCanceled Then Return
         Task.Progress = 0.7
-        
+
         MinecraftVersions = CType(DlClientListLoader.Output.Value("versions").DeepClone(), JArray)
         VanillaData = MinecraftVersions.OfType(Of JObject).FirstOrDefault(
             Function(v) v("id").ToString.Replace("∞", "infinite") = MinecraftVersion.Replace("∞", "infinite"))
         If VanillaData Is Nothing Then Throw New Exception($"Minecraft 列表中没有已安装的 {MinecraftVersion}")
         VanillaData("id") = MinecraftVersion
-        
+
         If Manifest IsNot Nothing Then
             SelectedOptiFine = Components.OptiFineEntry?.ToObject(Of DlOptiFineListEntry)()
             If SelectedOptiFine IsNot Nothing AndAlso Not DlOptiFineListLoader.Output.Value.Any(Function(v) v.FileName = SelectedOptiFine.FileName) Then
-                
+
                 If DlOptiFineListBmclapiLoader.State <> LoadState.Finished Then DlOptiFineListBmclapiLoader.WaitForExit()
                 DlOptiFineListLoader.Output = DlOptiFineListBmclapiLoader.Output
             End If
@@ -136,20 +124,20 @@ Public Class PageDownloadModify
                     v.InstanceName.AfterLast("-OptiFine_").Replace("HD_U_", "") = OptiFineVersion.Replace("HD_U_", ""))
             If SelectedOptiFine Is Nothing Then Throw New Exception($"OptiFine 列表中没有已安装的 {OptiFineVersion}")
         End If
-        
+
         If Components.ModLoaderVersions.ContainsKey(ModLoaders.Forge) Then
             SelectedForge = ForgeLoader?.Output?.FirstOrDefault(
                 Function(v) v.Inherit = MinecraftVersion AndAlso v.VersionName = Components.ModLoaderVersions(ModLoaders.Forge) AndAlso
                             v.Category <> "universal" AndAlso v.Category <> "client" AndAlso (SelectedOptiFine Is Nothing OrElse IsOptiFineSuitForForge(SelectedOptiFine, v)))
             If SelectedForge Is Nothing Then Throw New Exception($"Forge 列表中没有已安装的 {Components.ModLoaderVersions(ModLoaders.Forge)}")
         End If
-        
+
         If Components.ModLoaderVersions.ContainsKey(ModLoaders.NeoForge) Then
             SelectedNeoForge = DlNeoForgeListLoader.Output.Value.FirstOrDefault(
                 Function(v) v.Inherit = MinecraftVersion AndAlso v.VersionName = Components.ModLoaderVersions(ModLoaders.NeoForge))
             If SelectedNeoForge Is Nothing Then Throw New Exception($"NeoForge 列表中没有已安装的 {Components.ModLoaderVersions(ModLoaders.NeoForge)}")
         End If
-        
+
         If Components.ModLoaderVersions.ContainsKey(ModLoaders.Fabric) Then
             Dim FabricEntry = DlFabricListLoader.Output.Value("loader").OfType(Of JObject).FirstOrDefault(
                 Function(v) v("version").ToString = Components.ModLoaderVersions(ModLoaders.Fabric),
@@ -160,20 +148,20 @@ Public Class PageDownloadModify
             End If
             SelectedFabric = FabricEntry("version").ToString
         End If
-        
+
         If Components.ModLoaderVersions.ContainsKey(ModLoaders.LiteLoader) Then
             SelectedLiteLoader = DlLiteLoaderListLoader.Output.Value.FirstOrDefault(
                 Function(v) v.Inherit = MinecraftVersion AndAlso v.JsonToken("version").ToString = Components.ModLoaderVersions(ModLoaders.LiteLoader))
             If SelectedLiteLoader Is Nothing Then Throw New Exception($"LiteLoader 列表中没有已安装的 {Components.ModLoaderVersions(ModLoaders.LiteLoader)}")
         End If
-        
+
         If Components.FabricApiVersion IsNot Nothing Then
             SelectedFabricApi = DlFabricApiLoader.Output.FirstOrDefault(
                 Function(v) (v.Version = Components.FabricApiVersion OrElse v.Id = Components.FabricApiVersion OrElse
                              v.Display = Components.FabricApiVersion) AndAlso IsFabricApiCompatible(v, MinecraftVersion))
             If SelectedFabricApi Is Nothing Then Throw New Exception($"Fabric API 列表中没有已安装的 {Components.FabricApiVersion}")
         End If
-        
+
         If Components.OptiFabricVersion IsNot Nothing Then
             SelectedOptiFabric = DlOptiFabricLoader.Output.FirstOrDefault(
                 Function(v) (v.Version = Components.OptiFabricVersion OrElse v.Id = Components.OptiFabricVersion OrElse
@@ -181,18 +169,16 @@ Public Class PageDownloadModify
             If SelectedOptiFabric Is Nothing Then Throw New Exception($"OptiFabric 列表中没有已安装的 {Components.OptiFabricVersion}")
         End If
 
-        
         Dim ManagedFiles As New List(Of McInstallManifest.ManagedFile)
         If Manifest IsNot Nothing Then ManagedFiles.AddRange(Manifest.ManagedFiles)
 
 #Region "从 mods 文件夹中获取以 Mod 形式安装的组件信息"
 
-        
         Dim Mods As New Lazy(Of List(Of (File As FileInfo, Sha1 As String)))(
             Function()
                 Dim ModsFolder = Task.Input.PathIndie & "mods\"
                 Dim Files = DirectoryUtils.EnumerateFiles(ModsFolder, searchPattern:="*.jar").ToList()
-                If SelectedLiteLoader IsNot Nothing Then 
+                If SelectedLiteLoader IsNot Nothing Then
                     Files.AddRange(DirectoryUtils.EnumerateFiles(Path.Combine(ModsFolder, MinecraftVersion), searchPattern:="*.jar"))
                 End If
                 Dim Entries As New List(Of (File As FileInfo, Sha1 As String))
@@ -204,7 +190,7 @@ Public Class PageDownloadModify
                 Next
                 Return Entries
             End Function)
-        
+
         If SelectedFabric IsNot Nothing AndAlso SelectedFabricApi Is Nothing Then
             Dim FabricApiList = DlFabricApiLoader.Output.Where(Function(v) IsFabricApiCompatible(v, MinecraftVersion)).ToList()
             Dim Matches As New List(Of (File As FileInfo, Sha1 As String, Version As ResourceVersion))
@@ -220,10 +206,10 @@ Public Class PageDownloadModify
             End If
         End If
         If Task.IsCanceled Then Return
-        
+
         If SelectedFabric IsNot Nothing AndAlso SelectedOptiFabric Is Nothing Then
             Dim OptiFabricList = DlOptiFabricLoader.Output.Where(Function(v) IsOptiFabricCompatible(v, MinecraftVersion)).ToList()
-            Dim HasMd5 = OptiFabricList.Any(Function(v) If(v.Hash, "").Length = 32) 
+            Dim HasMd5 = OptiFabricList.Any(Function(v) If(v.Hash, "").Length = 32)
             Dim Matches As New List(Of (File As FileInfo, Sha1 As String, Version As ResourceVersion))
             For Each Entry In Mods.Value
                 Dim Match = OptiFabricList.FirstOrDefault(Function(v) v.Hash = Entry.Sha1)
@@ -241,15 +227,15 @@ Public Class PageDownloadModify
             End If
         End If
         If Task.IsCanceled Then Return
-        
+
         Dim OptiFineFiles As New List(Of (File As FileInfo, Sha1 As String, OriginalName As String))
-        If SelectedOptiFine Is Nothing AndAlso (SelectedForge IsNot Nothing OrElse SelectedLiteLoader IsNot Nothing OrElse SelectedFabric IsNot Nothing) Then 
-            Static OptiFineHashes As JObject = FileUtils.ReadAsJson("Minecraft\OptiFineHashes.json", type:=GetType(Resource)) 
+        If SelectedOptiFine Is Nothing AndAlso (SelectedForge IsNot Nothing OrElse SelectedLiteLoader IsNot Nothing OrElse SelectedFabric IsNot Nothing) Then
+            Static OptiFineHashes As JObject = FileUtils.ReadAsJson("Minecraft\OptiFineHashes.json", type:=GetType(Resource))
             OptiFineFiles = Mods.Value.
-                    Select(Function(Entry) (Entry.File, Entry.Sha1, OriginalName:=OptiFineHashes(Entry.Sha1)?.ToString())). 
+                    Select(Function(Entry) (Entry.File, Entry.Sha1, OriginalName:=OptiFineHashes(Entry.Sha1)?.ToString())).
                     Where(Function(Entry) Entry.OriginalName IsNot Nothing).ToList()
             Dim Matches As New List(Of (File As FileInfo, Sha1 As String, Version As DlOptiFineListEntry))
-            For Each Entry In OptiFineFiles 
+            For Each Entry In OptiFineFiles
                 Dim Match = DlOptiFineListLoader.Output.Value.FirstOrDefault(
                         Function(v) v.Inherit = MinecraftVersion AndAlso v.FileName = Entry.OriginalName AndAlso (SelectedForge Is Nothing OrElse IsOptiFineSuitForForge(v, SelectedForge)))
                 If Match Is Nothing Then
@@ -269,7 +255,6 @@ Public Class PageDownloadModify
 
 #End Region
 
-        
         If IsVanillaVersionReliable Then
             Components = New McComponents(MinecraftVersion, Components.ModLoaderVersions,
                     If(SelectedOptiFine Is Nothing, Nothing, JObject.FromObject(SelectedOptiFine)),
@@ -293,11 +278,8 @@ Public Class PageDownloadModify
         Return Matches(Choice.Value)
     End Function
 
-    
-    
-    
     Private Sub LoadInstanceFinished(Task As LoaderTask(Of McInstance, Object))
-        
+
         OriginalName = Task.Input.Name
         CustomLogo = Nothing
         If ReadIni(Task.Input.PathVersion & "PCL\Setup.ini", "LogoCustom", False) Then
@@ -311,7 +293,7 @@ Public Class PageDownloadModify
         IsSelectNameEdited = Not String.Equals(OriginalName, GetSelectName(), StringComparison.Ordinal)
         TextSelectName.ValidateRules = New ObjectModel.Collection(Of Validate) From {
             New ValidateFolderName(McFolderSelected & "versions", IgnoreList:=New List(Of String) From {OriginalName})}
-        
+
         CardMinecraft.Visibility = If(RestrictMcDownload, Visibility.Collapsed, Visibility.Visible)
         BtnBack.Visibility = Visibility.Collapsed
         ImgLogo.Margin = New Thickness(15, 15, 0, 0)
@@ -325,7 +307,7 @@ Public Class PageDownloadModify
         If ForgeVersionLoader IsNot Nothing Then LoadForge.State = ForgeVersionLoader
         PrepareSelectPage()
         ReloadComponentLists()
-        
+
         PanMinecraft.Visibility = Visibility.Collapsed
         PanMinecraft.Opacity = 0
         PanMinecraft.RenderTransform = New TranslateTransform(-50, 0)
@@ -334,7 +316,7 @@ Public Class PageDownloadModify
         PanBack.IsHitTestVisible = True
         PanAllBack.IsHitTestVisible = True
         InitialTarget = GetSelectedComponents()
-        
+
         BtnMinecraftRestore.Tag = VanillaData
         BtnOptiFineRestore.Tag = SelectedOptiFine
         BtnForgeRestore.Tag = SelectedForge
@@ -361,7 +343,7 @@ Public Class PageDownloadModify
 
     Public Overrides Sub ShowMinecraftVersionList()
         If IsInSelectPage Then
-            
+
             Dim Components = GetSelectedComponents()
             For Each Component In {
                 (Loader:=LoadOptiFine, Version:=Components.OptiFineVersion),
@@ -371,7 +353,7 @@ Public Class PageDownloadModify
                 (Loader:=LoadNeoForge, Version:=SelectedNeoForge?.VersionName),
                 (Loader:=LoadFabric, Version:=SelectedFabric),
                 (Loader:=LoadLiteLoader, Version:=SelectedLiteLoader?.JsonToken?("version").ToString())}
-                
+
                 If Component.Version IsNot Nothing Then PendingComponents(Component.Loader) = Component.Version
             Next
         End If
@@ -384,13 +366,13 @@ Public Class PageDownloadModify
             IsRestoringComponents = True
             Try
                 Dim HasProcessed As Boolean = False
-                
+
                 For Each LoadingComponent In {LoadFabric, LoadForge, LoadNeoForge, LoadLiteLoader, LoadOptiFine, LoadFabricApi, LoadOptiFabric}
                     Dim Version As String = Nothing
                     If Not PendingComponents.TryGetValue(LoadingComponent, Version) Then Continue For
                     If Not LoadingComponent.State.IsLoader Then Continue For
                     Dim Loader = DirectCast(LoadingComponent.State, LoaderBase)
-                    
+
                     If LoadingComponent Is LoadOptiFine Then
                         If {LoadFabric, LoadForge, LoadNeoForge, LoadLiteLoader}.Any(Function(Component) PendingComponents.ContainsKey(Component)) Then Continue For
                     ElseIf LoadingComponent Is LoadFabricApi Then
@@ -409,10 +391,10 @@ Public Class PageDownloadModify
                         If PendingComponents.ContainsKey(LoadFabric) OrElse PendingComponents.ContainsKey(LoadOptiFine) Then Continue For
                     End If
                     If Loader.State <> LoadState.Finished Then Continue For
-                    
+
                     PendingComponents.Remove(LoadingComponent)
                     HasProcessed = True
-                    
+
                     If LoadingComponent Is LoadFabric Then
                         If SelectedFabric Is Nothing AndAlso LoadFabricGetError() Is Nothing Then
                             Dim Versions = DlFabricListLoader.Output.Value("loader").OfType(Of JObject)
@@ -460,13 +442,13 @@ Public Class PageDownloadModify
                         If SelectedOptiFabric IsNot Nothing Then AutoSelectedOptiFabric = True
                     End If
                 Next
-                
+
                 If HasProcessed Then ReloadComponentLists()
             Finally
                 IsRestoringComponents = False
             End Try
         End If
-        
+
         MyBase.ReloadSelected()
         If InitialTarget IsNot Nothing Then RefreshComparisons()
     End Sub
@@ -474,25 +456,25 @@ Public Class PageDownloadModify
     Private Sub RefreshComparisons()
         Dim Current = GetSelectedComponents()
         ImgMinecraftNew.Source = VanillaIcon
-        
+
         Dim IsMinecraftUnchanged = InitialTarget.MinecraftVersion = Current.MinecraftVersion
         ShowComparison(PanMinecraftCompare, PanMinecraftInfo, InitialTarget.MinecraftVersion, Current.MinecraftVersion,
                        LabMinecraftVersion.Text, BtnMinecraftRestore, True)
-        
+
         Dim OriginalOptiFine = TryCast(BtnOptiFineRestore.Tag, DlOptiFineListEntry)
         ShowComparison(PanOptiFineCompare, PanOptiFineInfo, InitialTarget.OptiFineVersion, Current.OptiFineVersion,
                        LabOptiFine.Text, BtnOptiFineRestore, InitialTarget.OptiFineEntry Is Nothing OrElse
                            IsMinecraftUnchanged AndAlso CardOptiFine.MainSwap.Visibility = Visibility.Visible AndAlso OriginalOptiFine IsNot Nothing AndAlso
                            (SelectedForge Is Nothing OrElse IsOptiFineSuitForForge(OriginalOptiFine, SelectedForge)), BtnOptiFineClear)
-        
+
         ShowComparison(PanFabricApiCompare, PanFabricApiInfo, InitialTarget.FabricApiVersion, Current.FabricApiVersion,
                        LabFabricApi.Text, BtnFabricApiRestore, InitialTarget.FabricApiVersion Is Nothing OrElse
                              IsMinecraftUnchanged AndAlso SelectedFabric IsNot Nothing AndAlso CardFabricApi.MainSwap.Visibility = Visibility.Visible, BtnFabricApiClear)
-        
+
         ShowComparison(PanOptiFabricCompare, PanOptiFabricInfo, InitialTarget.OptiFabricVersion, Current.OptiFabricVersion,
                        LabOptiFabric.Text, BtnOptiFabricRestore, InitialTarget.OptiFabricVersion Is Nothing OrElse
                              IsMinecraftUnchanged AndAlso SelectedFabric IsNot Nothing AndAlso SelectedOptiFine IsNot Nothing AndAlso CardOptiFabric.MainSwap.Visibility = Visibility.Visible, BtnOptiFabricClear)
-        
+
         For Each Loader In {
             (Kind:=ModLoaders.Forge, Card:=CardForge, ComparePanel:=PanForgeCompare, CurrentPanel:=PanForgeInfo, Label:=LabForge, RestoreButton:=BtnForgeRestore, ClearButton:=BtnForgeClear),
             (Kind:=ModLoaders.NeoForge, Card:=CardNeoForge, ComparePanel:=PanNeoForgeCompare, CurrentPanel:=PanNeoForgeInfo, Label:=LabNeoForge, RestoreButton:=BtnNeoForgeRestore, ClearButton:=BtnNeoForgeClear),
@@ -520,7 +502,7 @@ Public Class PageDownloadModify
 
     Private Sub ShowComparison(ComparePanel As Grid, CurrentPanel As FrameworkElement, OldVersion As String, NewVersion As String, NewText As String,
                                RestoreButton As MyIconButton, CanRestore As Boolean, Optional ClearButton As FrameworkElement = Nothing)
-        
+
         Dim UnavailableReason As String = Nothing
         If NewVersion Is Nothing Then
             If RestoreButton Is BtnOptiFineRestore Then
@@ -540,13 +522,13 @@ Public Class PageDownloadModify
             End If
             NewText = If(UnavailableReason, "可以添加")
         End If
-        
+
         Dim IsPending = NewVersion Is Nothing AndAlso (NewText = "获取中……" OrElse NewText.StartsWithF("获取失败："))
         Dim IsChanged = OldVersion <> NewVersion AndAlso Not IsPending
         CanRestore = IsChanged AndAlso OldVersion IsNot Nothing AndAlso CanRestore
         ComparePanel.Visibility = If(IsChanged, Visibility.Visible, Visibility.Collapsed)
         CurrentPanel.Visibility = If(IsChanged, Visibility.Collapsed, Visibility.Visible)
-        
+
         RestoreButton.Visibility = If(CanRestore, Visibility.Visible, Visibility.Collapsed)
         If ClearButton IsNot Nothing Then ClearButton.ToolTip = If(OldVersion Is Nothing, "取消安装", "移除")
         Dim HasClearButton = ClearButton IsNot Nothing AndAlso ClearButton.Visibility = Visibility.Visible
@@ -554,7 +536,7 @@ Public Class PageDownloadModify
         ComparePanel.Margin = New Thickness(ComparePanel.Margin.Left, ComparePanel.Margin.Top,
                                             If(CanRestore AndAlso HasClearButton, 110, 80), ComparePanel.Margin.Bottom)
         If Not IsChanged Then Return
-        
+
         If OldVersion IsNot Nothing Then
             Dim Card = CType(ComparePanel.Parent, MyCard)
             If Card.Visibility = Visibility.Collapsed Then
@@ -579,14 +561,14 @@ Public Class PageDownloadModify
     Private Sub RestoreComponent(sender As Object, e As EventArgs) Handles BtnMinecraftRestore.Click, BtnOptiFineRestore.Click, BtnForgeRestore.Click,
                 BtnNeoForgeRestore.Click, BtnFabricRestore.Click, BtnFabricApiRestore.Click, BtnOptiFabricRestore.Click, BtnLiteLoaderRestore.Click
         Dim Button = DirectCast(sender, MyIconButton)
-        
+
         If Button Is BtnMinecraftRestore Then
             IsRestoringComponents = True
             Try
                 PendingComponents.Clear()
                 MinecraftSelected(McDownloadListItem(DirectCast(Button.Tag, JObject), Nothing, False).Init(), Nothing)
                 If ForgeVersionLoader IsNot Nothing Then LoadForge.State = ForgeVersionLoader
-                
+
                 SelectedOptiFine = TryCast(BtnOptiFineRestore.Tag, DlOptiFineListEntry)
                 SelectedForge = TryCast(BtnForgeRestore.Tag, DlForgeVersionEntry)
                 SelectedNeoForge = TryCast(BtnNeoForgeRestore.Tag, DlNeoForgeListEntry)
@@ -627,7 +609,7 @@ Public Class PageDownloadModify
             SelectedLiteLoader = TryCast(Button.Tag, DlLiteLoaderListEntry)
         End If
         DirectCast(Button.Parent, MyCard).IsSwapped = True
-        
+
         ReloadComponentLists()
     End Sub
 
@@ -673,7 +655,7 @@ Public Class PageDownloadModify
         Dim IsNameChanged = Not String.Equals(InstanceName, TargetInstance.Name, StringComparison.Ordinal)
         Request.NewInstanceName = If(IsNameChanged, InstanceName, Nothing)
         Request.InstanceFolder = TargetInstance.PathVersion
-        
+
         Dim Warnings As New List(Of String)
         If (SelectedForge IsNot Nothing OrElse SelectedNeoForge IsNot Nothing OrElse SelectedFabric IsNot Nothing) AndAlso
            Not PathUtils.IsSame(TargetInstance.PathIndie, TargetInstance.PathVersion) Then
@@ -704,9 +686,9 @@ Public Class PageDownloadModify
             If MyMsgBox("请注意：" & vbCrLf & "• " & Warnings.Join(vbCrLf & "• "), "修改确认", "开始修改", "取消", IsWarn:=True) <> 1 Then Return
         End If
         If Not Configs.HintModifyInstanceWarning.Get() Then Configs.HintModifyInstanceWarning.Set(True)
-        
+
         If IsVanillaVersionReliable AndAlso InitialTarget.IsEquivalentTo(Target) Then
-            
+
             Try
                 Dim OldPath = TargetInstance.PathVersion
                 Dim RenamedInstance = TargetInstance.Rename(InstanceName)
@@ -720,7 +702,7 @@ Public Class PageDownloadModify
                 Logger.Error(ex, "重命名版本失败", LogBehavior.Alert)
             End Try
         Else
-            
+
             If McModificationStart(Request, TargetInstance) Then FrmMain.PageBack()
         End If
     End Sub

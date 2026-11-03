@@ -1,20 +1,20 @@
 ﻿Public Class PageOtherLeft
 
     Private IsLoad As Boolean = False
-    Private IsPageSwitched As Boolean = False 
+    Private IsPageSwitched As Boolean = False
     Private Sub PageOtherLeft_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
-        
+
         Dim IsHiddenPage As Boolean = False
         If ItemAbout.Checked AndAlso Settings.Get(Of Boolean)("UiHiddenOtherAbout") Then IsHiddenPage = True
         If ItemTest.Checked AndAlso Settings.Get(Of Boolean)("UiHiddenOtherTest") Then IsHiddenPage = True
         If ItemFeedback.Checked AndAlso Settings.Get(Of Boolean)("UiHiddenOtherFeedback") Then IsHiddenPage = True
         If PageSetupUI.HiddenForceShow Then IsHiddenPage = False
-        
+
         If IsLoad AndAlso Not IsHiddenPage Then Return
         IsLoad = True
-        
+
         PageSetupUI.HiddenRefresh()
-        
+
         If IsPageSwitched Then Return
         If Not Settings.Get(Of Boolean)("UiHiddenOtherAbout") Then
             ItemAbout.SetChecked(True, False, False)
@@ -30,13 +30,10 @@
 
 #Region "页面切换"
 
-    
-    
-    
     Public PageID As FormMain.PageSubType
     Public Sub New()
         InitializeComponent()
-        
+
         If Not Settings.Get(Of Boolean)("UiHiddenOtherAbout") Then
             PageID = FormMain.PageSubType.OtherAbout
         ElseIf Not Settings.Get(Of Boolean)("UiHiddenOtherTest") Then
@@ -46,12 +43,8 @@
         End If
     End Sub
 
-    
-    
-    
     Private Sub PageCheck(sender As FrameworkElement, e As RouteEventArgs) Handles ItemAbout.Check, ItemTest.Check, ItemFeedback.Check
-        
-        
+
         If sender.Tag IsNot Nothing Then PageChange(Val(sender.Tag))
     End Sub
 
@@ -72,9 +65,6 @@
         End Select
     End Function
 
-    
-    
-    
     Public Sub PageChange(ID As FormMain.PageSubType)
         If PageID = ID Then Return
         AniControlEnabled += 1
@@ -89,7 +79,7 @@
         End Try
     End Sub
     Private Shared Sub PageChangeRun(Target As MyPageRight)
-        AniStop("FrmMain PageChangeRight") 
+        AniStop("FrmMain PageChangeRight")
         If Target.Parent IsNot Nothing Then Target.SetValue(ContentPresenter.ContentProperty, Nothing)
         FrmMain.PageRight = Target
         CType(FrmMain.PanMainRight.Child, MyPageRight).PageOnExit()
@@ -100,7 +90,7 @@
                                     FrmMain.PageRight.Opacity = 0
                                 End Sub, 130),
                          AaCode(Sub()
-                                    
+
                                     FrmMain.PageRight.Opacity = 1
                                     FrmMain.PageRight.PageOnEnter()
                                 End Sub, 30, True)
@@ -109,8 +99,7 @@
 
 #End Region
 
-    
-    Public Sub Refresh(sender As Object, e As EventArgs) 
+    Public Sub Refresh(sender As Object, e As EventArgs)
         Hint("正在刷新……", Log:=False)
     End Sub
 End Class

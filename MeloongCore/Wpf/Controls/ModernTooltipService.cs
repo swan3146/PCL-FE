@@ -1,6 +1,3 @@
-
-
-
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,17 +12,12 @@ using System.Windows.Threading;
 namespace MeloongCore.Wpf;
 public static class ModernTooltipService {
 
-    
     public static void SetUseModernTooltip(DependencyObject element, bool value) => element.SetValue(UseModernTooltipProperty, value);
     public static bool GetUseModernTooltip(DependencyObject element) => (bool) element.GetValue(UseModernTooltipProperty);
 
-    
     public static void SetFollowMouse(DependencyObject element, bool value) => element.SetValue(FollowMouseProperty, value);
     public static bool GetFollowMouse(DependencyObject element) => (bool) element.GetValue(FollowMouseProperty);
 
-    
-    
-    
     internal static void Init() {
         if (initialized) return;
         initialized = true;
@@ -39,14 +31,12 @@ public static class ModernTooltipService {
             if (sender is FrameworkElement owner && ReferenceEquals(owner, currentOwner)) Close(false);
         }), true);
 
-        
         EventManager.RegisterClassHandler(typeof(ComboBox), FrameworkElement.LoadedEvent, new RoutedEventHandler(static (sender, _) => HookComboBoxDropDown(sender as ComboBox)), true);
         EventManager.RegisterClassHandler(typeof(ComboBox), UIElement.PreviewMouseDownEvent, new MouseButtonEventHandler(static (sender, _) => HookComboBoxDropDown(sender as ComboBox)), true);
     }
 
     #region 字段与属性
 
-    
     public static readonly DependencyProperty UseModernTooltipProperty = DependencyProperty.RegisterAttached(
         "UseModernTooltip", typeof(bool), typeof(ModernTooltipService), new PropertyMetadata(true));
     public static readonly DependencyProperty FollowMouseProperty = DependencyProperty.RegisterAttached(
@@ -54,7 +44,6 @@ public static class ModernTooltipService {
     private static readonly DependencyProperty IsComboBoxDropDownHookedProperty = DependencyProperty.RegisterAttached(
         "IsComboBoxDropDownHooked", typeof(bool), typeof(ModernTooltipService), new PropertyMetadata(false));
 
-    
     private const double closedScale = 0.97;
     private const int shadowRadius = 18, contentMaxWidth = 676;
     private static readonly Thickness contentMargin = new(12, 11, 12, 8);
@@ -64,7 +53,6 @@ public static class ModernTooltipService {
     private static readonly DependencyPropertyDescriptor toolTipPropertyDescriptor =
         DependencyPropertyDescriptor.FromProperty(FrameworkElement.ToolTipProperty, typeof(FrameworkElement));
 
-    
     private static readonly DispatcherTimer openTimer = new();
     private static bool initialized;
     private static int animationToken;
@@ -154,7 +142,6 @@ public static class ModernTooltipService {
             return;
         }
 
-        
         if (owner.IsEnabled) return;
 
         if (!ReferenceEquals(currentOwner, owner)) HideImmediately();
@@ -177,7 +164,7 @@ public static class ModernTooltipService {
         }
 
         if (ShouldSuppressTooltip(owner)) {
-            
+
             if (currentOwner is not null &&
                 Mouse.Captured is DependencyObject captured &&
                 IsSameTreeBranch(captured, currentOwner) &&
@@ -192,7 +179,7 @@ public static class ModernTooltipService {
         if (owner is not null) {
             BeginShow(owner, Mouse.GetPosition(owner));
         } else if (currentOwner is not null) {
-            Close(true); 
+            Close(true);
         }
     }
 
@@ -210,7 +197,6 @@ public static class ModernTooltipService {
         var owner = FindOwnerInAncestors(Mouse.DirectlyOver as DependencyObject);
         if (owner is not null) return owner;
 
-        
         if (PresentationSource.FromVisual(reference)?.RootVisual is UIElement root) {
             var rootHit = root.InputHitTest(Mouse.GetPosition(root)) as DependencyObject;
             owner = FindOwnerInAncestors(rootHit);
@@ -305,7 +291,7 @@ public static class ModernTooltipService {
 
     private static void Show(FrameworkElement owner, Point point) {
         if (!ReferenceEquals(owner, currentOwner) || !CanShowModernTooltip(owner) || !TryGetToolTip(owner, out var content, out var sourceToolTip)) return;
-        
+
         if (owner.IsEnabled && !ReferenceEquals(owner, FindCurrentTooltipOwner(owner))) {
             Close(false);
             return;
@@ -346,7 +332,6 @@ public static class ModernTooltipService {
         popupCard!.DataContext = sourceToolTip?.DataContext ?? owner.DataContext;
         popupCard.FlowDirection = owner.FlowDirection;
 
-        
         popupCard.Child = null;
         RestoreBorrowedContent();
 
@@ -463,7 +448,6 @@ public static class ModernTooltipService {
 
     #endregion
 
-    
     private static void HookComboBoxDropDown(ComboBox? comboBox) {
         if (comboBox is null || (bool) comboBox.GetValue(IsComboBoxDropDownHookedProperty)) return;
         comboBox.SetValue(IsComboBoxDropDownHookedProperty, true);

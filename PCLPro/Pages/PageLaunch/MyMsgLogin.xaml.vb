@@ -1,8 +1,8 @@
 ﻿Public Class MyMsgLogin
     Private Data As JObject
-    Private UserCode As String 
-    Private DeviceCode As String 
-    Private Website As String 
+    Private UserCode As String
+    Private DeviceCode As String
+    Private Website As String
 
 #Region "弹窗"
 
@@ -28,9 +28,9 @@
 
     Private Sub Load(sender As Object, e As EventArgs) Handles MyBase.Loaded
         Try
-            
+
             If Settings.Get(Of Integer)("UiUiStyle") = 1 Then GlassAttachDialog(PanBorder)
-            
+
             Opacity = 0
             AniStart(AaColor(FrmMain.PanMsg, Grid.BackgroundProperty, If(MyConverter.IsWarn, New MyColor(140, 80, 0, 0), New MyColor(90, 0, 0, 0)) - FrmMain.PanMsg.Background, 280), "PanMsg Background")
             AniStart({
@@ -38,14 +38,14 @@
                 AaDouble(Sub(i) TransformPos.Y += i, -TransformPos.Y, 500, 90, New AniEaseOutBack(AniEasePower.Weak)),
                 AaDouble(Sub(i) TransformRotate.Angle += i, -TransformRotate.Angle, 740, 90, New AniEaseOutBack(AniEasePower.Weak))
             }, "MyMsgBox " & Uuid)
-            
+
             Logger.Info($"登录弹窗：{LabTitle.Text}{vbCrLf}{LabCaption.Text}")
         Catch ex As Exception
             Logger.Error(ex, "登录弹窗加载失败", LogBehavior.Toast)
         End Try
     End Sub
     Private Sub Close()
-        
+
         AniStart({
             AaCode(
             Sub()
@@ -60,14 +60,12 @@
         }, "MyMsgBox " & Uuid)
     End Sub
 
-    
     Public Sub Btn1_Click() Handles Btn1.Click
     End Sub
     Public Sub Btn3_Click() Handles Btn3.Click
         Finished(New OperationCanceledException)
     End Sub
 
-    
     Private Sub Btn4_Click() Handles Btn4.Click
         RunInNewThread(AddressOf OpenWebsiteIncognito, "MyMsgLogin Incognito")
     End Sub
@@ -99,7 +97,6 @@
         OpenWebsite(Url)
     End Sub
 
-    
     Private Sub Btn5_Click() Handles Btn5.Click
         RunInNewThread(AddressOf ManualLogin, "MyMsgLogin Manual")
     End Sub
@@ -116,12 +113,12 @@
             If InputToken.StartsWithF("refresh_token=") Then InputToken = InputToken.Substring("refresh_token=".Length)
             If InputToken.StartsWithF("d=") Then InputToken = InputToken.Substring(2)
             If InputToken.StartsWithF("M.C", True) Then
-                
+
                 Dim Result As String = RefreshTokenByMsa(InputToken)
                 Dim ResultJson As JObject = Result.DeserializeJson()
                 Finished({ResultJson("access_token").ToString, ResultJson("refresh_token").ToString})
             ElseIf InputToken.Length >= 40 Then
-                
+
                 Hint("已使用 AccessToken 登录，下次启动可能需要重新登录", HintType.Blue)
                 Finished({InputToken, ""})
             Else
@@ -133,7 +130,6 @@
         End Try
     End Sub
 
-    
     Private Function RefreshTokenByMsa(Token As String) As String
         Try
             Return NetRequestByClient(
@@ -173,16 +169,13 @@
         UserCode = Data("user_code")
         DeviceCode = Data("device_code")
         Website = Data("verification_uri")
-        
+
         LabTitle.Text = "登录 Minecraft"
         UpdateUiWithDeviceCode()
-        
+
         RunInNewThread(AddressOf WorkThread, "MyMsgLogin")
     End Sub
 
-    
-    
-    
     Private Sub UpdateUiWithDeviceCode()
         LabCaption.Text =
             $"登录网页将自动开启，请在网页中输入 {UserCode}（已自动复制）。" & vbCrLf & vbCrLf &
@@ -195,9 +188,6 @@
         CustomEventService.SetEventData(Btn2, UserCode)
     End Sub
 
-    
-    
-    
     Private Function RefreshDeviceCode() As Boolean
         Try
             Dim NewData As JObject = NetRequestByClientRetry(
@@ -229,13 +219,12 @@
         Integer.TryParse(Data("interval")?.ToString, IntervalSec)
         If IntervalSec < 1 OrElse IntervalSec > 60 Then IntervalSec = 5
         Thread.Sleep((IntervalSec - 1) * 1000)
-        
+
         Dim UnknownFailureCount As Integer = 0
         Dim DeviceCodeRefreshCount As Integer = 0
         Do While Not MyConverter.IsExited
             Try
-                
-                
+
                 Dim Result = NetRequestByClient(
                     "https://login.live.com/oauth20_token.srf", HttpMethod.Post,
                     Content:=
@@ -246,14 +235,14 @@
                     ContentType:="application/x-www-form-urlencoded",
                     Timeout:=20000 + UnknownFailureCount * 10000,
                     MakeLog:=False, RequireJson:=True)
-                
+
                 Dim ResultJson As JObject = Result.DeserializeJson()
                 McLaunchLog($"令牌过期时间：{ResultJson("expires_in")} 秒")
                 Hint("网页登录成功！", HintType.Green)
                 Finished({ResultJson("access_token").ToString, ResultJson("refresh_token").ToString})
                 Return
             Catch ex As Exception
-                
+
                 If TypeOf ex Is HttpRequestCodeException Then
                     Dim Response = CType(ex, HttpRequestCodeException).Response
                     If Response.Contains("authorization_declined") Then
@@ -268,13 +257,12 @@
                     ElseIf Response.Contains("service abuse") Then
                         Finished(New Exception("$非常抱歉，该账号已被微软封禁，无法登录。"))
                         Return
-                    ElseIf Response.Contains("AADSTS70000") Then 
+                    ElseIf Response.Contains("AADSTS70000") Then
                         Finished(New RestartException)
                         Return
                     ElseIf Response.Contains("already been used") OrElse
                            (Response.Contains("invalid_grant") AndAlso Response.Contains("device_code")) Then
-                        
-                        
+
                         If DeviceCodeRefreshCount < 1 AndAlso RefreshDeviceCode() Then
                             DeviceCodeRefreshCount += 1
                             UnknownFailureCount = 0

@@ -1,14 +1,12 @@
 ﻿Public Class PclLogger
     Inherits FileLogger
 
-    
     Public Overrides Function Format(Text As String, Level As LogLevel, FilePath As String, Ex As Exception) As String
         Text = MyBase.Format(Text, Level, FilePath, Ex)
         Text = FilterUserName(FilterAccessToken(Text, "*"c), "*"c)
         Return Text
     End Function
 
-    
     Public Overrides Sub HandleBehavior(RawMessage As String, FormattedMessage As String, Behavior As LogBehavior, Ex As Exception)
         If IsProgramEnding Then Return
         MyBase.HandleBehavior(RawMessage, FormattedMessage, Behavior, Ex)
@@ -18,7 +16,7 @@
         DetailText = FilterUserName(FilterAccessToken(DetailText, "*"c), "*"c)
         Select Case Behavior
             Case LogBehavior.None
-                
+
             Case LogBehavior.ToastIfDebug
                 If BuildType = BuildTypes.Debug OrElse ModeDebug Then Hint("[调试模式] " & BriefText, HintType.Blue, False)
             Case LogBehavior.Toast
@@ -34,7 +32,7 @@
             Case LogBehavior.AlertThenCrash
                 Static FirstTrigger As Boolean = True
                 If FirstTrigger Then
-                    
+
                     FirstTrigger = False
                     If PageSetupSystem.IsLauncherNewest Then
                         If MsgBox(DetailText & vbCrLf & vbCrLf & "是否反馈此问题？如果不反馈，这个问题可能永远无法得到解决！", MsgBoxStyle.Critical + MsgBoxStyle.YesNo, "错误") = MsgBoxResult.Yes Then Feedback(False, True)
@@ -42,12 +40,12 @@
                         MsgBox(DetailText & vbCrLf & vbCrLf & "将 PCL  FE 更新至最新版或许可以解决这个问题……", MsgBoxStyle.Critical, "错误")
                     End If
                 Else
-                    
+
                     Thread.Sleep(2000)
                 End If
                 FormMain.EndProgramForce(ProcessReturnValues.Exception)
         End Select
-        
+
         If Behavior >= LogBehavior.Toast Then Telemetry("错误日志", "Exception", DetailText)
     End Sub
 

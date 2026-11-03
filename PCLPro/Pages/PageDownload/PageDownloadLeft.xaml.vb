@@ -3,12 +3,8 @@ Public Class PageDownloadLeft
 
 #Region "页面切换"
 
-    
-    
-    
     Public PageID As FormMain.PageSubType = FormMain.PageSubType.DownloadInstall
 
-    
     Public Sub New()
         InitializeComponent()
         If Not RestrictMcDownload Then Return
@@ -18,12 +14,8 @@ Public Class PageDownloadLeft
         ItemMod.Checked = True
     End Sub
 
-    
-    
-    
     Private Sub PageCheck(sender As FrameworkElement, e As RouteEventArgs) Handles ItemInstall.Check, ItemMod.Check, ItemPack.Check, ItemResourcePack.Check, ItemShader.Check, ItemDataPack.Check, ItemMap.Check
-        
-        
+
         If sender.Tag IsNot Nothing Then PageChange(Val(sender.Tag))
     End Sub
 
@@ -56,9 +48,6 @@ Public Class PageDownloadLeft
         End Select
     End Function
 
-    
-    
-    
     Public Sub PageChange(ID As FormMain.PageSubType)
         If PageID = ID Then Return
         AniControlEnabled += 1
@@ -72,7 +61,7 @@ Public Class PageDownloadLeft
         End Try
     End Sub
     Private Shared Sub PageChangeRun(Target As MyPageRight)
-        AniStop("FrmMain PageChangeRight") 
+        AniStop("FrmMain PageChangeRight")
         If Target.Parent IsNot Nothing Then Target.SetValue(ContentPresenter.ContentProperty, Nothing)
         FrmMain.PageRight = Target
         CType(FrmMain.PanMainRight.Child, MyPageRight).PageOnExit()
@@ -85,7 +74,7 @@ Public Class PageDownloadLeft
             End Sub, 130),
             AaCode(
             Sub()
-                
+
                 FrmMain.PageRight.Opacity = 1
                 FrmMain.PageRight.PageOnEnter()
             End Sub, 30, True)
@@ -94,8 +83,7 @@ Public Class PageDownloadLeft
 
 #End Region
 
-    
-    Public Sub Refresh_Click(sender As Object, e As EventArgs) 
+    Public Sub Refresh_Click(sender As Object, e As EventArgs)
         Refresh(Val(sender.Tag))
     End Sub
     Public Sub Refresh() Implements IRefreshable.Refresh
@@ -161,7 +149,6 @@ Public Class PageDownloadLeft
         Hint("正在刷新……", Log:=False)
     End Sub
 
-    
     Private Sub ItemInstall_Click(sender As Object, e As MouseButtonEventArgs) Handles ItemInstall.Click
         If Not ItemInstall.Checked Then Return
         FrmDownloadInstall.ExitSelectPage()

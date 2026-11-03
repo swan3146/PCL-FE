@@ -1,47 +1,35 @@
 #If _MyType <> "Empty" Then
 
 Namespace My
-    
-    
-    
-    
+
     <Global.Microsoft.VisualBasic.HideModuleName()> _
     Module MyWpfExtension
         Private s_Computer As New ThreadSafeObjectProvider(Of Global.Microsoft.VisualBasic.Devices.Computer)
         Private s_User As New ThreadSafeObjectProvider(Of Global.Microsoft.VisualBasic.ApplicationServices.User)
         Private s_Windows As New ThreadSafeObjectProvider(Of MyWindows)
         Private s_Log As New ThreadSafeObjectProvider(Of Global.Microsoft.VisualBasic.Logging.Log)
-        
-        
-        
+
         <Global.System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")>
         Friend ReadOnly Property Application() As Application
             Get
                 Return CType(Global.System.Windows.Application.Current, Application)
             End Get
         End Property
-        
-        
-        
+
         <Global.System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")>
         Friend ReadOnly Property Computer() As Global.Microsoft.VisualBasic.Devices.Computer
             Get
                 Return s_Computer.GetInstance()
             End Get
         End Property
-        
-        
-        
-        
+
         <Global.System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")>
         Friend ReadOnly Property User() As Global.Microsoft.VisualBasic.ApplicationServices.User
             Get
                 Return s_User.GetInstance()
             End Get
         End Property
-        
-        
-        
+
         <Global.System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")>
         Friend ReadOnly Property Log() As Global.Microsoft.VisualBasic.Logging.Log
             Get
@@ -49,9 +37,6 @@ Namespace My
             End Get
         End Property
 
-        
-        
-        
         <Global.System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")>
         Friend ReadOnly Property Windows() As MyWindows
             <Global.System.Diagnostics.DebuggerHidden()>

@@ -3,16 +3,13 @@ using System.Diagnostics;
 namespace MeloongCore;
 public static class TaskUtils {
 
-    
-    
-    
     public static Task WhenAll(IEnumerable<Func<ProgressProvider?, Task>> tasks, ProgressProvider? progress = null) {
         var taskList = tasks.ToList();
         if (!taskList.Any()) {
             progress?.Skip();
             return Task.CompletedTask;
         }
-        
+
         var progressEach = 1d / taskList.Count;
         return Task.WhenAll(taskList.Select(async (task, _) => {
             var cp = progress?.SplitBy(progressEach)[0];
@@ -20,16 +17,14 @@ public static class TaskUtils {
             cp?.Finish();
         }));
     }
-    
-    
-    
+
     public static Task<TResult[]> WhenAll<TResult>(IEnumerable<Func<ProgressProvider?, Task<TResult>>> tasks, ProgressProvider? progress = null) {
         var taskList = tasks.ToList();
         if (!taskList.Any()) {
             progress?.Skip();
             return Task.FromResult(Array.Empty<TResult>());
         }
-        
+
         var progressEach = 1d / taskList.Count;
         return Task.WhenAll(taskList.Select(async (task, _) => {
             var cp = progress?.SplitBy(progressEach)[0];
@@ -38,14 +33,10 @@ public static class TaskUtils {
             return result;
         }));
     }
-    
-    
-    
+
     public static Task WhenAll(IEnumerable<Task> tasks, ProgressProvider? progress = null)
         => WhenAll(tasks.Select(task => new Func<ProgressProvider?, Task>(_ => task)), progress);
-    
-    
-    
+
     public static Task<TResult[]> WhenAll<TResult>(IEnumerable<Task<TResult>> tasks, ProgressProvider? progress = null)
         => WhenAll(tasks.Select(task => new Func<ProgressProvider?, Task<TResult>>(_ => task)), progress);
 
@@ -70,7 +61,7 @@ public static class TaskUtils {
                 }
             } catch {
                 try {
-                    linkedCancellationTokenSource.Cancel(); 
+                    linkedCancellationTokenSource.Cancel();
                 } catch {
                 }
                 throw;
@@ -79,11 +70,6 @@ public static class TaskUtils {
         await TaskUtils.WhenAll(Enumerable.Repeat(WorkerAsync, maxDegreeOfParallelism), progress).NoCapture();
     }
 
-    
-    
-    
-    
-    
     public static async Task<(string Output, int ExitCode)> RunProgramAsync(string file, string arguments = "", int? timeoutMs = null, Encoding? encoding = null, CancellationToken cancellationToken = default) {
         cancellationToken.ThrowIfCancellationRequested();
         var info = new ProcessStartInfo {
@@ -101,7 +87,6 @@ public static class TaskUtils {
         bool hasTimeout = timeoutMs is > 0;
         Logger.Info($"运行程序，并返回其输出：{file} {arguments}{(hasTimeout ? $"，最长可等待 {timeoutMs}ms" : "")}");
 
-        
         var outputTask = program.StandardOutput.ReadToEndAsync();
         var errorTask = program.StandardError.ReadToEndAsync();
 
@@ -116,7 +101,7 @@ public static class TaskUtils {
         if (completedTask != task) {
             try {
                 if (!program.HasExited) program.Kill();
-            } catch (InvalidOperationException) { 
+            } catch (InvalidOperationException) {
             }
             if (completedTask == cancelTask) throw new OperationCanceledException(cancellationToken);
             throw new TimeoutException($"运行程序超时：{file} {arguments}");

@@ -5,41 +5,25 @@ public static class FileUtils {
 
     #region 读取
 
-    
-    
-    
-    
     public static Stream ReadAsStream(string filePath, Type? type = null) {
         if (type is null) {
-            return Retrier.Attempt(delay: _ => TimeSpan.FromMilliseconds(200), isRetryAllowed: ex => ex is IOException, func: _ 
+            return Retrier.Attempt(delay: _ => TimeSpan.FromMilliseconds(200), isRetryAllowed: ex => ex is IOException, func: _
                 => new FileStream(PathUtils.ForApi(filePath), FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
         } else {
             return type.Assembly.GetManifestResourceStream(filePath) ?? throw new FileNotFoundException($"Embedded resource \"{filePath}\" was not found.");
         }
     }
 
-    
-    
-    
-    
     public static byte[] ReadAsBytes(string filePath, Type? type = null) {
-        using Stream fs = FileUtils.ReadAsStream(filePath, type); 
+        using Stream fs = FileUtils.ReadAsStream(filePath, type);
         using MemoryStream ms = new();
         fs.CopyTo(ms);
         return ms.ToArray();
     }
 
-    
-    
-    
-    
-    public static string ReadAsString(string filePath, Encoding? encoding = null, Type? type = null) 
+    public static string ReadAsString(string filePath, Encoding? encoding = null, Type? type = null)
         => FileUtils.ReadAsBytes(filePath, type).GetString(encoding);
-    
-    
-    
-    
-    
+
     public static string? TryReadAsString(string filePath, Encoding? encoding = null, Type? type = null) {
         try {
             if (type == null && !FileUtils.Exists(filePath)) return null;
@@ -49,53 +33,28 @@ public static class FileUtils {
         }
     }
 
-    
-    
-    
-    
     public static string[] ReadAsLines(string filePath, bool skipEmptyLines = false, Encoding? encoding = null, Type? type = null)
         => FileUtils.ReadAsString(filePath, encoding, type).SplitLines(skipEmptyLines);
-    
-    
-    
-    
-    
+
     public static string[] TryReadAsLines(string filePath, bool skipEmptyLines = false, Encoding? encoding = null, Type? type = null)
         => FileUtils.TryReadAsString(filePath, encoding, type)?.SplitLines(skipEmptyLines) ?? [];
 
-    
-    
-    
-    
     public static JToken? ReadAsJson(string filePath, Encoding? encoding = null, Type? type = null)
         => FileUtils.ReadAsString(filePath, encoding, type).DeserializeJson();
-    
-    
-    
-    
-    public static T? ReadAsJson<T>(string filePath, Encoding? encoding = null, Type? type = null) where T : JToken 
+
+    public static T? ReadAsJson<T>(string filePath, Encoding? encoding = null, Type? type = null) where T : JToken
         => FileUtils.ReadAsString(filePath, encoding, type).DeserializeJson<T>();
 
     #endregion
 
     #region 创建 / 写入
 
-    
-    
-    
-    
-    public static void Write(string filePath, string text, Encoding? encoding = null) 
+    public static void Write(string filePath, string text, Encoding? encoding = null)
         => FileUtils.Write(filePath, (encoding ?? new UTF8Encoding()).GetBytes(text));
-    
-    
-    
-    
-    public static void Write(string filePath, IEnumerable<byte> content) 
+
+    public static void Write(string filePath, IEnumerable<byte> content)
         => FileUtils.Write(filePath, [.. content]);
-    
-    
-    
-    
+
     public static void Write(string filePath, byte[] content) {
         DirectoryUtils.Create(PathUtils.RemoveLastPart(filePath));
         Logger.Trace($"写入文件：{filePath}（{content.Length} 字节）");
@@ -104,16 +63,9 @@ public static class FileUtils {
         });
     }
 
-    
-    
-    
-    
     public static void WriteAtomic(string filePath, string text, Encoding? encoding = null) =>
         FileUtils.WriteAtomic(filePath, (encoding ?? new UTF8Encoding()).GetBytes(text));
-    
-    
-    
-    
+
     public static void WriteAtomic(string filePath, byte[] content) {
         string tempPath = $"{filePath}.{Guid.NewGuid():N}.tmp";
         try {
@@ -128,11 +80,6 @@ public static class FileUtils {
         }
     }
 
-    
-    
-    
-    
-    
     public static void Write(string filePath, Stream stream) {
         Retrier.Attempt(delay: _ => TimeSpan.FromMilliseconds(200), isRetryAllowed: ex => ex is IOException, action: _ => {
             FileUtils.Delete(filePath);
@@ -142,10 +89,7 @@ public static class FileUtils {
             stream.CopyTo(fileStream);
         });
     }
-    
-    
-    
-    
+
     public static FileStream CreateAsStream(string filePath) {
         DirectoryUtils.Create(PathUtils.RemoveLastPart(filePath));
         Logger.Trace($"创建文件流：{filePath}");
@@ -155,17 +99,10 @@ public static class FileUtils {
         });
     }
 
-    
-    
-    
     public static string CreateRandom()
-        => Retrier.Attempt(delay: _ => TimeSpan.FromMilliseconds(200), isRetryAllowed: ex => ex is IOException, func: _ 
+        => Retrier.Attempt(delay: _ => TimeSpan.FromMilliseconds(200), isRetryAllowed: ex => ex is IOException, func: _
             => Path.GetTempFileName());
 
-    
-    
-    
-    
     public static void ExtractResources(string logicalName, string localFilePath, Type type) {
         var content = ReadAsBytes(logicalName, type);
         if (Exists(localFilePath) && CryptographyUtils.ComputeFileHash(localFilePath) == CryptographyUtils.ComputeHash(content)) return;
@@ -177,44 +114,34 @@ public static class FileUtils {
 
     #region 复制 / 剪切
 
-    
-    
-    
-    
-    
     public static void Copy(string sourceFilePath, string destFilePath) {
         sourceFilePath = PathUtils.ForCompare(sourceFilePath);
         destFilePath = PathUtils.ForCompare(destFilePath);
         if (string.CompareOrdinal(sourceFilePath, destFilePath) == 0) {
-            
+
             Logger.Trace($"复制文件到自身，不执行操作：{sourceFilePath} → {destFilePath}");
         } else if (PathUtils.IsSame(sourceFilePath, destFilePath)) {
-            
+
             Logger.Trace($"复制文件到自身，但大小写不同，等效于重命名文件：{sourceFilePath} → {destFilePath}");
             FileUtils.Move(sourceFilePath, destFilePath);
         } else {
-            
+
             DirectoryUtils.Create(PathUtils.RemoveLastPart(destFilePath));
             Logger.Trace($"复制文件：{sourceFilePath} → {destFilePath}");
             if (FileUtils.Exists(destFilePath)) FileUtils.SetReadOnly(destFilePath, false);
-            Retrier.Attempt(delay: _ => TimeSpan.FromMilliseconds(200), isRetryAllowed: ex => ex is IOException, action: _ 
+            Retrier.Attempt(delay: _ => TimeSpan.FromMilliseconds(200), isRetryAllowed: ex => ex is IOException, action: _
                 => File.Copy(PathUtils.ForApi(sourceFilePath), PathUtils.ForApi(destFilePath), true));
         }
     }
 
-    
-    
-    
-    
-    
     public static void Move(string sourceFilePath, string destFilePath, bool toRecycleBin = false) {
         sourceFilePath = PathUtils.ForCompare(sourceFilePath);
         destFilePath = PathUtils.ForCompare(destFilePath);
         if (string.CompareOrdinal(sourceFilePath, destFilePath) == 0) {
-            
+
             Logger.Trace($"剪切文件到自身，不执行操作：{sourceFilePath} → {destFilePath}");
         } else if (PathUtils.IsSame(sourceFilePath, destFilePath)) {
-            
+
             Logger.Trace($"剪切文件到自身，但大小写不同：{sourceFilePath} → {destFilePath}");
             Retrier.Attempt(delay: _ => TimeSpan.FromMilliseconds(200), isRetryAllowed: ex => ex is IOException, action: _ => {
                 var temp = Path.Combine(PathUtils.RemoveLastPart(sourceFilePath), Path.GetRandomFileName());
@@ -224,7 +151,7 @@ public static class FileUtils {
                 File.Move(PathUtils.ForApi(temp), PathUtils.ForApi(destFilePath));
             });
         } else {
-            
+
             DirectoryUtils.Create(PathUtils.RemoveLastPart(destFilePath));
             FileUtils.Delete(destFilePath, toRecycleBin);
             Logger.Trace($"剪切文件：{sourceFilePath} → {destFilePath}");
@@ -240,19 +167,10 @@ public static class FileUtils {
 
     #region 删除
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
     public static bool? Delete(string filePath, bool toRecycleBin = false) {
         if (!FileUtils.Exists(filePath)) return null;
         Logger.Trace($"{(toRecycleBin ? "将文件删除到回收站" : "删除文件")}：{filePath}");
-        
+
         if (toRecycleBin) {
             try {
                 DeleteToRecycleBin(filePath);
@@ -261,7 +179,7 @@ public static class FileUtils {
                 Logger.Warn(ex, $"无法将文件删除到回收站，回退到永久删除：{filePath}");
             }
         }
-        
+
         Retrier.Attempt(delay: _ => TimeSpan.FromMilliseconds(200), isRetryAllowed: ex => ex is IOException, action: _ => {
             FileUtils.SetReadOnly(filePath, false);
             File.Delete(PathUtils.ForApi(filePath));
@@ -269,20 +187,17 @@ public static class FileUtils {
         return false;
     }
 
-    
-    
-    
     internal static void DeleteToRecycleBin(string target) {
-        
+
         void Run() {
             IShellItem? item = null;
             IFileOperation? op = null;
             try {
                 var iid = typeof(IShellItem).GUID;
                 Marshal.ThrowExceptionForHR(SHCreateItemFromParsingName(PathUtils.RemoveExtendedPrefix(target), IntPtr.Zero, ref iid, out item));
-                
+
                 op = (IFileOperation) new FileOperation();
-                op.SetOperationFlags(0x0040 | 0x0010 | 0x0004); 
+                op.SetOperationFlags(0x0040 | 0x0010 | 0x0004);
                 op.DeleteItem(item, IntPtr.Zero);
                 op.PerformOperations();
                 op.GetAnyOperationsAborted(out bool aborted);
@@ -292,17 +207,17 @@ public static class FileUtils {
                 if (item != null && Marshal.IsComObject(item)) Marshal.FinalReleaseComObject(item);
             }
         }
-        
+
         if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA) {
             Retrier.Attempt(delay: _ => TimeSpan.FromMilliseconds(200), isRetryAllowed: ex => ex is IOException, action: _ => Run());
         } else {
-            System.Runtime.ExceptionServices.ExceptionDispatchInfo? internalEx = null; 
-            var thread = new Thread(() => { 
-                try { 
-                    Retrier.Attempt(delay: _ => TimeSpan.FromMilliseconds(200), isRetryAllowed: ex => ex is IOException or COMException, action: _ => Run()); 
-                } catch (Exception ex) { 
-                    internalEx = System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex); 
-                } 
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo? internalEx = null;
+            var thread = new Thread(() => {
+                try {
+                    Retrier.Attempt(delay: _ => TimeSpan.FromMilliseconds(200), isRetryAllowed: ex => ex is IOException or COMException, action: _ => Run());
+                } catch (Exception ex) {
+                    internalEx = System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex);
+                }
             }) { IsBackground = true, Name = nameof(DeleteToRecycleBin) };
             thread.SetApartmentState(ApartmentState.STA);
             thread.Start();
@@ -310,7 +225,7 @@ public static class FileUtils {
             internalEx?.Throw();
         }
     }
-    
+
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
     static extern int SHCreateItemFromParsingName([MarshalAs(UnmanagedType.LPWStr)] string pszPath, IntPtr pbc, ref Guid riid, [MarshalAs(UnmanagedType.Interface)] out IShellItem ppv);
     [ComImport, Guid("43826D1E-E718-42EE-BC55-A1E261C37BFE"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -345,16 +260,12 @@ public static class FileUtils {
 
     #region 压缩 / 解压
 
-    
-    
-    
-    
     public static ZipArchive OpenZip(string zipFilePath, CancellationToken c = default) {
         ZipArchive TryOpen(Encoding encoding) {
             Logger.Trace($"尝试以 {encoding.EncodingName} 编码打开压缩包：{zipFilePath}");
             var result = ZipFile.Open(PathUtils.ForApi(zipFilePath), ZipArchiveMode.Read, encoding);
             try {
-                _ = result.Entries; 
+                _ = result.Entries;
                 return result;
             } catch {
                 result.Dispose();
@@ -363,7 +274,7 @@ public static class FileUtils {
         }
         return Retrier.Attempt(delay: _ => TimeSpan.FromMilliseconds(200), maxAttempts:10, isRetryAllowed: ex => ex is IOException, cancellationToken: c, func: _ => {
             try {
-                try { 
+                try {
                     return TryOpen(new UTF8Encoding(false, true));
                 } catch (DecoderFallbackException) {
                     return TryOpen(Encoding.GetEncoding("GB18030"));
@@ -372,18 +283,13 @@ public static class FileUtils {
                 throw new InvalidDataException($"文件不是压缩包，或者文件已损坏（{zipFilePath}）", ex);
             }
         });
-        
+
     }
 
-    
-    
-    
-    
-    
     public static void ExtractToDirectory(string compressionFile, string outputDirectory, CancellationToken c = default, ProgressProvider? p = null) {
         compressionFile = PathUtils.ForApi(compressionFile);
         DirectoryUtils.Create(outputDirectory);
-        
+
         if (PathUtils.GetExtension(compressionFile) == "gz") {
             string outFilePath = Path.Combine(outputDirectory, PathUtils.GetFileNameWithoutExtension(compressionFile));
             Logger.Trace($"解压 gz 文件：{compressionFile} → {outFilePath}");
@@ -393,9 +299,9 @@ public static class FileUtils {
             p?.Finish();
             return;
         }
-        
+
         using var archive = FileUtils.OpenZip(compressionFile, c);
-        var entries = archive.Entries.Where(e => !string.IsNullOrEmpty(e.Name)).ToList(); 
+        var entries = archive.Entries.Where(e => !string.IsNullOrEmpty(e.Name)).ToList();
         int totalCount = entries.Count;
         int doneCount = 0;
         Logger.Trace($"解压 zip 文件：{compressionFile} → {outputDirectory}（共 {totalCount} 项）");
@@ -403,32 +309,24 @@ public static class FileUtils {
             c.ThrowIfCancellationRequested();
             doneCount++;
             if (totalCount > 0) p?.Set((double) doneCount / totalCount);
-            
+
             string outputFilePath = Path.Combine(outputDirectory, entry.FullName);
             if (!PathUtils.IsParentOf(outputDirectory, outputFilePath))
                 throw new InvalidDataException($"Zip 文件项 {entry.FullName} 的路径在压缩包之外，这可能导致安全问题");
-            
+
             using var entryStream = entry.Open();
             FileUtils.Write(outputFilePath, entryStream);
         }
     }
 
-    
-    
-    
-    
     public static void CreateZipFromDirectory(string outputFullPath, string sourceDirectory) {
         DirectoryUtils.Create(PathUtils.RemoveLastPart(outputFullPath));
         FileUtils.Delete(outputFullPath);
         Logger.Trace($"将文件夹中的内容压缩为 zip 文件：{sourceDirectory} → {outputFullPath}");
-        Retrier.Attempt(delay: _ => TimeSpan.FromMilliseconds(200), isRetryAllowed: ex => ex is IOException, action: _ 
+        Retrier.Attempt(delay: _ => TimeSpan.FromMilliseconds(200), isRetryAllowed: ex => ex is IOException, action: _
             => ZipFile.CreateFromDirectory(PathUtils.ForApi(sourceDirectory), PathUtils.ForApi(outputFullPath)));
     }
 
-    
-    
-    
-    
     public static void CreateZipFromFiles(string outputFullPath, params string[] sourceFiles) {
         var sources = new Dictionary<string, string>();
         foreach (var source in sourceFiles) {
@@ -439,15 +337,10 @@ public static class FileUtils {
         FileUtils.CreateZipFromFiles(outputFullPath, sources);
     }
 
-    
-    
-    
-    
-    
     public static void CreateZipFromFiles(string outputFullPath, IDictionary<string, string> sources) {
         DirectoryUtils.Create(PathUtils.RemoveLastPart(outputFullPath));
         FileUtils.Delete(outputFullPath);
-        using var archive = Retrier.Attempt(delay: _ => TimeSpan.FromMilliseconds(200), isRetryAllowed: ex => ex is IOException, func: _ 
+        using var archive = Retrier.Attempt(delay: _ => TimeSpan.FromMilliseconds(200), isRetryAllowed: ex => ex is IOException, func: _
             => ZipFile.Open(PathUtils.ForApi(outputFullPath), ZipArchiveMode.Create));
         Logger.Trace($"创建 zip 文件：{sources.Count} 个文件 → {outputFullPath}\n{sources.Select(p => $"- {p.Value} → {p.Key}").Join('\n')}");
         foreach (var pair in sources) archive.CreateEntryFromFile(PathUtils.ForApi(pair.Value), pair.Key.Replace('\\', '/'), CompressionLevel.Optimal);
@@ -455,16 +348,9 @@ public static class FileUtils {
 
     #endregion
 
-    
-    
-    
-    public static bool Exists(string filePath) 
+    public static bool Exists(string filePath)
         => File.Exists(PathUtils.ForApi(filePath));
 
-    
-    
-    
-    
     public static bool IsAvailable(string filePath) {
         if (!Exists(filePath)) return true;
         try {
@@ -477,16 +363,9 @@ public static class FileUtils {
         }
     }
 
-    
-    
-    
-    public static FileInfo GetInfo(string path) 
+    public static FileInfo GetInfo(string path)
         => new(PathUtils.ForApi(path));
 
-    
-    
-    
-    
     public static void SetReadOnly(string path, bool readOnly) {
         path = PathUtils.ForApi(path);
         var attributes = File.GetAttributes(path);
@@ -500,40 +379,16 @@ public static class FileUtils {
 
 }
 
-
-
-
 public class FileChecker {
 
-    
-    
-    
-    
     public long ActualSize = -1;
 
-    
-    
-    
-    
     public long MinSize = -1;
 
-    
-    
-    
-    
     public string? Hash = null;
 
-    
-    
-    
     public bool IsJson = false;
-    
-    
-    
-    
-    
-    
-    
+
     public string? Check(string localPath) {
         try {
             var info = FileUtils.GetInfo(localPath);

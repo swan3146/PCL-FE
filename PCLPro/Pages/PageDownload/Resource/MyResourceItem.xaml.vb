@@ -3,7 +3,6 @@ Public Class MyResourceItem
 #Region "基础属性"
     Public Uuid As Integer = GetUuid()
 
-    
     Public Property Title As String
         Get
             Return LabTitle.Text
@@ -14,7 +13,6 @@ Public Class MyResourceItem
         End Set
     End Property
 
-    
     Public Property SubTitle As String
         Get
             Return If(LabTitleRaw?.Text, "")
@@ -26,7 +24,6 @@ Public Class MyResourceItem
         End Set
     End Property
 
-    
     Public Property Description As String
         Get
             Return LabInfo.Text
@@ -36,13 +33,12 @@ Public Class MyResourceItem
             LabInfo.Text = value
         End Set
     End Property
-    
+
     Private Sub LabInfo_MouseEnter(sender As Object, e As MouseEventArgs) Handles LabInfo.MouseEnter
         ToolTipInfo.Content = LabInfo.Text
         LabInfo.ToolTip = If(IsTextTrimmed(LabInfo), ToolTipInfo, Nothing)
     End Sub
 
-    
     Public WriteOnly Property Tags As List(Of String)
         Set(Tags As List(Of String))
             PanTags.Children.Clear()
@@ -63,7 +59,6 @@ Public Class MyResourceItem
 
 #Region "点击"
 
-    
     Public Event Click(sender As Object, e As MouseButtonEventArgs)
     Private Sub Button_MouseUp(sender As Object, e As MouseButtonEventArgs) Handles Me.PreviewMouseLeftButtonUp
         If IsMouseDown Then
@@ -73,7 +68,7 @@ Public Class MyResourceItem
         End If
     End Sub
     Private Sub MyResourceItem_Click(sender As MyResourceItem, e As EventArgs) Handles Me.Click
-        
+
         Dim Titles As New List(Of String)
         If FrmMain.PageCurrent.Page = FormMain.PageType.ResourceDetail Then
             For Each Card As MyCard In FrmDownloadResourceDetail.PanResults.Children
@@ -81,12 +76,12 @@ Public Class MyResourceItem
             Next
             Logger.Info($"记录当前已展开的卡片：{String.Join("、", Titles)}")
         End If
-        
+
         Dim TargetType As ResourceTypes
         Dim TargetInstance As String = Nothing
         Dim TargetLoader As ModLoaders = ModLoaders.None
         If FrmMain.PageCurrent.Page = FormMain.PageType.Download Then
-            
+
             Select Case FrmMain.PageCurrentSub
                 Case FormMain.PageSubType.DownloadMod
                     TargetType = ResourceTypes.Mod
@@ -109,8 +104,8 @@ Public Class MyResourceItem
                     TargetInstance = FrmDownloadMap.Content.Loader.Input.GameVersion
             End Select
         Else
-            
-            TargetType = ResourceTypes.Any 
+
+            TargetType = ResourceTypes.Any
             TargetInstance = FrmMain.PageCurrent.Additional(2)
             TargetLoader = FrmMain.PageCurrent.Additional(3)
         End If
@@ -118,7 +113,6 @@ Public Class MyResourceItem
                            .Additional = {sender.Tag, Titles, TargetInstance, TargetLoader, TargetType}})
     End Sub
 
-    
     Private IsMouseDown As Boolean = False
     Private Sub Button_MouseDown(sender As Object, e As MouseButtonEventArgs) Handles Me.PreviewMouseLeftButtonDown
         If IsMouseOver AndAlso CanInteraction Then IsMouseDown = True
@@ -151,9 +145,7 @@ Public Class MyResourceItem
                 SetRowSpan(Rect, 999)
                 Children.Insert(0, Rect)
                 _RectBack = Rect
-                
-                
-                
+
             End If
             Return _RectBack
         End Get
@@ -162,13 +154,11 @@ Public Class MyResourceItem
 #End Region
 
     Private StateLast As String
-    
-    
-    
+
     Public Property CanInteraction As Boolean = True
     Public Sub RefreshColor(sender As Object, e As EventArgs) Handles Me.MouseEnter, Me.MouseLeave, Me.MouseLeftButtonDown, Me.MouseLeftButtonUp
         If Not CanInteraction Then Return
-        
+
         Dim StateNew As String, Time As Integer
         If IsMouseOver Then
             If IsMouseDown Then
@@ -184,9 +174,9 @@ Public Class MyResourceItem
         End If
         If StateLast = StateNew Then Return
         StateLast = StateNew
-        
-        If IsLoaded AndAlso AniControlEnabled = 0 Then 
-            
+
+        If IsLoaded AndAlso AniControlEnabled = 0 Then
+
             Dim Ani As New List(Of AniData)
             If IsMouseOver Then
                 Ani.AddRange({
@@ -208,7 +198,7 @@ Public Class MyResourceItem
             End If
             AniStart(Ani, "MyResourceItem Color " & Uuid)
         Else
-            
+
             AniStop("MyResourceItem Color " & Uuid)
             If _RectBack IsNot Nothing Then RectBack.Opacity = 0
         End If

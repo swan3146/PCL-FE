@@ -10,15 +10,16 @@
     ShutdownMode="OnExplicitShutdown">
     <Application.Resources>
         <ResourceDictionary>
-            
-            
+
             <corewpf:AdditionConverter x:Key="AdditionConverter"/>
             <corewpf:MultiplicationConverter x:Key="MultiplicationConverter"/>
             <corewpf:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
             <corewpf:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
 
-            
+            <FontFamily x:Key="UiFontFamily">Resources/#PCL English, Microsoft YaHei UI</FontFamily>
+            <sys:Double x:Key="UiFontSize">13</sys:Double>
+
             <SolidColorBrush x:Key="ColorBrush1">#343d4a</SolidColorBrush>
             <SolidColorBrush x:Key="ColorBrush2">#0b5bcb</SolidColorBrush>
             <SolidColorBrush x:Key="ColorBrush3">#1370f3</SolidColorBrush>
@@ -65,7 +66,6 @@
             <SolidColorBrush x:Key="ColorBrushSemiTransparent">#01eaf2fe</SolidColorBrush>
             <SolidColorBrush x:Key="ColorBrushBackgroundTransparentSidebar" Color="#F1FFFFFF" />
 
-            
             <Style TargetType="{x:Type Window}" x:Key="MyWindow">
                 <Setter Property="OverridesDefaultStyle" Value="True"/>
                 <Setter Property="Template">
@@ -77,7 +77,6 @@
                 </Setter>
             </Style>
 
-            
             <Style TargetType="Label">
                 <Setter Property="OverridesDefaultStyle" Value="True"/>
                 <Setter Property="Padding" Value="0"/>
@@ -85,11 +84,11 @@
                     <Setter.Value>
                         <ControlTemplate TargetType="Label">
                             <Border Background="{TemplateBinding Background}">
-                                <ContentPresenter 
-                                    HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
-                                    Margin="{TemplateBinding Padding}" 
-                                    RecognizesAccessKey="False" 
-                                    SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" 
+                                <ContentPresenter
+                                    HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                    Margin="{TemplateBinding Padding}"
+                                    RecognizesAccessKey="False"
+                                    SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
                                     VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                             </Border>
                         </ControlTemplate>
@@ -103,36 +102,34 @@
                     <Setter.Value>
                         <ControlTemplate TargetType="Label">
                             <Border Background="{TemplateBinding Background}">
-                                <TextBlock 
-                                    HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
-                                    Margin="{TemplateBinding Padding}" 
+                                <TextBlock
+                                    HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                    Margin="{TemplateBinding Padding}"
                                     Foreground="{TemplateBinding Foreground}"
                                     Text="{TemplateBinding Content}"
-                                    SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" 
+                                    SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
                                     VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                             </Border>
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
             </Style>
-            
-            
+
             <Style TargetType="TextBlock">
                 <Setter Property="OverridesDefaultStyle" Value="True" />
-                <Setter Property="FontSize" Value="13" />
+                <Setter Property="FontSize" Value="{DynamicResource UiFontSize}" />
                 <Setter Property="Foreground" Value="{DynamicResource ColorBrush1}" />
                 <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-                <Setter Property="FontFamily" Value="Resources/#PCL English, Microsoft YaHei UI" />
+                <Setter Property="FontFamily" Value="{DynamicResource UiFontFamily}" />
             </Style>
             <Style TargetType="TextBlock" x:Key="BasedOnTextBlock">
                 <Setter Property="OverridesDefaultStyle" Value="True" />
-                <Setter Property="FontSize" Value="13" />
+                <Setter Property="FontSize" Value="{DynamicResource UiFontSize}" />
                 <Setter Property="Foreground" Value="{DynamicResource ColorBrush1}" />
                 <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-                <Setter Property="FontFamily" Value="Resources/#PCL English, Microsoft YaHei UI" />
+                <Setter Property="FontFamily" Value="{DynamicResource UiFontFamily}" />
             </Style>
 
-            
             <Style x:Key="MyThumb" TargetType="Thumb">
                 <Setter Property="Stylus.IsPressAndHoldEnabled" Value="false"/>
                 <Setter Property="Template">
@@ -169,7 +166,7 @@
                                     </Track.DecreaseRepeatButton>
                                     <Track.IncreaseRepeatButton>
                                         <RepeatButton Command="{x:Static ScrollBar.PageDownCommand}" Opacity="0" />
-                                    </Track.IncreaseRepeatButton> 
+                                    </Track.IncreaseRepeatButton>
                                     <Track.Thumb>
                                         <Thumb Style="{StaticResource MyThumb}" Foreground="{TemplateBinding Foreground}" />
                                     </Track.Thumb>
@@ -237,14 +234,13 @@
                 </Setter>
             </Style>
 
-            
             <Style TargetType="local:MyTextBox">
                 <Setter Property="BorderThickness" Value="1" />
                 <Setter Property="Background" Value="{StaticResource ColorBrushHalfWhite}" />
-                <Setter Property="FontSize" Value="13" />
+                <Setter Property="FontSize" Value="{DynamicResource UiFontSize}" />
                 <Setter Property="SelectionBrush" Value="{DynamicResource ColorBrush3}" />
                 <Setter Property="Foreground" Value="{DynamicResource ColorBrush1}" />
-                <Setter Property="FontFamily" Value="Resources/#PCL English, Microsoft YaHei UI" />
+                <Setter Property="FontFamily" Value="{DynamicResource UiFontFamily}" />
                 <Setter Property="VerticalContentAlignment" Value="Center" />
                 <Setter Property="SnapsToDevicePixels" Value="True" />
                 <Setter Property="IsUndoEnabled" Value="True" />
@@ -268,10 +264,10 @@
                                 <Border x:Name="border" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
                                     <ScrollViewer x:Name="PART_ContentHost" Style="{StaticResource ScrollViewerNoMargin}" RenderOptions.ClearTypeHint="Enabled" BorderThickness="0"
                                            Margin="5,0,0,0" Cursor="IBeam" />
-                                    
+
                                 </Border>
                                 <Border Margin="{TemplateBinding Padding}" IsHitTestVisible="False" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" BorderThickness="0">
-                                    <TextBlock x:Name="labHint" Foreground="{StaticResource ColorBrushGray4}" Margin="7,0,0,0" Padding="{TemplateBinding BorderThickness}" FontSize="{TemplateBinding FontSize}" FontFamily="Resources/#PCL English, Microsoft YaHei UI" />
+                                    <TextBlock x:Name="labHint" Foreground="{StaticResource ColorBrushGray4}" Margin="7,0,0,0" Padding="{TemplateBinding BorderThickness}" FontSize="{TemplateBinding FontSize}" FontFamily="{DynamicResource UiFontFamily}" />
                                 </Border>
                                 <TextBlock Grid.Row="1" x:Name="labWrong" Height="0" Foreground="{TemplateBinding BorderBrush}" Padding="0,4,0,0" Margin="0,0,0,-3" />
                             </Grid>
@@ -281,7 +277,7 @@
                 <Setter Property="behaviors:ClipboardInterceptor.EnableSafeClipboard" Value="True" />
             </Style>
             <Style TargetType="PasswordBox">
-                <Setter Property="FontSize" Value="13" />
+                <Setter Property="FontSize" Value="{DynamicResource UiFontSize}" />
                 <Setter Property="VerticalContentAlignment" Value="Top" />
                 <Setter Property="SelectionBrush" Value="{DynamicResource ColorBrush3}" />
                 <Setter Property="Foreground" Value="{DynamicResource ColorBrush1}" />
@@ -323,7 +319,6 @@
                 <Setter Property="behaviors:ClipboardInterceptor.EnableSafeClipboard" Value="True" />
             </Style>
 
-            
             <DataTemplate x:Key="ComboBoxItemTemplateWithDelete">
                 <local:MyListItem Title="{Binding}" FontSize="13" MaxHeight="26" IsScaleAnimationEnabled="False" Margin="-3,0,0,0">
                     <local:MyListItem.Buttons>
@@ -339,7 +334,7 @@
                 <Setter Property="Foreground" Value="{DynamicResource ColorBrushBg0}" />
                 <Setter Property="Background" Value="{StaticResource ColorBrushHalfWhite}" />
                 <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-                <Setter Property="FontSize" Value="13" />
+                <Setter Property="FontSize" Value="{DynamicResource UiFontSize}" />
                 <Setter Property="MaxDropDownHeight" Value="320" />
                 <Setter Property="Template">
                     <Setter.Value>
@@ -348,8 +343,8 @@
                                 <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="9" BorderThickness="1" BorderBrush="{TemplateBinding Foreground}" />
                                 <ToggleButton Margin="0,0,1.5,0" Foreground="{TemplateBinding Foreground}" IsTabStop="False" SnapsToDevicePixels="False" Focusable="False" IsChecked="{Binding IsDropDownOpen,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}" ClickMode="Press" />
                                 <ContentPresenter x:Name="PART_Content" Margin="8.5,0,21.5,0" IsHitTestVisible="False" VerticalAlignment="Center"
-                                                  Content="{TemplateBinding SelectionBoxItem}" 
-                                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" 
+                                                  Content="{TemplateBinding SelectionBoxItem}"
+                                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
                                                   ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" />
                                 <Popup x:Name="PART_Popup" SnapsToDevicePixels="True" VerticalOffset="-1.5" AllowsTransparency="True" IsOpen="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" Placement="Bottom" PopupAnimation="Fade">
                                     <Grid x:Name="PanPopup">
@@ -492,7 +487,6 @@
                 </Setter>
             </Style>
 
-            
             <Style TargetType="ContextMenu">
                 <Setter Property="SnapsToDevicePixels" Value="True"/>
                 <Setter Property="OverridesDefaultStyle" Value="True"/>
@@ -512,7 +506,7 @@
                     </Setter.Value>
                 </Setter>
             </Style>
-            
+
             <Style TargetType="local:MyMenuItem">
                 <Setter Property="Foreground" Value="{DynamicResource ColorBrush1}" />
                 <Setter Property="Template">
@@ -523,12 +517,11 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" SharedSizeGroup="Icon"/>
                                         <ColumnDefinition />
-                                        
 
                                     </Grid.ColumnDefinitions>
                                     <Path Name="Icon" VerticalAlignment="Center" Stretch="Uniform" Margin="8,0" Fill="{TemplateBinding Foreground}" Height="12" Width="15" />
                                     <TextBlock Name="HeaderHost" Grid.Column="1" Text="{TemplateBinding Header}" Foreground="{TemplateBinding Foreground}" Margin="0,0,40,0" VerticalAlignment="Center" Height="16" />
-                                    
+
                                 </Grid>
                             </Border>
                             <ControlTemplate.Triggers>
@@ -540,7 +533,7 @@
                     </Setter.Value>
                 </Setter>
             </Style>
-            
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

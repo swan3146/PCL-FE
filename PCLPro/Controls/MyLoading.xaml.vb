@@ -62,9 +62,7 @@ Public Class MyLoading
             RefreshText()
         End Set
     End Property
-    
-    
-    
+
     Public Property TextErrorInherit As Boolean = True
 
     Private Sub RefreshText() Handles Me.IsErrorChanged, Me.Loaded, _State.ProgressChanged
@@ -95,7 +93,6 @@ Public Class MyLoading
 
 #Region "状态改变"
 
-    
     Public Enum MyLoadingState
         Unloaded = -1
         Run = 0
@@ -103,7 +100,6 @@ Public Class MyLoading
         [Error] = 2
     End Enum
 
-    
     Private WithEvents _State As ILoadingTrigger
     Public Property State As ILoadingTrigger
         Get
@@ -128,7 +124,6 @@ Public Class MyLoading
         AniLoop()
     End Sub
 
-    
     Private Property _OuterState As MyLoadingState = MyLoadingState.Unloaded
     Private Property OuterState As MyLoadingState
         Get
@@ -138,14 +133,12 @@ Public Class MyLoading
             If _OuterState = value Then Return
             Dim OldValue = _OuterState
             _OuterState = value
-            
+
             RaiseEvent StateChanged(Me, value, OldValue)
             If (OldValue = MyLoadingState.Error) <> (value = MyLoadingState.Error) Then RaiseEvent IsErrorChanged(Me, value = MyLoadingState.Error)
         End Set
     End Property
 
-
-    
     Private Property _InnerState As MyLoadingState = MyLoadingState.Unloaded
     Private Property InnerState As MyLoadingState
         Get
@@ -155,7 +148,7 @@ Public Class MyLoading
             If _InnerState = value Then Return
             Dim OldValue = _InnerState
             _InnerState = value
-            
+
             AniLoop()
             If (OldValue = MyLoadingState.Error) <> (value = MyLoadingState.Error) Then ErrorAnimation(Me, value = MyLoadingState.Error)
         End Set
@@ -165,17 +158,11 @@ Public Class MyLoading
 
 #Region "动画"
 
-    
-    
-    
     Public Property HasAnimation As Boolean = True
 
-    
-    
-    
     Private IsLooping As Boolean = False
     Private Sub AniLoop()
-        
+
         If Not HasAnimation OrElse IsLooping OrElse Not InnerState = MyLoadingState.Run OrElse AniSpeed > 10 OrElse Not IsLoaded Then Return
         IsLooping = True
         ErrorAnimationWaiting = True
@@ -205,13 +192,10 @@ Public Class MyLoading
         }, "MyLoader Loop " & Uuid & "/" & GetUuid())
     End Sub
 
-    
-    
-    
     Private ErrorAnimationWaiting As Boolean = False
     Private Sub ErrorAnimation(sender As Object, isError As Boolean)
         If isError Then
-            
+
             Dim Wait As Integer = If(ErrorAnimationWaiting, 400, 0)
             AniStart({
                 AaColor(PanBack, ForegroundProperty, "ColorBrushRedLight", 300),
@@ -219,7 +203,7 @@ Public Class MyLoading
                 AaScaleTransform(PathError, 1 - CType(PathError.RenderTransform, ScaleTransform).ScaleX, 400, 300 + Wait, New AniEaseOutBack)
             }, "MyLoader Error " & Uuid)
         Else
-            
+
             AniStart({
                 AaOpacity(PathError, -PathError.Opacity, 100),
                 AaScaleTransform(PathError, 0.5 - CType(PathError.RenderTransform, ScaleTransform).ScaleX, 200),
@@ -237,7 +221,7 @@ Public Class MyLoading
     End Sub
     Private IsMouseDown As Boolean = False
     Private Sub Button_MouseDown(sender As Object, e As MouseButtonEventArgs) Handles Me.MouseLeftButtonDown
-        
+
         IsMouseDown = True
     End Sub
     Private Sub Button_MouseLeave(sender As Object, e As Object) Handles Me.MouseLeave, Me.MouseLeftButtonUp

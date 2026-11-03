@@ -4,9 +4,6 @@ using System.Windows.Data;
 
 namespace MeloongCore.Wpf;
 
-
-
-
 public class AdditionConverter : IValueConverter {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) {
         if (value is null) return 0;
@@ -23,9 +20,6 @@ public class AdditionConverter : IValueConverter {
         return before - scale;
     }
 }
-
-
-
 
 public class MultiplicationConverter : IValueConverter {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) {
@@ -45,9 +39,6 @@ public class MultiplicationConverter : IValueConverter {
     }
 }
 
-
-
-
 public class InverseBooleanToVisibilityConverter : IValueConverter {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) {
         if (value is null) return Visibility.Visible;
@@ -58,9 +49,6 @@ public class InverseBooleanToVisibilityConverter : IValueConverter {
         return value is Visibility vis && vis != Visibility.Visible;
     }
 }
-
-
-
 
 public class InverseBooleanConverter : IValueConverter {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) {

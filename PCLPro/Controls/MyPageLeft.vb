@@ -2,8 +2,7 @@ Public Class MyPageLeft
     Inherits Grid
     Private Uuid As Integer = GetUuid()
 
-    
-    Public Property AnimatedControl As String 
+    Public Property AnimatedControl As String
         Get
             Return GetValue(AnimatedControlProperty)
         End Get
@@ -15,7 +14,7 @@ Public Class MyPageLeft
 
     Public Sub TriggerShowAnimation()
         If AnimatedControl Is Nothing Then
-            
+
             If TypeOf RenderTransform IsNot ScaleTransform Then
                 RenderTransform = New ScaleTransform(0.96, 0.96)
                 RenderTransformOrigin = New Point(0.5, 0.5)
@@ -26,13 +25,13 @@ Public Class MyPageLeft
                 AaOpacity(Me, 1, 100)
             }, "PageLeft PageChange " & Uuid)
         Else
-            
+
             Dim AniList As New List(Of AniData)
             Dim Id As Integer = 0, Delay As Integer = 0
             For Each Element As FrameworkElement In GetAllAnimControls(True)
                 Element = MyVirtualizingElement.TryInit(Element)
                 If Element.Visibility = Visibility.Collapsed Then
-                    
+
                     Element.Opacity = 1
                     Element.RenderTransform = New TranslateTransform(0, 0)
                     If TypeOf Element Is MyListItem Then CType(Element, MyListItem).IsMouseOverAnimationEnabled = True
@@ -59,7 +58,7 @@ Public Class MyPageLeft
     End Sub
     Public Sub TriggerHideAnimation()
         If AnimatedControl Is Nothing Then
-            
+
             If TypeOf RenderTransform IsNot ScaleTransform Then
                 RenderTransform = New ScaleTransform(1, 1)
                 RenderTransformOrigin = New Point(0.5, 0.5)
@@ -69,7 +68,7 @@ Public Class MyPageLeft
                 AaOpacity(Me, -Opacity, 80, 30)
             }, "PageLeft PageChange " & Uuid)
         Else
-            
+
             Dim AniList As New List(Of AniData)
             Dim Id As Integer = 0
             Dim Controls = GetAllAnimControls()
@@ -82,7 +81,6 @@ Public Class MyPageLeft
         End If
     End Sub
 
-    
     Private Function GetAllAnimControls(Optional IgnoreInvisibility As Boolean = False) As List(Of FrameworkElement)
         Dim AllControls As New List(Of FrameworkElement)
         GetAllAnimControls(FindName(AnimatedControl), AllControls, IgnoreInvisibility)

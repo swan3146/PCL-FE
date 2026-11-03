@@ -1,20 +1,17 @@
-
-
 Friend Module ModSecret
 
-    
     Public Const VersionBranchMain As String = "OpenSource"
-    
+
     Public Const RegFolder As String = "PCLDebug"
-    
+
     Public OAuthClientId As String = If(Environment.GetEnvironmentVariable("PCL_MS_CLIENT_ID"), "04b07795-8ddb-461a-bbee-02f9e1bf7b46")
-    
+
     Public OAuthClientIdMsa As String = If(Environment.GetEnvironmentVariable("PCL_MS_CLIENT_ID_MSA"), "00000000402b5328")
-    
+
     Public Const OAuthScopeMsa As String = "service::user.auth.xboxlive.com::MBI_SSL"
-    
+
     Public CurseForgeAPIKey As String = If(Environment.GetEnvironmentVariable("PCL_CURSEFORGE_API_KEY"), "")
-    
+
     Public Const ClsBaseUrl As String = ""
 
 #Region "网络鉴权"
@@ -24,13 +21,11 @@ Friend Module ModSecret
         If Not UrlWithMark.EndsWithF("{CDN}") Then Return UrlWithMark
         Return UrlWithMark.Replace("{CDN}", "").Replace(" ", "%20")
     End Function
-    
-    
-    
+
     Friend Sub SecretHeadersSign(Url As String, ByRef Req As HttpRequestMessage, Optional SimulateBrowserHeaders As Boolean = False)
         If Not Req.Headers.UserAgent.Any Then
             If Url.Contains("baidupcs.com") OrElse Url.Contains("baidu.com") Then
-                Req.Headers.Add("User-Agent", "LogStatistic")  
+                Req.Headers.Add("User-Agent", "LogStatistic")
             ElseIf SimulateBrowserHeaders Then
                 Req.Headers.Add("User-Agent", $"PCL2/{VersionBaseName}.{CInt(BuildType)} Mozilla/5.0 AppleWebKit/537.36 Chrome/63.0.3239.132 Safari/537.36")
             Else
@@ -74,39 +69,38 @@ Friend Module ModSecret
             If ThemeNow = NewTheme AndAlso NewTheme >= 0 Then Return
             If NewTheme >= 0 Then ThemeNow = NewTheme
 
-            
             Dim ApplyTheme As Integer = If(ThemeNow >= 0, ThemeNow, 0)
             If ApplyTheme >= 15 Then ApplyTheme = 0
             Select Case ApplyTheme
-                Case 0 
+                Case 0
                     ColorHue = 210 : ColorSat = 85 : ColorLightAdjust = 0 : ColorHueTopbarDelta = 0
-                Case 1 
+                Case 1
                     ColorHue = 174 : ColorSat = 78 : ColorLightAdjust = 0 : ColorHueTopbarDelta = 14
-                Case 2 
+                Case 2
                     ColorHue = 112 : ColorSat = 58 : ColorLightAdjust = 0 : ColorHueTopbarDelta = 12
-                Case 3 
+                Case 3
                     ColorHue = 45 : ColorSat = 92 : ColorLightAdjust = 2 : ColorHueTopbarDelta = 10
-                Case 4 
+                Case 4
                     ColorHue = 28 : ColorSat = 46 : ColorLightAdjust = -2 : ColorHueTopbarDelta = 8
-                Case 5 
+                Case 5
                     ColorHue = 215 : ColorSat = 6 : ColorLightAdjust = -8 : ColorHueTopbarDelta = 0
-                Case 6 
+                Case 6
                     ColorHue = 336 : ColorSat = 78 : ColorLightAdjust = 0 : ColorHueTopbarDelta = 12
-                Case 7 
+                Case 7
                     ColorHue = 272 : ColorSat = 62 : ColorLightAdjust = -2 : ColorHueTopbarDelta = 16
-                Case 8 
+                Case 8
                     ColorHue = 38 : ColorSat = 76 : ColorLightAdjust = -2 : ColorHueTopbarDelta = 10
-                Case 9 
+                Case 9
                     ColorHue = 22 : ColorSat = 90 : ColorLightAdjust = 0 : ColorHueTopbarDelta = 10
-                Case 10 
+                Case 10
                     ColorHue = 353 : ColorSat = 78 : ColorLightAdjust = 0 : ColorHueTopbarDelta = 12
-                Case 11 
+                Case 11
                     ColorHue = 220 : ColorSat = 92 : ColorLightAdjust = -8 : ColorHueTopbarDelta = 14
-                Case 12 
+                Case 12
                     ColorHue = CInt((Date.Now.Minute * 6 + Date.Now.Hour * 17) Mod 360) : ColorSat = 88 : ColorLightAdjust = 0 : ColorHueTopbarDelta = 46
-                Case 13 
+                Case 13
                     ColorHue = RandomInteger(0, 359) : ColorSat = 88 : ColorLightAdjust = 0 : ColorHueTopbarDelta = 32
-                Case 14 
+                Case 14
                     ColorHue = Settings.Get(Of Integer)("UiLauncherHue")
                     ColorSat = Settings.Get(Of Integer)("UiLauncherSat")
                     ColorHueTopbarDelta = Settings.Get(Of Integer)("UiLauncherDelta")
@@ -157,7 +151,7 @@ Friend Module ModSecret
         RunInUi(
         Sub()
             If Not FrmMain.IsLoaded Then Return
-            
+
             Dim Brush = New LinearGradientBrush With {.EndPoint = New Point(1, 0), .StartPoint = New Point(0, 0)}
             Dim Deltas = ColorHueTopbarDelta.Switch(Function(d) New Integer() {-d, 0, d}, Function(d) d)
             Brush.GradientStops.Add(New GradientStop With {.Offset = 0, .Color = New MyColor().FromHSL2(ColorHue + Deltas(0), ColorSat, 48 + ColorLightAdjust)})
@@ -165,7 +159,7 @@ Friend Module ModSecret
             Brush.GradientStops.Add(New GradientStop With {.Offset = 1, .Color = New MyColor().FromHSL2(ColorHue + Deltas(2), ColorSat, 48 + ColorLightAdjust)})
             FrmMain.PanTitle.Background = Brush
             FrmMain.PanTitle.Background.Freeze()
-            
+
             If Settings.Get(Of Boolean)("UiBackgroundColorful") Then
                 Brush = New LinearGradientBrush With {.EndPoint = New Point(0.1, 1), .StartPoint = New Point(0.9, 0)}
                 Brush.GradientStops.Add(New GradientStop With {.Offset = -0.1, .Color = New MyColor().FromHSL2(ColorHue - 15, ColorSat * 0.8, 91)})
@@ -176,6 +170,8 @@ Friend Module ModSecret
                 FrmMain.PanForm.Background = New MyColor(245, 245, 245)
             End If
             FrmMain.PanForm.Background.Freeze()
+
+            FormMain.FontColorRefresh()
         End Sub)
     End Sub
     Friend Sub ThemeCheckAll(EffectSetup As Boolean)
@@ -201,10 +197,6 @@ Friend Module ModSecret
     Public Sub UpdateReplace(ProcessId As Integer, OldFileName As String, NewFileName As String, TriggerRestart As Boolean)
     End Sub
 
-    
-    
-    
-    
     Public Sub UpdateReplaceFromEnvironment()
         Dim OldPath As String = Environment.GetEnvironmentVariable("PCL_UPDATE_OLD")
         Dim NewPath As String = Environment.GetEnvironmentVariable("PCL_UPDATE_NEW")
@@ -214,13 +206,13 @@ Friend Module ModSecret
         If String.IsNullOrEmpty(OldPath) OrElse String.IsNullOrEmpty(NewPath) Then
             Environment.Exit(1)
         End If
-        
+
         Try
             Dim OldProcess As Diagnostics.Process = Diagnostics.Process.GetProcessById(CInt(OldPid))
             OldProcess.WaitForExit(120 * 1000)
         Catch
         End Try
-        
+
         Dim Replaced As Boolean = False
         If IO.File.Exists(NewPath) Then
             For i = 1 To 60
@@ -233,7 +225,7 @@ Friend Module ModSecret
                 End Try
             Next
         End If
-        
+
         If Restart AndAlso IO.File.Exists(OldPath) Then
             Try
                 Diagnostics.Process.Start(New Diagnostics.ProcessStartInfo(OldPath) With {
@@ -242,7 +234,7 @@ Friend Module ModSecret
             Catch
             End Try
         End If
-        
+
         If Replaced Then
             Try
                 IO.File.Delete(NewPath)
@@ -258,31 +250,19 @@ Friend Module ModSecret
         Environment.Exit(0)
     End Sub
 
-    
-    
-    
-    
     Friend Sub DownloadLatestPCL(Optional LoaderToSyncProgress As LoaderBase = Nothing)
-        
+
     End Sub
 
 #End Region
 
 #Region "联网配置"
 
-    
-    
-    
-    
     Public ServerConfig As JObject
 
     Public ServerLoader As New LoaderTask(Of Integer, Integer)("PCL 配置更新", AddressOf LoadLocalServerConfig, Priority:=ThreadPriority.BelowNormal) With
-        {.ReloadTimeout = 1000 * 60 * 60} 
+        {.ReloadTimeout = 1000 * 60 * 60}
 
-    
-    
-    
-    
     Private Sub LoadLocalServerConfig()
         ServerConfig = JObject.Parse("{
   ""Link"": {
@@ -319,9 +299,6 @@ Friend Module ModSecret
     Friend Sub GeneratePotatoCode()
     End Sub
 
-    
-    
-    
     Friend Function GetIdentify() As String
         Return "0000-0000-0000-0000"
     End Function

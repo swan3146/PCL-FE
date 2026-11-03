@@ -1,14 +1,7 @@
 namespace MeloongCore;
 
-
-
-
-
 public class ProgressProvider {
 
-    
-    
-    
     public event Action<(double actual, double skiped)>? ProgressChanged;
     private event Action? ChildProgressChanged;
     private void InvokeProgressChanged() {
@@ -16,15 +9,13 @@ public class ProgressProvider {
         ChildProgressChanged?.Invoke();
     }
 
-    
-
     private (double actual, double skiped, double splited) progressParts = (0, 0, 0);
     private double progressSum => progressParts.actual + progressParts.skiped + progressParts.splited;
 
     private bool _Set(double value, bool skiped) {
         value = value.Clamp(0, 1);
         double delta = value - progressSum;
-        if (delta < 0) { 
+        if (delta < 0) {
             progressParts = (progressParts.actual * value / progressSum,
                               progressParts.skiped * value / progressSum,
                               progressParts.splited * value / progressSum);
@@ -36,10 +27,6 @@ public class ProgressProvider {
         return delta != 0;
     }
 
-    
-    
-    
-    
     public void Set(double value, bool skiped = false, ChildrenAction action = ChildrenAction.Finished) {
         bool changed;
         lock (this) {
@@ -48,11 +35,7 @@ public class ProgressProvider {
         }
         if (changed) InvokeProgressChanged();
     }
-    
-    
-    
-    
-    
+
     public void Add(double value, bool skiped = false, ChildrenAction action = ChildrenAction.Finished) {
         bool changed;
         lock (this) {
@@ -61,13 +44,11 @@ public class ProgressProvider {
         }
         if (changed) InvokeProgressChanged();
     }
-    
+
     public void Finish(ChildrenAction action = ChildrenAction.Finished) => Set(1, skiped: false, action: action);
-    
+
     public void Skip(ChildrenAction action = ChildrenAction.Skiped) => Set(1, skiped: true, action: action);
-    
-    
-    
+
     public void Reset() {
         bool changed;
         lock (this) {
@@ -79,21 +60,12 @@ public class ProgressProvider {
         if (changed) InvokeProgressChanged();
     }
 
-    
-
     private readonly List<(double percentage, ProgressProvider child)> childrens = [];
 
-    
-    
-    
     public ProgressProvider SplitTo(double value) {
         lock (this) return SplitBy(value - progressSum).First();
     }
-    
-    
-    
-    
-    
+
     public List<ProgressProvider> SplitBy(params double[] percentages) {
         lock (this) {
             if (percentages.Any(p => p <= 0)) throw new ArgumentException("子项进度必须为正数且");
@@ -108,22 +80,19 @@ public class ProgressProvider {
     }
 
     public enum ChildrenAction {
-        
+
         None,
-        
+
         Finished,
-        
+
         Skiped
     }
-    
-    
-    
-    
+
     private bool AssumeChildrenAs(ChildrenAction action) {
         if (action == ChildrenAction.None) return false;
         lock (this) {
             bool changed = false;
-            if (childrens.Any(c => c.percentage > 0)) { 
+            if (childrens.Any(c => c.percentage > 0)) {
                 var mult = progressParts.splited / childrens.Sum(c => c.percentage);
                 childrens.ForEach(c => {
                     var (subActual, subSkiped) = c.child.GetRaw();
@@ -139,15 +108,10 @@ public class ProgressProvider {
         }
     }
 
-    
-
-    
-    
-    
     public (double actual, double skiped) GetRaw() {
         lock (this) {
             (double actual, double skiped) current = (progressParts.actual, progressParts.skiped);
-            if (childrens.Any(c => c.percentage > 0)) { 
+            if (childrens.Any(c => c.percentage > 0)) {
                 var mult = progressParts.splited / childrens.Sum(c => c.percentage);
                 childrens.ForEach(c => {
                     var (subActual, subSkiped) = c.child.GetRaw();
@@ -163,16 +127,14 @@ public class ProgressProvider {
 
     private (double actual, double skiped) observedProgress = (0, 0);
     private double incrementProgress = 0;
-    
-    
-    
+
     public double GetIncreasing() {
         lock (this) {
             (double actual, double skiped) current = GetRaw();
-            if (current == observedProgress) return incrementProgress; 
-            if (IsFinished) { 
+            if (current == observedProgress) return incrementProgress;
+            if (IsFinished) {
                 incrementProgress = 1;
-            } else if (current.actual >= observedProgress.actual) { 
+            } else if (current.actual >= observedProgress.actual) {
                 incrementProgress += (1 - incrementProgress) *
                     (current.actual - observedProgress.actual) / (1 - observedProgress.actual - current.skiped);
             }
@@ -182,9 +144,6 @@ public class ProgressProvider {
     }
 
 }
-
-
-
 
 public class ProgressObserver : RateLimitedWorker {
     private readonly ProgressProvider provider;
@@ -200,7 +159,7 @@ public class ProgressObserver : RateLimitedWorker {
     private void StartObserver((double actual, double skiped) raw) => Start();
     private static void Observe(ProgressProvider provider, Action<double> updateAction) {
         double progress = provider.GetIncreasing();
-        
+
         updateAction(progress);
     }
 

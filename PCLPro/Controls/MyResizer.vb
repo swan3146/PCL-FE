@@ -301,7 +301,7 @@ Public Class MyResizer
     End Sub
 
     Private Sub updateMouseDown()
-        Dim flag = (GetAsyncKeyState(&H1) And &H8000) = 0 
+        Dim flag = (GetAsyncKeyState(&H1) And &H8000) = 0
         If flag Then
             resizeRight = False
             resizeLeft = False

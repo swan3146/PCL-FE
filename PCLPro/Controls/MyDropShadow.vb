@@ -1,9 +1,6 @@
 Public Class MyDropShadow
     Inherits Decorator
 
-    
-    
-    
     Public Property Color As Color
         Get
             Return GetValue(ColorProperty)
@@ -15,9 +12,6 @@ Public Class MyDropShadow
     Public Shared ReadOnly ColorProperty As DependencyProperty = DependencyProperty.Register("Color", GetType(Color), GetType(MyDropShadow),
         New FrameworkPropertyMetadata(Color.FromArgb(&H71, &H0, &H0, &H0), FrameworkPropertyMetadataOptions.AffectsRender, New PropertyChangedCallback(AddressOf ClearBrushes)))
 
-    
-    
-    
     Public Property ShadowRadius As Double
         Get
             Return GetValue(ShadowRadiusProperty)
@@ -29,9 +23,6 @@ Public Class MyDropShadow
     Public Shared ReadOnly ShadowRadiusProperty As DependencyProperty = DependencyProperty.Register("ShadowRadius", GetType(Double), GetType(MyDropShadow),
         New FrameworkPropertyMetadata(CDbl(5), FrameworkPropertyMetadataOptions.AffectsRender, New PropertyChangedCallback(AddressOf ClearBrushes)))
 
-    
-    
-    
     Public Property CornerRadius As CornerRadius
         Get
             Return GetValue(CornerRadiusProperty)
@@ -46,12 +37,6 @@ Public Class MyDropShadow
     End Function
     Public Shared ReadOnly CornerRadiusProperty As DependencyProperty = DependencyProperty.Register("CornerRadius", GetType(CornerRadius), GetType(MyDropShadow),
         New FrameworkPropertyMetadata(New CornerRadius(), FrameworkPropertyMetadataOptions.AffectsRender, New PropertyChangedCallback(AddressOf ClearBrushes)), New ValidateValueCallback(AddressOf IsCornerRadiusValid))
-
-
-    
-    
-    
-
 
     Protected Overrides Sub OnRender(drawingContext As DrawingContext)
         Dim cornerRadius As CornerRadius = Me.CornerRadius
@@ -320,4 +305,3 @@ Public Class MyDropShadow
     End Function
 
 End Class
-

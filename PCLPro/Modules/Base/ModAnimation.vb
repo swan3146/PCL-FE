@@ -1,21 +1,15 @@
-
-
-
 Imports System.Windows.Media.Effects
 
 Public Module ModAnimation
 
 #Region "声明"
 
-    
-    
-    
     Public ReadOnly Property AniSpeed As Double
         Get
             Dim Setting As Integer = Settings.Get(Of Integer)("SystemDebugAnim")
             If Setting >= 30 Then Return 200
             Dim Speed As Double = (Setting * 0.1 + 0.1).Clamp(0.1, 3)
-            
+
             Select Case Settings.Get(Of Integer)("UiAnimationSpeed")
                 Case 0
                     Return Speed * 0.6
@@ -28,28 +22,20 @@ Public Module ModAnimation
             End Select
         End Get
     End Property
-    
-    
-    
+
     Public AniGroups As New Dictionary(Of String, AniGroupEntry)
     Public Class AniGroupEntry
         Public Data As List(Of AniData)
         Public StartTick As Long
         Public Uuid As Integer = GetUuid()
     End Class
-    
-    
-    
+
     Private AniLastTick As Long
-    
-    
-    
+
     Public AniRunning As Boolean = False
     Private _AniControlEnabled As Integer = 0
     Private ReadOnly AniControlEnabledLock As New Object
-    
-    
-    
+
     Public Property AniControlEnabled() As Integer
         Get
             Return _AniControlEnabled
@@ -65,64 +51,26 @@ Public Module ModAnimation
 
 #Region "类与枚举"
 
-    
-    
-    
-    
     Public Structure AniData
 
-        
-        
-        
-        
         Public TypeMain As AniType
-        
-        
-        
-        
+
         Public TypeSub As AniTypeSub
 
-        
-        
-        
-        
         Public TimeTotal As Integer
-        
-        
-        
-        
+
         Public TimeFinished As Double
-        
-        
-        
-        
+
         Public TimePercent As Double
 
-        
-        
-        
-        
         Public IsAfter As Boolean
 
-        
-        
-        
-        
         Public Ease As AniEase
-        
-        
-        
-        
+
         Public Obj As Object
-        
-        
-        
-        
+
         Public Value As Object
-        
-        
-        
-        
+
         Public ValueLast As Object
 
         Public Overrides Function ToString() As String
@@ -131,47 +79,23 @@ Public Module ModAnimation
 
     End Structure
 
-    
-    
-    
     Public Enum AniType
-        
-        
-        
-        
+
         Number
-        
-        
-        
-        
+
         Color
-        
-        
-        
-        
+
         Scale
-        
-        
-        
-        
+
         TextAppear
-        
-        
-        
-        
+
         Code
-        
-        
-        
+
         ScaleTransform
-        
-        
-        
+
         RotateTransform
     End Enum
-    
-    
-    
+
     Public Enum AniTypeSub
         X
         Y
@@ -193,233 +117,72 @@ Public Module ModAnimation
 
 #Region "种类"
 
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     Public Function AaX(Obj As Object, Value As Double, Optional Time As Integer = 400, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing, Optional After As Boolean = False) As AniData
         Return New AniData With {.TypeMain = AniType.Number, .TypeSub = AniTypeSub.X,
                                    .TimeTotal = Time, .Ease = If(Ease, New AniEaseLinear), .Obj = Obj, .Value = Value, .IsAfter = After, .TimeFinished = -Delay}
     End Function
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     Public Function AaY(Obj As Object, Value As Double, Optional Time As Integer = 400, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing, Optional After As Boolean = False) As AniData
         Return New AniData With {.TypeMain = AniType.Number, .TypeSub = AniTypeSub.Y,
                                    .TimeTotal = Time, .Ease = If(Ease, New AniEaseLinear), .Obj = Obj, .Value = Value, .IsAfter = After, .TimeFinished = -Delay}
     End Function
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     Public Function AaWidth(Obj As Object, Value As Double, Optional Time As Integer = 400, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing, Optional After As Boolean = False) As AniData
         Return New AniData With {.TypeMain = AniType.Number, .TypeSub = AniTypeSub.Width,
                                    .TimeTotal = Time, .Ease = If(Ease, New AniEaseLinear), .Obj = Obj, .Value = Value, .IsAfter = After, .TimeFinished = -Delay}
     End Function
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     Public Function AaHeight(Obj As Object, Value As Double, Optional Time As Integer = 400, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing, Optional After As Boolean = False) As AniData
         Return New AniData With {.TypeMain = AniType.Number, .TypeSub = AniTypeSub.Height,
                                    .TimeTotal = Time, .Ease = If(Ease, New AniEaseLinear), .Obj = Obj, .Value = Value, .IsAfter = After, .TimeFinished = -Delay}
     End Function
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     Public Function AaOpacity(Obj As Object, Value As Double, Optional Time As Integer = 400, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing, Optional After As Boolean = False) As AniData
         Return New AniData With {.TypeMain = AniType.Number, .TypeSub = AniTypeSub.Opacity,
                                    .TimeTotal = Time, .Ease = If(Ease, New AniEaseLinear), .Obj = Obj, .Value = Value, .IsAfter = After, .TimeFinished = -Delay}
     End Function
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     Public Function AaValue(Obj As Object, Value As Double, Optional Time As Integer = 400, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing, Optional After As Boolean = False) As AniData
         Return New AniData With {.TypeMain = AniType.Number, .TypeSub = AniTypeSub.Value,
                                    .TimeTotal = Time, .Ease = If(Ease, New AniEaseLinear), .Obj = Obj, .Value = Value, .IsAfter = After, .TimeFinished = -Delay}
     End Function
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     Public Function AaRadius(Obj As Object, Value As Double, Optional Time As Integer = 400, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing, Optional After As Boolean = False) As AniData
         Return New AniData With {.TypeMain = AniType.Number, .TypeSub = AniTypeSub.Radius,
                                    .TimeTotal = Time, .Ease = If(Ease, New AniEaseLinear), .Obj = Obj, .Value = Value, .IsAfter = After, .TimeFinished = -Delay}
     End Function
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     Public Function AaBorderThickness(Obj As Object, Value As Double, Optional Time As Integer = 400, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing, Optional After As Boolean = False) As AniData
         Return New AniData With {.TypeMain = AniType.Number, .TypeSub = AniTypeSub.BorderThickness,
                                    .TimeTotal = Time, .Ease = If(Ease, New AniEaseLinear), .Obj = Obj, .Value = Value, .IsAfter = After, .TimeFinished = -Delay}
     End Function
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     Public Function AaStrokeThickness(Obj As Object, Value As Double, Optional Time As Integer = 400, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing, Optional After As Boolean = False) As AniData
         Return New AniData With {.TypeMain = AniType.Number, .TypeSub = AniTypeSub.StrokeThickness,
                                    .TimeTotal = Time, .Ease = If(Ease, New AniEaseLinear), .Obj = Obj, .Value = Value, .IsAfter = After, .TimeFinished = -Delay}
     End Function
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     Public Function AaGridLengthWidth(Obj As Object, Value As Double, Optional Time As Integer = 400, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing, Optional After As Boolean = False) As AniData
         Return New AniData With {.TypeMain = AniType.Number, .TypeSub = AniTypeSub.GridLengthWidth,
                                    .TimeTotal = Time, .Ease = If(Ease, New AniEaseLinear), .Obj = Obj, .Value = Value, .IsAfter = After, .TimeFinished = -Delay}
     End Function
 
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     Public Function AaDouble(Obj As Object, Prop As DependencyProperty, Value As Double, Optional Time As Integer = 400, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing, Optional After As Boolean = False) As AniData
         Return New AniData With {.TypeMain = AniType.Number, .TypeSub = AniTypeSub.Double, .TimeTotal = Time, .Ease = If(Ease, New AniEaseLinear), .Obj = {Obj, Prop, ""}, .Value = Value, .IsAfter = After, .TimeFinished = -Delay}
     End Function
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     Public Function AaDouble(Lambda As ParameterizedThreadStart, Value As Double, Optional Time As Integer = 400, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing, Optional After As Boolean = False) As AniData
         Return New AniData With {.TypeMain = AniType.Number, .TypeSub = AniTypeSub.DoubleParam, .TimeTotal = Time, .Ease = If(Ease, New AniEaseLinear), .Obj = Lambda, .Value = Value, .IsAfter = After, .TimeFinished = -Delay}
     End Function
 
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     Public Function AaColor(Obj As FrameworkElement, Prop As DependencyProperty, Value As MyColor, Optional Time As Integer = 400, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing, Optional After As Boolean = False) As AniData
         Return New AniData With {.TypeMain = AniType.Color, .TimeTotal = Time, .Ease = If(Ease, New AniEaseLinear), .Obj = {Obj, Prop, ""}, .Value = Value, .IsAfter = After, .TimeFinished = -Delay, .ValueLast = New MyColor(0, 0, 0, 0)}
     End Function
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     Public Function AaColor(Obj As FrameworkElement, Prop As DependencyProperty, Res As String, Optional Time As Integer = 400, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing, Optional After As Boolean = False) As AniData
         Return New AniData With {.TypeMain = AniType.Color, .TimeTotal = Time, .Ease = If(Ease, New AniEaseLinear), .Obj = {Obj, Prop, Res}, .Value = New MyColor(Application.Current.FindResource(Res)) - New MyColor(Obj.GetValue(Prop)), .IsAfter = After, .TimeFinished = -Delay, .ValueLast = New MyColor(0, 0, 0, 0)}
     End Function
 
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     Public Function AaScale(Obj As Object, Value As Double, Optional Time As Integer = 400, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing, Optional After As Boolean = False, Optional Absolute As Boolean = False) As AniData
         Dim ChangeRect As MyRect
         If Absolute Then
@@ -430,108 +193,34 @@ Public Module ModAnimation
         Return New AniData With {.TypeMain = AniType.Scale, .TimeTotal = Time, .Ease = If(Ease, New AniEaseLinear), .Obj = Obj, .Value = ChangeRect, .IsAfter = After, .TimeFinished = -Delay}
     End Function
 
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     Public Function AaTextAppear(Obj As Object, Optional Hide As Boolean = False, Optional TimePerText As Boolean = True, Optional Time As Integer = 70, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing, Optional After As Boolean = False) As AniData
-        
+
         Return New AniData With {.TypeMain = AniType.TextAppear, .Ease = If(Ease, New AniEaseLinear), .TimeTotal = If(TimePerText, Time * If(TypeOf Obj Is TextBlock, Obj.Text, Obj.Context.ToString).ToString.Length, Time), .Obj = Obj, .Value = {If(TypeOf Obj Is TextBlock, Obj.Text, Obj.Context.ToString), Hide}, .IsAfter = After, .TimeFinished = -Delay}
     End Function
 
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
     Public Function AaCode(Code As ThreadStart, Optional Delay As Integer = 0, Optional After As Boolean = False) As AniData
         Return New AniData With {.TypeMain = AniType.Code,
                                    .TimeTotal = 1, .Value = Code, .IsAfter = After, .TimeFinished = -Delay}
     End Function
 
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     Public Function AaScaleTransform(Obj As Object, Value As Double, Optional Time As Integer = 400, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing, Optional After As Boolean = False) As AniData
         Return New AniData With {.TypeMain = AniType.ScaleTransform, .TimeTotal = Time, .Ease = If(Ease, New AniEaseLinear), .Obj = Obj, .Value = Value, .IsAfter = After, .TimeFinished = -Delay}
     End Function
 
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     Public Function AaRotateTransform(Obj As Object, Value As Double, Optional Time As Integer = 400, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing, Optional After As Boolean = False) As AniData
         Return New AniData With {.TypeMain = AniType.RotateTransform, .TimeTotal = Time, .Ease = If(Ease, New AniEaseLinear), .Obj = Obj, .Value = Value, .IsAfter = After, .TimeFinished = -Delay}
     End Function
 
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
     Public Function AaTranslateX(Obj As Object, Value As Double, Optional Time As Integer = 400, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing, Optional After As Boolean = False) As AniData
         Return New AniData With {.TypeMain = AniType.Number, .TypeSub = AniTypeSub.TranslateX,
                                    .TimeTotal = Time, .Ease = If(Ease, New AniEaseLinear), .Obj = Obj, .Value = Value, .IsAfter = After, .TimeFinished = -Delay}
     End Function
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     Public Function AaTranslateY(Obj As Object, Value As Double, Optional Time As Integer = 400, Optional Delay As Integer = 0, Optional Ease As AniEase = Nothing, Optional After As Boolean = False) As AniData
         Return New AniData With {.TypeMain = AniType.Number, .TypeSub = AniTypeSub.TranslateY,
                                    .TimeTotal = Time, .Ease = If(Ease, New AniEaseLinear), .Obj = Obj, .Value = Value, .IsAfter = After, .TimeFinished = -Delay}
     End Function
 
-    
-
-    
-    
-    
-    
     Public Function AaStack(Stack As StackPanel, Optional Time As Integer = 100, Optional Delay As Integer = 25) As List(Of AniData)
         Dim Result = New List(Of AniData)
         Dim AniDelay As Integer = 0
@@ -547,34 +236,22 @@ Public Module ModAnimation
 
 #Region "缓动函数"
 
-    
     Public Enum AniEasePower As Integer
         Weak = 2
         Middle = 3
         Strong = 4
         ExtraStrong = 5
     End Enum
-    
-    
-    
+
     Public MustInherit Class AniEase
-        
-        
-        
-        
+
         Public MustOverride Function GetValue(t As Double) As Double
-        
-        
-        
-        
-        
+
         Public Overridable Function GetDelta(t1 As Double, t0 As Double) As Double
             Return GetValue(t1) - GetValue(t0)
         End Function
     End Class
-    
-    
-    
+
     Public Class AniEaseInout
         Inherits AniEase
         Private ReadOnly EaseIn As AniEase, EaseOut As AniEase, EaseInPercent As Double
@@ -590,10 +267,6 @@ Public Module ModAnimation
         End Function
     End Class
 
-    
-    
-    
-    
     Public Class AniEaseLinear
         Inherits AniEase
         Public Overrides Function GetValue(t As Double) As Double
@@ -604,10 +277,6 @@ Public Module ModAnimation
         End Function
     End Class
 
-    
-    
-    
-    
     Public Class AniEaseInFluent
         Inherits AniEase
         Private ReadOnly p As AniEasePower
@@ -618,9 +287,7 @@ Public Module ModAnimation
             Return t.Clamp(0, 1) ^ p
         End Function
     End Class
-    
-    
-    
+
     Public Class AniEaseOutFluent
         Inherits AniEase
         Private ReadOnly p As AniEasePower
@@ -631,9 +298,7 @@ Public Module ModAnimation
             Return 1 - (1 - t).Clamp(0, 1) ^ p
         End Function
     End Class
-    
-    
-    
+
     Public Class AniEaseInoutFluent
         Inherits AniEase
         Private Ease As AniEaseInout
@@ -644,31 +309,23 @@ Public Module ModAnimation
             Return Ease.GetValue(t)
         End Function
     End Class
-    
-    
-    
+
     Public Class AniEaseOutFluentWithInitial
         Inherits AniEase
-        Private ReadOnly alpha As Double 
-        
-        
-        
+        Private ReadOnly alpha As Double
+
         Public Sub New(InitialPixelPerSecond As Double, TotalSecond As Double, TotalDistance As Double)
-            Dim v0_norm As Double = InitialPixelPerSecond * TotalSecond / TotalDistance 
+            Dim v0_norm As Double = InitialPixelPerSecond * TotalSecond / TotalDistance
             alpha = v0_norm - 1.0
-            If alpha < 0 Then alpha = 0 
+            If alpha < 0 Then alpha = 0
         End Sub
         Public Overrides Function GetValue(percent As Double) As Double
             Dim p As Double = percent.Clamp(0, 1)
-            If alpha = 0 Then Return p 
+            If alpha = 0 Then Return p
             Return (alpha + 1) * p / (1 + alpha * p)
         End Function
     End Class
 
-    
-    
-    
-    
     Public Class AniEaseInBack
         Inherits AniEase
         Private ReadOnly p As Double
@@ -680,9 +337,7 @@ Public Module ModAnimation
             Return t ^ p * Math.Cos(1.5 * Math.PI * (1 - t))
         End Function
     End Class
-    
-    
-    
+
     Public Class AniEaseOutBack
         Inherits AniEase
         Private ReadOnly p As Double
@@ -695,10 +350,6 @@ Public Module ModAnimation
         End Function
     End Class
 
-    
-    
-    
-    
     Public Class AniEaseInCar
         Inherits AniEase
         Private Ease As AniEaseInout
@@ -709,9 +360,7 @@ Public Module ModAnimation
             Return Ease.GetValue(t)
         End Function
     End Class
-    
-    
-    
+
     Public Class AniEaseOutCar
         Inherits AniEase
         Private Ease As AniEaseInout
@@ -723,13 +372,9 @@ Public Module ModAnimation
         End Function
     End Class
 
-    
-    
-    
-    
     Public Class AniEaseInElastic
         Inherits AniEase
-        Private ReadOnly p As Integer 
+        Private ReadOnly p As Integer
         Public Sub New(Optional Power As AniEasePower = AniEasePower.Middle)
             p = Power + 4
         End Sub
@@ -738,9 +383,7 @@ Public Module ModAnimation
             Return t ^ ((p - 1) * 0.25) * Math.Cos((p - 3.5) * Math.PI * (1 - t) ^ 1.5)
         End Function
     End Class
-    
-    
-    
+
     Public Class AniEaseOutElastic
         Inherits AniEase
         Private ReadOnly p As Integer
@@ -757,14 +400,9 @@ Public Module ModAnimation
 
 #Region "接口（开始、中断、检测）"
 
-    
-    
-    
-    
-    
     Public Sub AniStart(AniGroup As IList, Optional Name As String = "", Optional RefreshTime As Boolean = False)
-        If RefreshTime Then AniLastTick = GetTimeMs() 
-        
+        If RefreshTime Then AniLastTick = GetTimeMs()
+
         Dim AllAnis = New List(Of AniData)
         For Each Element In AniGroup
             If TypeOf Element Is ICollection Then
@@ -781,22 +419,15 @@ Public Module ModAnimation
         End If
         AniGroups.Add(Name, NewEntry)
     End Sub
-    
-    
-    
+
     Public Sub AniStart(AniGroup As AniData, Optional Name As String = "", Optional RefreshTime As Boolean = False)
         AniStart(New List(Of AniData) From {AniGroup}, Name, RefreshTime)
     End Sub
-    
-    
-    
-    
+
     Public Sub AniStop(Name As String)
         AniGroups.Remove(Name)
     End Sub
-    
-    
-    
+
     Public Function AniIsRun(Name As String) As Boolean
         Return AniGroups.ContainsKey(Name)
     End Function
@@ -806,30 +437,25 @@ Public Module ModAnimation
     Private AniCount As Integer = 0
     Private AniFPSCounter As Integer = 0
     Private AniFPSTimer As Long = 0
-    
-    
-    
+
     Public AniFPS As Integer = 0
 
-    
-    
-    
     Public Sub AniStart()
-        
+
         AniLastTick = GetTimeMs()
         AniFPSTimer = AniLastTick
-        AniRunning = True 
+        AniRunning = True
 
         RunInNewThread(
         Sub()
             Try
                 Logger.Info("动画线程开始")
                 Do While True
-                    
+
                     Dim DeltaTime As Long = (GetTimeMs() - AniLastTick).Clamp(0, 100000)
                     If DeltaTime < 3 Then GoTo Sleeper
                     AniLastTick = GetTimeMs()
-                    
+
                     If ModeDebug Then
                         If (AniLastTick - AniFPSTimer).Clamp(0, 100000) >= 500 Then
                             AniFPS = AniFPSCounter
@@ -838,7 +464,7 @@ Public Module ModAnimation
                         End If
                         AniFPSCounter += 2
                     End If
-                    
+
                     RunInUiWait(
                     Sub()
                         AniCount = 0
@@ -853,7 +479,7 @@ Public Module ModAnimation
                         End If
                     End Sub)
 Sleeper:
-                    
+
                     Thread.Sleep(1)
                 Loop
             Catch ex As Exception
@@ -862,54 +488,50 @@ Sleeper:
         End Sub, "Animation", ThreadPriority.AboveNormal)
     End Sub
 
-    
-    
-    
     Public Sub AniTimer(DeltaTick As Double)
         Try
             If DeltaTick / AniSpeed > 100 Then Logger.Info($"两个动画帧间隔 {DeltaTick} ms")
             Dim i As Integer = -1
-            
+
             Do While i + 1 < AniGroups.Count
                 i += 1
-                
+
                 Dim Entry As AniGroupEntry = AniGroups.Values(i)
-                If Entry.StartTick > AniLastTick Then Continue Do 
-                Dim CanRemoveAfter = True 
+                If Entry.StartTick > AniLastTick Then Continue Do
+                Dim CanRemoveAfter = True
                 Dim ii = 0
 
-                
                 Do While ii < Entry.Data.Count
                     Dim Anim As AniData = Entry.Data(ii)
-                    
-                    If Anim.IsAfter = False Then 
-                        CanRemoveAfter = False 
-                        
+
+                    If Anim.IsAfter = False Then
+                        CanRemoveAfter = False
+
                         Anim.TimeFinished += DeltaTick
-                        
+
                         If Anim.TimeFinished > 0 Then
                             Anim = AniRun(Anim)
                             AniCount += 1
                         End If
-                        
+
                         If Anim.TimeFinished >= Anim.TimeTotal Then
-                            
+
                             If Anim.TypeMain = AniType.Color AndAlso Not Anim.Obj(2) = "" Then Anim.Obj(0).SetResourceReference(Anim.Obj(1), Anim.Obj(2))
-                            
+
                             Entry.Data.RemoveAt(ii)
                             GoTo NextAni
                         End If
                         Entry.Data(ii) = Anim
-                    Else 
+                    Else
                         If CanRemoveAfter Then
-                            
+
                             CanRemoveAfter = False
                             Anim.IsAfter = False
                             Entry.Data(ii) = Anim
-                            
+
                             GoTo NextAni
                         Else
-                            
+
                             Exit Do
                         End If
                     End If
@@ -917,10 +539,8 @@ Sleeper:
 NextAni:
                 Loop
 
-                
                 If Not Entry.Data.Any() Then
-                    
-                    
+
                     For Current = 0 To AniGroups.Count - 1
                         If AniGroups.ElementAt(Current).Value.Uuid = Entry.Uuid Then
                             AniGroups.Remove(AniGroups.ElementAt(Current).Key)
@@ -936,10 +556,6 @@ NextAni:
         End Try
     End Sub
 
-    
-    
-    
-    
     Private Function AniRun(Ani As AniData) As AniData
         Try
             Select Case Ani.TypeMain
@@ -1008,7 +624,7 @@ NextAni:
                     End If
 
                 Case AniType.Color
-                    
+
                     Dim Delta As MyColor = MyColor.Lerp(New MyColor(0, 0, 0, 0), Ani.Value, Ani.Ease.GetDelta(Ani.TimeFinished / Ani.TimeTotal, Ani.TimePercent)) + Ani.ValueLast
                     Dim Obj As FrameworkElement = Ani.Obj(0)
                     Dim Prop As DependencyProperty = Ani.Obj(1)
@@ -1028,7 +644,7 @@ NextAni:
                     Dim TextCount As Integer = If(Ani.Value(1), Text.Length, 0) +
                                                Math.Round(Text.Length * If(Ani.Value(1), -1, 1) * Ani.Ease.GetDelta(Ani.TimeFinished / Ani.TimeTotal, 0))
                     Dim NewText As String = Text.Substring(0, TextCount)
-                    
+
                     If TextCount < Text.Length Then
                         Dim NextText As String = Text.Substring(TextCount, 1)
                         If Convert.ToInt32(Convert.ToChar(NextText)) >= Convert.ToInt32(Convert.ToChar(128)) Then
@@ -1037,7 +653,7 @@ NextAni:
                             NewText &= RandomInteger(0, 85).ConvertRadix(86)
                         End If
                     End If
-                    
+
                     If TypeOf Ani.Obj Is TextBlock Then
                         Ani.Obj.Text = NewText
                     Else
@@ -1068,7 +684,7 @@ NextAni:
                     CType(Obj.RenderTransform, RotateTransform).Angle = CType(Obj.RenderTransform, RotateTransform).Angle + Delta
 
             End Select
-            Ani.TimePercent = Ani.TimeFinished / Ani.TimeTotal 
+            Ani.TimePercent = Ani.TimeFinished / Ani.TimeTotal
         Catch ex As Exception
             Logger.Error(ex, $"执行动画失败：{Ani}", LogBehavior.Toast)
         End Try

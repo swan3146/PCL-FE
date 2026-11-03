@@ -76,7 +76,7 @@ Public Class Settings
         New Setting("CacheJavaListVersion", 0, Source:=Sources.Registry),
         New Setting("LoginRemember", True, Source:=Sources.Registry, Encrypted:=True),
         New Setting("LoginLegacyName", "", Source:=Sources.Registry, Encrypted:=True),
-        New Setting("LoginMsJson", "{}", Source:=Sources.Registry, Encrypted:=True), 
+        New Setting("LoginMsJson", "{}", Source:=Sources.Registry, Encrypted:=True),
         New Setting("LoginNideEmail", "", Source:=Sources.Registry, Encrypted:=True),
         New Setting("LoginNidePass", "", Source:=Sources.Registry, Encrypted:=True),
         New Setting("LoginAuthEmail", "", Source:=Sources.Registry, Encrypted:=True),
@@ -129,7 +129,7 @@ Public Class Settings
         New Setting("ToolUpdateSnapshot", False, Source:=Sources.Registry),
         New Setting("ToolUpdateReleaseLast", "", Source:=Sources.Registry),
         New Setting("ToolUpdateSnapshotLast", "", Source:=Sources.Registry),
-        New Setting("UiLauncherTransparent", 600, OnChanged:=Sub(Value As Integer) If FrmMain IsNot Nothing Then FrmMain.Opacity = Value / 1000 + 0.4), 
+        New Setting("UiLauncherTransparent", 600, OnChanged:=Sub(Value As Integer) If FrmMain IsNot Nothing Then FrmMain.Opacity = Value / 1000 + 0.4),
         New Setting("UiLauncherHue", 180),
         New Setting("UiLauncherSat", 80),
         New Setting("UiLauncherDelta", 90),
@@ -145,6 +145,9 @@ Public Class Settings
         New Setting("UiAnimationSpeed", 1),
         New Setting("UiStartAnimation", True),
         New Setting("UiUiBlur", 18, OnChanged:=AddressOf FormMain.GlassStyleRefresh),
+        New Setting("UiFontFamily", "", OnChanged:=AddressOf FormMain.FontFamilyRefresh),
+        New Setting("UiFontColor", "", OnChanged:=AddressOf FormMain.FontColorRefresh),
+        New Setting("UiFontSize", 13, OnChanged:=AddressOf FormMain.FontSizeRefresh),
         New Setting("UiGlassCorner", 16, OnChanged:=AddressOf FormMain.GlassStyleRefresh),
         New Setting("UiGlassCardOpacity", 0, OnChanged:=AddressOf FormMain.GlassStyleRefresh),
         New Setting("UiWindowTopmost", False, OnChanged:=AddressOf FormMain.WindowTopmostRefresh),
@@ -154,7 +157,7 @@ Public Class Settings
         New Setting("UiCheckUpdateAtStartup", True),
         New Setting("UiVideoBackground", "", OnChanged:=AddressOf FormMain.VideoBackgroundRefresh),
         New Setting("UiFirewallGuideShown", False),
-        New Setting("UiBackgroundColorful", True, OnChanged:=Sub() ThemeRefresh()), 
+        New Setting("UiBackgroundColorful", True, OnChanged:=Sub() ThemeRefresh()),
         New Setting("UiBackgroundOpacity", 1000, OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
         New Setting("UiBackgroundBlur", 0, OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
         New Setting("UiBackgroundSuit", 0, OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
@@ -224,13 +227,9 @@ Public Class Settings
         Public Encrypted As Boolean
         Public DefaultValue As Object
         Public Source As Sources
-        
-        
-        
+
         Public OnChanged As Action(Of Object)
-        
-        
-        
+
         Public Type As Type
         Public Sub New(Key As String, Value As Object, Optional Source As Sources = Sources.Normal, Optional Encrypted As Boolean = False, Optional OnChanged As Action(Of Object) = Nothing)
             Try
@@ -241,14 +240,10 @@ Public Class Settings
                 Me.Type = If(Value, "").GetType
                 Me.OnChanged = OnChanged
             Catch ex As Exception
-                Logger.Error(ex, "初始化设置项失败") 
+                Logger.Error(ex, "初始化设置项失败")
             End Try
         End Sub
 
-        
-        
-        
-        
         Public ValueCache As New ConcurrentDictionary(Of String, Object)
         Public Function GetCache(Instance As McInstance)
             Dim Key As String = If(Source = Sources.Instance, Instance.PathVersion, "")
@@ -260,9 +255,6 @@ Public Class Settings
             ValueCache(Key) = Value
         End Sub
 
-        
-        
-        
         Public Sub Save(Optional Instance As McInstance = Nothing)
             Dim Value As String = GetCache(Instance)
             Logger.Trace($"保存设置：{Key} {If(Encrypted, "", "= " & Value)}{If(Instance Is Nothing, "", $"（实例：{Instance?.PathVersion}）")}")
@@ -291,30 +283,24 @@ Public Class Settings
 
     End Class
 
-    
-    
-    
     Public Shared Sub [Set](Key As String, Value As Object, Optional Instance As McInstance = Nothing)
         Dim Entry As Setting = Nothing
         If Not Entries.TryGetValue(Key, Entry) Then Throw New KeyNotFoundException("未找到设置项：" & Key)
         Try
-            
+
             Value = CTypeDynamic(Value, Entry.Type)
             If Entry.GetCache(Instance) Is Nothing Then [Get](Key, Instance)
             If Entry.GetCache(Instance) = Value Then Return
-            
+
             Entry.Set(Value, Instance)
             Entry.Save(Instance)
-            
+
             If Entry.OnChanged IsNot Nothing Then Entry.OnChanged.Invoke(Value)
         Catch ex As Exception
             Logger.Error(ex, $"设置设置项时出错（{Key}, {Value}）")
         End Try
     End Sub
-    
-    
-    
-    
+
     Public Shared Sub SetSafe(Key As String, Value As Object, Optional Instance As McInstance = Nothing)
         Dim Entry As Setting = Nothing
         If Not Entries.TryGetValue(Key, Entry) Then Throw New KeyNotFoundException("未找到设置项：" & Key)
@@ -322,25 +308,21 @@ Public Class Settings
         [Set](Key, Value, Instance)
     End Sub
 
-    
-    
-    
     Public Shared Function [Get](Key As String, Optional Instance As McInstance = Nothing)
         Dim Entry As Setting = Nothing
         If Not Entries.TryGetValue(Key, Entry) Then Throw New KeyNotFoundException("未找到设置项：" & Key)
         Dim Value = Entry.GetCache(Instance)
         If Value IsNot Nothing Then Return Value
-        
-        
+
         Static ForcedSettings As New Dictionary(Of String, Object)
         Dim ForcedSetting As Object = Nothing
         If ForcedSettings.TryGetValue(Key, ForcedSetting) Then
             Entry.Set(ForcedSetting, Instance)
             Return ForcedSetting
         End If
-        
+
         Try
-            Dim GotValue As String = Nothing 
+            Dim GotValue As String = Nothing
             Dim DefaultValue As String = If(Entry.Encrypted, DesEncrypt(Entry.DefaultValue, "PCL" & Identify), Entry.DefaultValue)
             Select Case Entry.Source
                 Case Sources.Normal
@@ -378,10 +360,7 @@ Public Class Settings
     Public Shared Function [Get](Of T)(Key As String, Optional Instance As McInstance = Nothing) As T
         Return [Get](Key, Instance)
     End Function
-    
-    
-    
-    
+
     Public Shared Function GetSafe(Key As String, Optional Instance As McInstance = Nothing)
         Dim Entry As Setting = Nothing
         If Not Entries.TryGetValue(Key, Entry) Then Throw New KeyNotFoundException("未找到设置项：" & Key)
@@ -389,17 +368,14 @@ Public Class Settings
         Return [Get](Key, Instance)
     End Function
 
-    
-    
-    
     Public Shared Sub Reset(Key As String, Optional Instance As McInstance = Nothing)
         Dim Entry As Setting = Nothing
         If Not Entries.TryGetValue(Key, Entry) Then Throw New KeyNotFoundException("未找到设置项：" & Key)
         Try
-            
+
             If Entry.GetCache(Instance) Is Nothing Then [Get](Key, Instance)
             If Entry.GetCache(Instance) = Entry.DefaultValue Then Return
-            
+
             Entry.Set(Entry.DefaultValue, Instance)
             Select Case Entry.Source
                 Case Sources.Normal
@@ -414,24 +390,17 @@ Public Class Settings
                     If Instance Is Nothing Then Throw New Exception($"重置版本设置 {Key} 时未提供目标版本")
                     DeleteIniKey(Instance.PathVersion & "PCL\Setup.ini", Key)
             End Select
-            
+
             If Entry.OnChanged IsNot Nothing Then Entry.OnChanged.Invoke(Entry.DefaultValue)
         Catch ex As Exception
             Logger.Error(ex, $"重置设置项时出错（{Key}）")
         End Try
     End Sub
 
-    
-    
-    
     Public Shared Function GetDefault(Key As String) As String
         Return Entries(Key).DefaultValue
     End Function
 
-    
-    
-    
-    
     Public Shared Function HasSaved(Key As String, Optional Instance As McInstance = Nothing) As Boolean
         Select Case Entries(Key).Source
             Case Sources.Normal
@@ -443,7 +412,7 @@ Public Class Settings
                     Logger.Warn(ex, $"判断注册表 {Key} 是否存在时出错")
                     Return False
                 End Try
-            Case Else 
+            Case Else
                 If Instance Is Nothing Then Throw New Exception($"判断版本设置 {Key} 是否存在时未提供目标版本")
                 Return HasIniKey(Instance.PathVersion & "PCL\Setup.ini", Key)
         End Select
@@ -453,9 +422,6 @@ Public Class Settings
 
     Private Shared ReadOnly desInitialVector As Byte() = Encoding.UTF8.GetBytes("95168702")
 
-    
-    
-    
     Private Shared Function DesEncrypt(sourceString As String, Optional key As String = Nothing) As String
         key = If(key Is Nothing, "@;$ Abv2", key.GetStableHashCode().ToString().EnsureLength("X"c, 8).Substring(0, 8))
         Dim btKey As Byte() = Encoding.UTF8.GetBytes(key)
@@ -471,9 +437,6 @@ Public Class Settings
         End Using
     End Function
 
-    
-    
-    
     Private Shared Function DesDecrypt(encryptedString As String, Optional key As String = Nothing) As String
         key = If(key Is Nothing, "@;$ Abv2", key.GetStableHashCode().ToString().EnsureLength("X"c, 8).Substring(0, 8))
         Dim btKey As Byte() = Encoding.UTF8.GetBytes(key)

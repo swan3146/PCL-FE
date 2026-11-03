@@ -4,7 +4,6 @@ Imports System.Windows.Markup
 Public Class MyHint
     Public Uuid As Integer = GetUuid()
 
-    
     Public Property HasBorder As Boolean
         Get
             Return BorderThickness.Top > 0
@@ -18,7 +17,6 @@ Public Class MyHint
         End Set
     End Property
 
-    
     Public Enum Themes
         Blue = 0
         Red = 1
@@ -68,7 +66,6 @@ Public Class MyHint
             d.Theme = If(e.NewValue, Themes.Red, Themes.Blue)
         End Sub))
 
-    
     Public ReadOnly Property Inlines As InlineCollection
         Get
             Return LabText.Inlines
@@ -88,7 +85,6 @@ Public Class MyHint
             d.LabText.Text = e.NewValue
         End Sub))
 
-    
     Public Property CanClose As Boolean
         Get
             Return BtnClose.Visibility = Visibility.Visible
@@ -106,7 +102,6 @@ Public Class MyHint
         AniDispose(Me, False)
     End Sub
 
-    
     Public Event Click(sender As Object, e As MouseButtonEventArgs)
     Private IsMouseDown As Boolean = False
     Private Sub MyHint_MouseUp(sender As Object, e As MouseButtonEventArgs) Handles Me.MouseLeftButtonUp
@@ -116,7 +111,7 @@ Public Class MyHint
         RaiseEvent Click(sender, e)
         If e.Handled Then Return
         e.Handled = True
-        RaiseCustomEvent() 
+        RaiseCustomEvent()
     End Sub
     Private Sub MyHint_MouseDown(sender As Object, e As MouseButtonEventArgs) Handles Me.MouseLeftButtonDown
         IsMouseDown = True

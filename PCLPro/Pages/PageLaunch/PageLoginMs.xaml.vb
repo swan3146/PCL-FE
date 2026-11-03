@@ -1,11 +1,8 @@
 Public Class PageLoginMs
 
-    
-    
-    
     Public Sub Reload(KeepInput As Boolean)
         Dim IndexBefore = ComboAccounts.SelectedIndex
-        
+
         ComboAccounts.Items.Clear()
         ComboAccounts.Items.Add(New MyComboBoxItem With {.Content = "添加新账号"})
         Try
@@ -21,7 +18,7 @@ Public Class PageLoginMs
             Logger.Error(ex, $"微软登录信息出错，登录信息已被重置", LogBehavior.Toast)
             Settings.Set("LoginMsJson", "{}")
         End Try
-        
+
         ComboAccounts.SelectedIndex = If(KeepInput, Math.Max(0, IndexBefore), 0)
     End Sub
     Private Sub ComboAccounts_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboAccounts.SelectionChanged
@@ -33,9 +30,6 @@ Public Class PageLoginMs
         End If
     End Sub
 
-    
-    
-    
     Public Shared Function GetLoginData() As McLoginMs
         If FrmLoginMs Is Nothing Then Return New McLoginMs With {.OAuthRefreshToken = Settings.Get(Of String)("CacheMsV2OAuthRefresh"), .UserName = Settings.Get(Of String)("CacheMsV2Name")}
         Dim Result As McLoginMs = Nothing
@@ -50,9 +44,7 @@ Public Class PageLoginMs
         End Sub)
         Return Result
     End Function
-    
-    
-    
+
     Public Shared Function IsVaild(LoginData As McLoginMs) As String
         If LoginData.OAuthRefreshToken = "" Then
             Return "请在登录账号后再启动游戏！"

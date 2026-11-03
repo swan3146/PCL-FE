@@ -1,8 +1,5 @@
 Public Class LazyLoadBehavior
 
-    
-    
-    
     Public Shared Sub OnFirstEnterScrollViewerViewport(obj As DependencyObject, value As Action)
         obj.SetValue(IsInViewportProperty, value)
     End Sub
@@ -19,15 +16,15 @@ Public Class LazyLoadBehavior
         Dim Handler As EventHandler =
         Sub()
             If Handled Then Return
-            
+
             If Element.RenderSize.Width < Double.Epsilon Then Return
             If Not Element.IsVisible Then Return
-            
+
             Dim Scroll = FindParentScrollViewer(Element)
             If Scroll Is Nothing Then Return
             If Not New Rect(0, 0, Scroll.ViewportWidth, Scroll.ViewportHeight).IntersectsWith(
                Element.TransformToAncestor(Scroll).TransformBounds(New Rect(New Point(0, 0), Element.RenderSize))) Then Return
-            
+
             Handled = True
             CType(e.NewValue, Action).Invoke()
             RemoveHandler Element.LayoutUpdated, Handler

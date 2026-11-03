@@ -3,13 +3,9 @@ Imports System.Windows.Shapes
 Public Class MySlider
     Implements ISettingControl
 
-    
-
     Public Uuid As Integer = GetUuid()
     Public Event Change(sender As Object, user As Boolean)
     Public Event PreviewChange(sender As Object, e As RouteEventArgs)
-
-    
 
     Private _MaxValue As Integer = 100
     Public Property MaxValue As Integer
@@ -34,7 +30,6 @@ Public Class MySlider
                 newValue = newValue.Clamp(0, MaxValue)
                 If _Value = newValue Then Return
 
-                
                 Dim OldValue = _Value
                 _Value = newValue
                 If AniControlEnabled = 0 Then
@@ -76,11 +71,9 @@ Public Class MySlider
         ShapeDot.Margin = New Thickness(NewWidth, ShapeDot.Margin.Top, ShapeDot.Margin.Right, ShapeDot.Margin.Bottom)
     End Sub
 
-    
-
     Public GetHintText As [Delegate]
     Private Sub DragStart(sender As Object, e As MouseButtonEventArgs) Handles Me.MouseLeftButtonDown
-        e.Handled = True 
+        e.Handled = True
         DragControl = Me
         RefreshColor()
         FrmMain.DragDoing()
@@ -111,15 +104,12 @@ Public Class MySlider
         TextHint.Text = GetHintText.DynamicInvoke(Value)
         Dim typeface As New Typeface(TextHint.FontFamily, TextHint.FontStyle, TextHint.FontWeight, TextHint.FontStretch)
         Dim formattedText As New FormattedText(TextHint.Text, Thread.CurrentThread.CurrentCulture, TextHint.FlowDirection, typeface, TextHint.FontSize, TextHint.Foreground, DPI)
-        TextHint.Width = formattedText.Width 
+        TextHint.Width = formattedText.Width
     End Sub
-
-    
 
     Private Sub RefreshColor() Handles Me.IsEnabledChanged, Me.MouseEnter, Me.MouseLeave
         Try
 
-            
             Dim ForegroundName As String, DotFillName As String
             Dim AnimationTime As Integer
             If IsEnabled Then
@@ -141,15 +131,15 @@ Public Class MySlider
                 DotFillName = "ColorBrushGray5"
                 AnimationTime = 200
             End If
-            
-            If IsLoaded AndAlso AniControlEnabled = 0 Then 
-                
+
+            If IsLoaded AndAlso AniControlEnabled = 0 Then
+
                 AniStart({
                             AaColor(Me, BorderBrushProperty, ForegroundName, AnimationTime),
                             AaColor(ShapeDot, Ellipse.FillProperty, DotFillName, AnimationTime)
                          }, "MySlider Color " & Uuid)
             Else
-                
+
                 AniStop("MySlider Color " & Uuid)
                 SetResourceReference(BorderBrushProperty, ForegroundName)
                 ShapeDot.SetResourceReference(Ellipse.FillProperty, DotFillName)
@@ -160,16 +150,14 @@ Public Class MySlider
         End Try
     End Sub
 
-    
-
     Public Property ValueByKey As UInteger = 1
     Private Sub MySlider_MouseEnter() Handles Me.MouseEnter
-        Focus() 
+        Focus()
     End Sub
     Private Sub MySlider_KeyDown(sender As Object, e As KeyEventArgs) Handles Me.KeyDown
-        
+
         If ReferenceEquals(Me, DragControl) Then Return
-        
+
         If e.Key = Key.Left Then
             ChangeByKey = True
             Value -= ValueByKey
@@ -183,7 +171,7 @@ Public Class MySlider
         Else
             Return
         End If
-        
+
         If GetHintText IsNot Nothing Then
             RefreshPopup()
             AniStop("MySlider KeyPopup " & Uuid)

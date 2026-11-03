@@ -58,7 +58,6 @@
 		<Optimize>True</Optimize>
 	</PropertyGroup>
 
-	
 	<ItemGroup>
 		<EmbeddedResource Include="Launch\JavaWrapper.jar" LogicalName="Launch\JavaWrapper.jar" />
 		<EmbeddedResource Include="Launch\LwjglUnsafeAgent.jar" LogicalName="Launch\LwjglUnsafeAgent.jar" />

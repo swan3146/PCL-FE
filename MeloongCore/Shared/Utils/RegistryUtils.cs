@@ -2,23 +2,16 @@ using Microsoft.Win32;
 namespace MeloongCore;
 
 public static class RegistryUtils {
-    
+
     public const string NULL_STRING = "__NULL__";
 
-    
-    
-    
-    
     public static (object? result, bool exists) Read(string folder, string entry) {
         using RegistryKey? folderKey = GetRegistryKey(folder);
         var result = folderKey?.GetValue(entry);
         if (result is null) return (null, false);
         return (result is string str && str == NULL_STRING ? null : result, true);
     }
-    
-    
-    
-    
+
     public static object? TryRead(string folder, string entry, object? defaultValue = null) {
         try {
             var (result, exists) = Read(folder, entry);
@@ -29,19 +22,11 @@ public static class RegistryUtils {
         }
     }
 
-    
-    
-    
-    
-    
     public static void Write(string folder, string entry, object? value) {
         using RegistryKey folderKey = GetRegistryKey(folder, create: true)!;
         folderKey.SetValue(entry, value ?? NULL_STRING);
     }
 
-    
-    
-    
     public static bool Has(string folder, string entry) {
         using RegistryKey? folderKey = GetRegistryKey(folder);
         if (folderKey is null) return false;
@@ -49,9 +34,6 @@ public static class RegistryUtils {
         return !ReferenceEquals(folderKey.GetValue(entry, notFound), notFound);
     }
 
-    
-    
-    
     public static void Delete(string folder, string entry) {
         using RegistryKey? folderKey = GetRegistryKey(folder, writable: true);
         folderKey?.DeleteValue(entry, throwOnMissingValue: false);

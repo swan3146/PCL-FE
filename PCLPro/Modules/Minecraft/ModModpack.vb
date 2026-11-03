@@ -3,16 +3,12 @@ Imports System.Text.RegularExpressions
 
 Public Module ModModpack
 
-    
-    
-    
-    
     Public Sub ModpackInstall()
         If RestrictMcDownload Then
             Hint("为遵守相关法律法规，PCL 不再提供 MC 下载功能，非常抱歉 qwq……", HintType.Red)
             Return
         End If
-        Dim File As String = Dialogs.SelectFile("选择整合包压缩文件", False, filter:={({"rar", "zip", "mrpack"}, "整合包文件")}).FirstOrDefault() 
+        Dim File As String = Dialogs.SelectFile("选择整合包压缩文件", False, filter:={({"rar", "zip", "mrpack"}, "整合包文件")}).FirstOrDefault()
         If String.IsNullOrEmpty(File) Then Return
         RunInThread(
         Sub()
@@ -24,58 +20,55 @@ Public Module ModModpack
             End Try
         End Sub)
     End Sub
-    
-    
-    
-    
+
     Public Function ModpackInstall(File As String, Optional InstanceName As String = Nothing, Optional Logo As String = Nothing) As LoaderCombo(Of String)
         Logger.Info($"整合包安装请求：{If(File, "null")}")
         Dim Archive As ZipArchive = Nothing
         Dim ArchiveBaseFolder As String = ""
-        
+
         If String.IsNullOrEmpty(InstanceName) Then InstanceName = GetModpackInstanceName(File)
         Try
-            
+
             Dim TargetFolder As String = $"{McFolderSelected}versions\{InstanceName}\"
             If TargetFolder.Contains("!") OrElse TargetFolder.Contains(";") Then Hint("游戏路径中不能含有感叹号或分号：" & TargetFolder, HintType.Red) : Throw New OperationCanceledException
-            
+
             Dim PackType As Integer = -1
             Try
                 Archive = FileUtils.OpenZip(File)
-                
-                If Archive.GetEntry("mcbbs.packmeta") IsNot Nothing Then PackType = 3 : Exit Try 
-                If Archive.GetEntry("mmc-pack.json") IsNot Nothing Then PackType = 2 : Exit Try 
-                If Archive.GetEntry("modrinth.index.json") IsNot Nothing Then PackType = 4 : Exit Try 
+
+                If Archive.GetEntry("mcbbs.packmeta") IsNot Nothing Then PackType = 3 : Exit Try
+                If Archive.GetEntry("mmc-pack.json") IsNot Nothing Then PackType = 2 : Exit Try
+                If Archive.GetEntry("modrinth.index.json") IsNot Nothing Then PackType = 4 : Exit Try
                 If Archive.GetEntry("manifest.json") IsNot Nothing Then
                     Dim Json As JObject = Archive.GetEntry("manifest.json").Open().ReadString(Encoding.UTF8).DeserializeJson()
                     If Json("addons") Is Nothing Then
-                        PackType = 0 : Exit Try 
+                        PackType = 0 : Exit Try
                     Else
-                        PackType = 3 : Exit Try 
+                        PackType = 3 : Exit Try
                     End If
                 End If
-                If Archive.GetEntry("modpack.json") IsNot Nothing Then PackType = 1 : Exit Try 
-                If Archive.GetEntry("modpack.zip") IsNot Nothing OrElse Archive.GetEntry("modpack.mrpack") IsNot Nothing Then PackType = 9 : Exit Try 
-                
+                If Archive.GetEntry("modpack.json") IsNot Nothing Then PackType = 1 : Exit Try
+                If Archive.GetEntry("modpack.zip") IsNot Nothing OrElse Archive.GetEntry("modpack.mrpack") IsNot Nothing Then PackType = 9 : Exit Try
+
                 For Each Entry In Archive.Entries
                     Dim PathSplits As String() = Entry.FullName.Split("/")
                     ArchiveBaseFolder = PathSplits(0) & "/"
-                    
+
                     If PathSplits.Count <> 2 Then Continue For
-                    
-                    If PathSplits(1) = "mcbbs.packmeta" Then PackType = 3 : Exit Try 
-                    If PathSplits(1) = "mmc-pack.json" Then PackType = 2 : Exit Try 
-                    If PathSplits(1) = "modrinth.index.json" Then PackType = 4 : Exit Try 
+
+                    If PathSplits(1) = "mcbbs.packmeta" Then PackType = 3 : Exit Try
+                    If PathSplits(1) = "mmc-pack.json" Then PackType = 2 : Exit Try
+                    If PathSplits(1) = "modrinth.index.json" Then PackType = 4 : Exit Try
                     If PathSplits(1) = "manifest.json" Then
                         Dim Json As JObject = Entry.Open().ReadString(Encoding.UTF8).DeserializeJson()
                         If Json("addons") Is Nothing Then
-                            PackType = 0 : Exit Try 
+                            PackType = 0 : Exit Try
                         Else
-                            PackType = 3 : ArchiveBaseFolder = "overrides/" : Exit Try 
+                            PackType = 3 : ArchiveBaseFolder = "overrides/" : Exit Try
                         End If
                     End If
-                    If PathSplits(1) = "modpack.json" Then PackType = 1 : Exit Try 
-                    If PathSplits(1) = "modpack.zip" OrElse PathSplits(1) = "modpack.mrpack" Then PackType = 9 : Exit Try 
+                    If PathSplits(1) = "modpack.json" Then PackType = 1 : Exit Try
+                    If PathSplits(1) = "modpack.zip" OrElse PathSplits(1) = "modpack.mrpack" Then PackType = 9 : Exit Try
                 Next
             Catch ex As Exception
                 If ex.GetDisplay(True).Contains("Error.WinIOError") Then
@@ -86,7 +79,7 @@ Public Module ModModpack
                     Throw New Exception("打开整合包文件失败，文件可能损坏或为不支持的压缩包格式", ex)
                 End If
             End Try
-            
+
             If RestrictMcDownload Then Throw New Exception("为遵守相关法律法规，PCL 不再提供 MC 下载功能，非常抱歉 qwq……")
             Select Case PackType
                 Case 0
@@ -116,9 +109,6 @@ Public Module ModModpack
         End Try
     End Function
 
-    
-    
-    
     Private Function GetModpackInstanceName(File As String) As String
         Dim Name As String = If(File, "").Replace("/", "\")
         Name = IO.Path.GetFileNameWithoutExtension(Name)
@@ -127,10 +117,10 @@ Public Module ModModpack
         Next
         Name = Name.Trim()
         If Name.Length > 40 Then Name = Name.Substring(0, 40).Trim()
-        
+
         Dim Validate As New ValidateFolderName(McFolderSelected & "versions")
         If Name = "" OrElse Validate.Validate(Name) <> "" Then Name = "整合包"
-        
+
         Dim Base As String = Name
         Dim Index As Integer = 2
         While IO.Directory.Exists(IO.Path.Combine(McFolderSelected, "versions", Name))
@@ -146,38 +136,32 @@ Public Module ModModpack
         c.ThrowIfCancellationRequested()
         FileUtils.ExtractToDirectory(FileAddress, InstallTemp, c, p)
     End Sub
-    
-    
-    
-    
+
     Private Sub CopyOverrideDirectory(OverridesFolder As String, VersionFolder As String, Loader As LoaderBase)
         OverridesFolder = PathUtils.AddSlashSuffix(OverridesFolder)
         VersionFolder = PathUtils.AddSlashSuffix(VersionFolder)
-        
+
         If DirectoryUtils.Exists(OverridesFolder) Then
             Logger.Info($"处理整合包覆写文件夹：{OverridesFolder} → {VersionFolder}")
             DirectoryUtils.Copy(OverridesFolder, VersionFolder)
         Else
             Logger.Info($"整合包中没有覆写文件夹：{OverridesFolder}")
         End If
-        
+
         Dim OverridesIni As String = $"{OverridesFolder}PCL\Setup.ini"
         Dim VersionIni As String = $"{VersionFolder}PCL\Setup.ini"
         If FileUtils.Exists(OverridesIni) Then
-            WriteIni(OverridesIni, "VersionArgumentIndie", 1) 
+            WriteIni(OverridesIni, "VersionArgumentIndie", 1)
             WriteIni(OverridesIni, "VersionArgumentIndieV2", True)
             WriteIni(OverridesIni, "IsStar", False)
-            FileUtils.Copy(OverridesIni, VersionIni) 
+            FileUtils.Copy(OverridesIni, VersionIni)
         Else
-            WriteIni(VersionIni, "VersionArgumentIndie", 1) 
+            WriteIni(VersionIni, "VersionArgumentIndie", 1)
             WriteIni(VersionIni, "VersionArgumentIndieV2", True)
         End If
-        IniClearCache(VersionIni) 
+        IniClearCache(VersionIni)
     End Sub
-    
-    
-    
-    
+
     Private Sub NotifyIncompatibleLoader(LoaderName As String)
         If MyMsgBox($"整合包中存在不兼容的加载器：{LoaderName}{vbCrLf}如果你知道如何手动安装它，可以先选择跳过，然后在整合包下载结束后手动安装。",
             "不兼容的加载器", "取消", $"不安装 {LoaderName} 并继续") = 1 Then Throw New OperationCanceledException
@@ -185,11 +169,9 @@ Public Module ModModpack
 
 #Region "不同类型整合包的安装方法"
 
-    
     Private Function InstallPackCurseForge(FileAddress As String, Archive As ZipArchive, ArchiveBaseFolder As String,
                                            Optional InstanceName As String = Nothing, Optional Logo As String = Nothing) As LoaderCombo(Of String)
 
-        
         Dim Json As JObject
         Try
             Json = Archive.GetEntry(ArchiveBaseFolder & "manifest.json").Open().ReadString().DeserializeJson()
@@ -198,7 +180,6 @@ Public Module ModModpack
         End Try
         If Json("minecraft") Is Nothing OrElse Json("minecraft")("version") Is Nothing Then Throw New Exception("CurseForge 整合包未提供 Minecraft 版本信息")
 
-        
         If InstanceName Is Nothing Then
             InstanceName = If(Json("name"), "")
             Dim Validate As New ValidateFolderName(McFolderSelected & "versions")
@@ -208,42 +189,41 @@ Public Module ModModpack
         End If
         Dim VersionFolder As String = PathUtils.AddSlashSuffix(Path.Combine(McFolderSelected, "versions", InstanceName) & "\")
 
-        
         Dim TargetVersion As New McVersion(Json("minecraft")("version").ToString)
         For Each Entry In If(Json("minecraft")("modLoaders"), {})
             Dim Id As String = If(Entry("id"), "").ToString.Lower
             If Id.StartsWithF("forge-") Then
-                
+
                 If Id.Contains("recommended") Then Throw New Exception("该整合包版本过老，已不支持进行安装！")
                 Logger.Info($"整合包 Forge 版本：{Id}")
                 TargetVersion.ModLoaderVersions(ModLoaders.Forge) = Id.Replace("forge-", "")
             ElseIf Id.StartsWithF("neoforge-") Then
-                
+
                 Logger.Info($"整合包 NeoForge 版本：{Id}")
                 TargetVersion.ModLoaderVersions(ModLoaders.NeoForge) = Id.Replace("neoforge-", "")
             ElseIf Id.StartsWithF("fabric-") Then
-                
+
                 Logger.Info($"整合包 Fabric 版本：{Id}")
                 TargetVersion.ModLoaderVersions(ModLoaders.Fabric) = Id.Replace("fabric-", "")
             Else
                 NotifyIncompatibleLoader(Id)
             End If
         Next
-        
+
         Dim InstallTemp As String = RequestTaskTempFolder()
         Dim InstallLoaders As New List(Of LoaderBase)
         Dim OverrideHome As String = If(Json("overrides"), "")
         If OverrideHome <> "" Then
-            Dim OverridesFolder As String = InstallTemp & ArchiveBaseFolder & If(OverrideHome = "." OrElse OverrideHome = "./", "", OverrideHome) 
+            Dim OverridesFolder As String = InstallTemp & ArchiveBaseFolder & If(OverrideHome = "." OrElse OverrideHome = "./", "", OverrideHome)
             If Not PathUtils.IsParentOf(InstallTemp, OverridesFolder) Then Throw New Exception("整合包的 overrides 路径超出了解压目录，请向整合包作者反馈此问题！")
             InstallLoaders.Add(New LoaderTask(Of String, Integer)("解压整合包文件",
             Sub(Task As LoaderTask(Of String, Integer))
                 ExtractModpackFiles(InstallTemp, FileAddress, Task.CreateCancellationToken(), Task.CreateSyncProgressProvider(ToPercentage:=0.6))
                 CopyOverrideDirectory(OverridesFolder, VersionFolder, Task)
             End Sub) With {
-            .ProgressWeight = FileUtils.GetInfo(FileAddress).Length / 1024 / 1024 / 6, .Block = False}) 
+            .ProgressWeight = FileUtils.GetInfo(FileAddress).Length / 1024 / 1024 / 6, .Block = False})
         End If
-        
+
         Dim ModList As New List(Of Integer)
         Dim ModOptionalList As New List(Of Integer)
         For Each ModEntry In If(Json("files"), {})
@@ -256,20 +236,19 @@ Public Module ModModpack
         Next
         If ModList.Any Then
             Dim ModDownloadLoaders As New List(Of LoaderBase)
-            
+
             ModDownloadLoaders.Add(New LoaderTask(Of Integer, JArray)("获取 Mod 下载信息",
             Sub(Task As LoaderTask(Of Integer, JArray))
                 Task.Output = DlModRequest("https://api.curseforge.com/v1/mods/files", HttpMethod.Post, "{""fileIds"": [" & ModList.Join(",") & "]}", "application/json")("data")
                 If ModList.Count = Task.Output.Count Then Return
-                
-                
+
                 Dim MissingIds = ModList.Except(Task.Output.Select(Function(j) j("id").ToObject(Of Integer))).ToList
                 Logger.Info($"缺失的 fileIds：{MissingIds.Join("、")}")
-                
+
                 Dim Missings = MissingIds.Select(Of (ProjectId As Integer, FileId As Integer))(
                     Function(id) (CType(Json("files").AsEnumerable.First(Function(f) f("fileID").ToObject(Of Integer) = id), JObject)("projectID").ToObject(Of Integer), id)).ToList
                 Logger.Info($"缺失项：{Missings.Join("、")}")
-                
+
                 Dim Projects As New List(Of ResourceProject)
                 Try
                     Projects = ResourceProject.FromProjectIds(Missings.Select(Function(e) e.ProjectId.ToString), ResourcePlatforms.CurseForge).ToList
@@ -289,24 +268,24 @@ Public Module ModModpack
                     "整合包内容缺失", "继续", "取消", IsWarn:=True) = 2 Then
                     Task.Cancel()
                 End If
-            End Sub) With {.ProgressWeight = ModList.Count / 10}) 
-            
+            End Sub) With {.ProgressWeight = ModList.Count / 10})
+
             ModDownloadLoaders.Add(New LoaderTask(Of JArray, List(Of NetFile))("构造 Mod 下载信息",
             Sub(Task As LoaderTask(Of JArray, List(Of NetFile)))
                 Dim FileList As New Dictionary(Of Integer, NetFile)
                 For Each ModJson In Task.Input
                     Dim Id As Integer = ModJson("id").ToObject(Of Integer)
-                    
+
                     If FileList.ContainsKey(Id) Then Continue For
-                    
+
                     If ModOptionalList.Contains(Id) Then
                         If MyMsgBox("是否要下载整合包中的可选文件 " & ModJson("displayName").ToString & "？", "下载可选文件", "是", "否") = 2 Then
                             Continue For
                         End If
                     End If
-                    
+
                     Dim TargetFolder As String, Type As ResourceTypes
-                    If ModJson("modules").Any Then 
+                    If ModJson("modules").Any Then
                         Dim ModuleNames = CType(ModJson("modules"), JArray).Select(Function(l) l("name").ToString).ToList
                         If ModuleNames.Contains("META-INF") OrElse ModuleNames.Contains("mcmod.info") OrElse ModuleNames.Contains("fabric.mod.json") OrElse
                             ModJson?("FileName")?.ToString.EndsWithF(".jar", True) Then
@@ -321,47 +300,46 @@ Public Module ModModpack
                     Else
                         TargetFolder = "mods" : Type = ResourceTypes.Mod
                     End If
-                    
+
                     Dim File = ResourceVersion.FromPlatformJson(ModJson, Type)
                     If Not File.DownloadAvailable Then Continue For
-                    
+
                     FileList.Add(Id, File.ToNetFile(PathUtils.AddSlashSuffix(Path.Combine(VersionFolder, TargetFolder)),
                         ResourceVersion.DownloadReason.ModPack, TargetVersion.VanillaName, TargetVersion.ModLoaders))
                     Task.Progress += 1 / (1 + ModList.Count)
                 Next
                 Task.Output = FileList.Values.ToList
-            End Sub) With {.ProgressWeight = ModList.Count / 200, .Show = False}) 
-            
-            ModDownloadLoaders.Add(New LoaderDownload("下载 Mod", New List(Of NetFile)) With {.ProgressWeight = ModList.Count * 1.5}) 
-            
+            End Sub) With {.ProgressWeight = ModList.Count / 200, .Show = False})
+
+            ModDownloadLoaders.Add(New LoaderDownload("下载 Mod", New List(Of NetFile)) With {.ProgressWeight = ModList.Count * 1.5})
+
             InstallLoaders.Add(New LoaderCombo(Of Integer)("下载 Mod（主加载器）", ModDownloadLoaders) With
                 {.Show = False, .ProgressWeight = ModDownloadLoaders.Sum(Function(l) l.ProgressWeight)})
         End If
 
-        
         Dim Target As New McComponents(TargetVersion.VanillaName, TargetVersion.ModLoaderVersions)
         Dim MergeLoaders = McInstallLoadersGet(New McInstallRequest With {
             .NewInstanceName = InstanceName, .InstanceFolder = VersionFolder, .Components = Target})
-        
+
         Dim Loaders As New List(Of LoaderBase)
         Loaders.Add(New LoaderCombo(Of String)("整合包安装", InstallLoaders) With {.Show = False, .Block = False, .ProgressWeight = InstallLoaders.Sum(Function(l) l.ProgressWeight)})
         Loaders.Add(New LoaderCombo(Of String)("游戏安装", MergeLoaders) With {.Show = False, .ProgressWeight = MergeLoaders.Sum(Function(l) l.ProgressWeight)})
         Loaders.Add(New LoaderTask(Of String, String)("最终整理文件",
         Sub(Task As LoaderTask(Of String, String))
-            
+
             If Logo IsNot Nothing AndAlso FileUtils.Exists(Logo) Then
                 FileUtils.Copy(Logo, VersionFolder & "PCL\Logo.png")
                 WriteIni(VersionFolder & "PCL\Setup.ini", "Logo", "PCL\Logo.png")
                 WriteIni(VersionFolder & "PCL\Setup.ini", "LogoCustom", "True")
                 Logger.Info($"已设置整合包 Logo：{Logo}")
             End If
-            
+
             Dim SaveFolder As String = $"{VersionFolder}saves\"
             For Each MapFile In DirectoryUtils.EnumerateFiles(SaveFolder, searchPattern:="*.zip")
                 FileUtils.ExtractToDirectory(MapFile, SaveFolder, Task.CreateCancellationToken())
                 FileUtils.Delete(MapFile)
             Next
-            
+
             For Each FileToDelete As String In {VersionFolder & "原始整合包.zip", VersionFolder & "原始整合包.mrpack"}
                 If FileUtils.Exists(FileToDelete) Then
                     Logger.Info($"删除原始整合包文件：{FileToDelete}")
@@ -374,14 +352,12 @@ Public Module ModModpack
             End If
         End Sub) With {.ProgressWeight = 0.1, .Show = False})
 
-        
         Dim LoaderName As String = "CurseForge 整合包安装：" & InstanceName & " "
         If LoaderTaskbar.Any(Function(l) l.Name = LoaderName) Then
             Hint("该整合包正在安装中！", HintType.Red)
             Throw New OperationCanceledException
         End If
 
-        
         Dim Loader As New LoaderCombo(Of String)(LoaderName, Loaders) With {.OnStateChanged = AddressOf McInstallState}
         Loader.Start(VersionFolder)
         LoaderTaskbarAdd(Loader)
@@ -389,10 +365,8 @@ Public Module ModModpack
         Return Loader
     End Function
 
-    
     Private Function InstallPackModrinth(FileAddress As String, Archive As ZipArchive, ArchiveBaseFolder As String, Optional InstanceName As String = Nothing, Optional Logo As String = Nothing) As LoaderCombo(Of String)
 
-        
         Dim Json As JObject
         Try
             Json = Archive.GetEntry(ArchiveBaseFolder & "modrinth.index.json").Open().ReadString().DeserializeJson()
@@ -400,27 +374,26 @@ Public Module ModModpack
             Throw New Exception("Modrinth 整合包安装信息存在问题", ex)
         End Try
         If Json("dependencies") Is Nothing OrElse Json("dependencies")("minecraft") Is Nothing Then Throw New Exception("Modrinth 整合包未提供 Minecraft 版本信息")
-        
-        
+
         Dim TargetVersion As New McVersion("Unknown")
         For Each Entry As JProperty In If(Json("dependencies"), {})
             Select Case Entry.Name.Lower
                 Case "minecraft"
                     TargetVersion.VanillaName = Entry.Value.ToString
-                Case "forge" 
+                Case "forge"
                     TargetVersion.ModLoaderVersions(ModLoaders.Forge) = Entry.Value.ToString
                     Logger.Info($"整合包 Forge 版本：{TargetVersion.ModLoaderVersions(ModLoaders.Forge)}")
-                Case "neoforge", "neo-forge" 
+                Case "neoforge", "neo-forge"
                     TargetVersion.ModLoaderVersions(ModLoaders.NeoForge) = Entry.Value.ToString
                     Logger.Info($"整合包 NeoForge 版本：{TargetVersion.ModLoaderVersions(ModLoaders.NeoForge)}")
-                Case "fabric-loader" 
+                Case "fabric-loader"
                     TargetVersion.ModLoaderVersions(ModLoaders.Fabric) = Entry.Value.ToString
                     Logger.Info($"整合包 Fabric 版本：{TargetVersion.ModLoaderVersions(ModLoaders.Fabric)}")
                 Case Else
                     NotifyIncompatibleLoader(Entry.Name)
             End Select
         Next
-        
+
         If InstanceName Is Nothing Then
             InstanceName = If(Json("name"), "")
             Dim Validate As New ValidateFolderName(McFolderSelected & "versions")
@@ -429,7 +402,7 @@ Public Module ModModpack
             If String.IsNullOrEmpty(InstanceName) Then Throw New OperationCanceledException
         End If
         Dim VersionFolder As String = Path.Combine(McFolderSelected, "versions", InstanceName) & "\"
-        
+
         Dim InstallTemp As String = RequestTaskTempFolder()
         Dim InstallLoaders As New List(Of LoaderBase)
         InstallLoaders.Add(New LoaderTask(Of String, Integer)("解压整合包文件",
@@ -437,11 +410,11 @@ Public Module ModModpack
             ExtractModpackFiles(InstallTemp, FileAddress, Task.CreateCancellationToken(), Task.CreateSyncProgressProvider(ToPercentage:=0.5))
             CopyOverrideDirectory(InstallTemp & ArchiveBaseFolder & "overrides", VersionFolder, Task)
             CopyOverrideDirectory(InstallTemp & ArchiveBaseFolder & "client-overrides", VersionFolder, Task)
-        End Sub) With {.ProgressWeight = FileUtils.GetInfo(FileAddress).Length / 1024 / 1024 / 6, .Block = False}) 
-        
+        End Sub) With {.ProgressWeight = FileUtils.GetInfo(FileAddress).Length / 1024 / 1024 / 6, .Block = False})
+
         Dim FileList As New List(Of NetFile)
         For Each File In If(Json("files"), {})
-            
+
             If File("env") IsNot Nothing Then
                 Select Case File("env")("client").ToString
                     Case "optional"
@@ -453,11 +426,11 @@ Public Module ModModpack
                         Continue For
                 End Select
             End If
-            
+
             Dim Urls = File("downloads").SelectMany(Function(t) ResourceVersion.ParseCurseForgeDownloadUrls(t.ToString)).ToList
             Urls.AddRange(Urls.Select(Function(u) DlSourceModGet(u)).ToList)
             Urls = ResourceVersion.ParseModrinthTrackArguments(Urls,
-                ResourceVersion.DownloadReason.ModPack, TargetVersion.VanillaName, TargetVersion.ModLoaders).ToList 
+                ResourceVersion.DownloadReason.ModPack, TargetVersion.VanillaName, TargetVersion.ModLoaders).ToList
             Urls = Urls.Distinct.ToList()
             Dim TargetPath As String = Path.Combine(VersionFolder, File("path").ToString().TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
             If Not PathUtils.IsParentOf(VersionFolder, TargetPath) Then
@@ -465,31 +438,30 @@ Public Module ModModpack
                 Throw New OperationCanceledException
             End If
             FileList.Add(New NetFile(Urls, TargetPath,
-                New FileChecker With {.Hash = File("hashes")("sha1").ToString}, True)) 
+                New FileChecker With {.Hash = File("hashes")("sha1").ToString}, True))
         Next
         If FileList.Any Then
-            InstallLoaders.Add(New LoaderDownload("下载额外文件", FileList) With {.ProgressWeight = FileList.Count * 1.5}) 
+            InstallLoaders.Add(New LoaderDownload("下载额外文件", FileList) With {.ProgressWeight = FileList.Count * 1.5})
         End If
 
-        
         Dim Target As New McComponents(TargetVersion.VanillaName, TargetVersion.ModLoaderVersions)
         Dim MergeLoaders = McInstallLoadersGet(New McInstallRequest With {
             .NewInstanceName = InstanceName, .InstanceFolder = VersionFolder,
             .Components = Target})
-        
+
         Dim Loaders As New List(Of LoaderBase)
         Loaders.Add(New LoaderCombo(Of String)("整合包安装", InstallLoaders) With {.Show = False, .Block = False, .ProgressWeight = InstallLoaders.Sum(Function(l) l.ProgressWeight)})
         Loaders.Add(New LoaderCombo(Of String)("游戏安装", MergeLoaders) With {.Show = False, .ProgressWeight = MergeLoaders.Sum(Function(l) l.ProgressWeight)})
         Loaders.Add(New LoaderTask(Of String, String)("最终整理文件",
         Sub(Task As LoaderTask(Of String, String))
-            
+
             If Logo IsNot Nothing AndAlso FileUtils.Exists(Logo) Then
                 FileUtils.Copy(Logo, VersionFolder & "PCL\Logo.png")
                 WriteIni(VersionFolder & "PCL\Setup.ini", "Logo", "PCL\Logo.png")
                 WriteIni(VersionFolder & "PCL\Setup.ini", "LogoCustom", "True")
                 Logger.Info($"已设置整合包 Logo：{Logo}")
             End If
-            
+
             For Each FileToDelete As String In {VersionFolder & "原始整合包.zip", VersionFolder & "原始整合包.mrpack"}
                 If FileUtils.Exists(FileToDelete) Then
                     Logger.Info($"删除原始整合包文件：{FileToDelete}")
@@ -502,14 +474,12 @@ Public Module ModModpack
             End If
         End Sub) With {.ProgressWeight = 0.1, .Show = False})
 
-        
         Dim LoaderName As String = $"Modrinth 整合包安装：{InstanceName} "
         If LoaderTaskbar.Any(Function(l) l.Name = LoaderName) Then
             Hint("该整合包正在安装中！", HintType.Red)
             Throw New OperationCanceledException
         End If
 
-        
         Dim Loader As New LoaderCombo(Of String)(LoaderName, Loaders) With {.OnStateChanged = AddressOf McInstallState}
         Loader.Start(VersionFolder)
         LoaderTaskbarAdd(Loader)
@@ -517,48 +487,47 @@ Public Module ModModpack
         Return Loader
     End Function
 
-    
     Private Function InstallPackHMCL(FileAddress As String, Archive As ZipArchive, ArchiveBaseFolder As String) As LoaderCombo(Of String)
-        
+
         Dim Json As JObject
         Try
             Json = Archive.GetEntry(ArchiveBaseFolder & "modpack.json").Open().ReadString(Encoding.UTF8).DeserializeJson()
         Catch ex As Exception
             Throw New Exception("HMCL 整合包安装信息存在问题", ex)
         End Try
-        
+
         Dim InstanceName As String = If(Json("name"), "")
         Dim Validate As New ValidateFolderName(McFolderSelected & "versions")
         If Validate.Validate(InstanceName) <> "" Then InstanceName = ""
         If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入版本名称", "", "", New Collection(Of Validate) From {Validate})
         If String.IsNullOrEmpty(InstanceName) Then Throw New OperationCanceledException
         Dim VersionFolder As String = Path.Combine(McFolderSelected, "versions", InstanceName) & "\"
-        
+
         Dim InstallTemp As String = RequestTaskTempFolder()
         Dim InstallLoaders As New List(Of LoaderBase)
         InstallLoaders.Add(New LoaderTask(Of String, Integer)("解压整合包文件",
         Sub(Task As LoaderTask(Of String, Integer))
             ExtractModpackFiles(InstallTemp, FileAddress, Task.CreateCancellationToken(), Task.CreateSyncProgressProvider(ToPercentage:=0.6))
             CopyOverrideDirectory(InstallTemp & ArchiveBaseFolder & "minecraft", VersionFolder, Task)
-        End Sub) With {.ProgressWeight = FileUtils.GetInfo(FileAddress).Length / 1024 / 1024 / 6, .Block = False}) 
-        
+        End Sub) With {.ProgressWeight = FileUtils.GetInfo(FileAddress).Length / 1024 / 1024 / 6, .Block = False})
+
         If Json("gameVersion") Is Nothing Then Throw New Exception("该 HMCL 整合包未提供游戏版本信息，无法安装！")
         Dim Target As New McComponents(Json("gameVersion").ToString, New Dictionary(Of ModLoaders, String))
         Dim MergeLoaders = McInstallLoadersGet(New McInstallRequest With {
             .NewInstanceName = InstanceName, .InstanceFolder = VersionFolder,
             .Components = Target})
-        
+
         Dim Loaders As New List(Of LoaderBase) From {
             New LoaderCombo(Of String)("整合包安装", InstallLoaders) With {.Show = False, .Block = False, .ProgressWeight = InstallLoaders.Sum(Function(l) l.ProgressWeight)},
             New LoaderCombo(Of String)("游戏安装", MergeLoaders) With {.Show = False, .ProgressWeight = MergeLoaders.Sum(Function(l) l.ProgressWeight)}
         }
-        
+
         Dim LoaderName As String = "HMCL 整合包安装：" & InstanceName & " "
         If LoaderTaskbar.Any(Function(l) l.Name = LoaderName) Then
             Hint("该整合包正在安装中！", HintType.Red)
             Throw New OperationCanceledException
         End If
-        
+
         Dim Loader As New LoaderCombo(Of String)(LoaderName, Loaders) With {.OnStateChanged = AddressOf McInstallState}
         Loader.Start(VersionFolder)
         LoaderTaskbarAdd(Loader)
@@ -566,9 +535,8 @@ Public Module ModModpack
         Return Loader
     End Function
 
-    
     Private Function InstallPackMMC(FileAddress As String, Archive As ZipArchive, ArchiveBaseFolder As String) As LoaderCombo(Of String)
-        
+
         Dim PackJson As JObject, PackInstance As String
         Try
             PackJson = Archive.GetEntry(ArchiveBaseFolder & "mmc-pack.json").Open().ReadString(Encoding.UTF8).DeserializeJson()
@@ -576,21 +544,21 @@ Public Module ModModpack
         Catch ex As Exception
             Throw New Exception("MMC 整合包安装信息存在问题", ex)
         End Try
-        
+
         Dim InstanceName As String = If(PackInstance.RegexSeek("(?<=\nname\=)[^\n]+"), "")
         Dim Validate As New ValidateFolderName(McFolderSelected & "versions")
         If Validate.Validate(InstanceName) <> "" Then InstanceName = ""
         If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入版本名称", "", "", New Collection(Of Validate) From {Validate})
         If String.IsNullOrEmpty(InstanceName) Then Throw New OperationCanceledException
         Dim VersionFolder As String = Path.Combine(McFolderSelected, "versions", InstanceName) & "\"
-        
+
         Dim InstallTemp As String = RequestTaskTempFolder()
         Dim SetupFile As String = VersionFolder & "PCL\Setup.ini"
         Dim InstallLoaders As New List(Of LoaderBase)
         InstallLoaders.Add(New LoaderTask(Of String, Integer)("解压整合包文件",
         Sub(Task As LoaderTask(Of String, Integer))
             ExtractModpackFiles(InstallTemp, FileAddress, Task.CreateCancellationToken(), Task.CreateSyncProgressProvider(ToPercentage:=0.55))
-            
+
             Dim MmcGameRoot As String
             If DirectoryUtils.Exists(InstallTemp & ArchiveBaseFolder & ".minecraft") AndAlso Not DirectoryUtils.Exists(InstallTemp & ArchiveBaseFolder & "minecraft") Then
                 MmcGameRoot = InstallTemp & ArchiveBaseFolder & ".minecraft"
@@ -598,18 +566,18 @@ Public Module ModModpack
                 MmcGameRoot = InstallTemp & ArchiveBaseFolder & "minecraft"
             End If
             CopyOverrideDirectory(MmcGameRoot, VersionFolder, Task)
-            
+
             Try
                 Dim MmcSetupFile As String = InstallTemp & ArchiveBaseFolder & "instance.cfg"
                 If FileUtils.Exists(MmcSetupFile) Then
-                    
+
                     Dim Lines As New List(Of String)
                     For Each Line In FileUtils.ReadAsLines(MmcSetupFile, True)
                         If Not Line.Contains("=") Then Continue For
                         Lines.Add(Line.BeforeFirst("=") & ":" & Line.AfterFirst("="))
                     Next
                     FileUtils.Write(MmcSetupFile, Lines.Join(vbCrLf))
-                    
+
                     If ReadIni(MmcSetupFile, "OverrideCommands", False) Then
                         Dim PreLaunchCommand As String = ReadIni(MmcSetupFile, "PreLaunchCommand")
                         If PreLaunchCommand <> "" Then
@@ -634,7 +602,7 @@ Public Module ModModpack
                         FileUtils.Copy($"{InstallTemp}{ArchiveBaseFolder}{Logo}.png", VersionFolder & "PCL\Logo.png")
                         Logger.Info($"迁移 MultiMC 版本独立设置：版本图标（{Logo}.png）")
                     End If
-                    
+
                     Dim JvmArgs As String = ReadIni(MmcSetupFile, "JvmArgs", "")
                     If JvmArgs <> "" Then
                         If ReadIni(MmcSetupFile, "OverrideJavaArgs", False) Then
@@ -650,8 +618,8 @@ Public Module ModModpack
             Catch ex As Exception
                 Logger.Warn(ex, $"读取 MMC 配置文件失败（{InstallTemp}{ArchiveBaseFolder}instance.cfg）")
             End Try
-        End Sub) With {.ProgressWeight = FileUtils.GetInfo(FileAddress).Length / 1024 / 1024 / 6, .Block = False}) 
-        
+        End Sub) With {.ProgressWeight = FileUtils.GetInfo(FileAddress).Length / 1024 / 1024 / 6, .Block = False})
+
         If PackJson("components") Is Nothing Then Throw New Exception("该 MMC 整合包未提供游戏版本信息，无法安装！")
         Dim MinecraftVersion As String = Nothing
         Dim ModLoaderVersions As New Dictionary(Of ModLoaders, String)
@@ -668,31 +636,29 @@ Public Module ModModpack
                 Case "net.fabricmc.fabric-loader"
                     ModLoaderVersions(ModLoaders.Fabric) = Component("version")
                 Case Else
-                    If UID.StartsWithF("org.lwjgl") Then 
+                    If UID.StartsWithF("org.lwjgl") Then
                         Logger.Info($"已跳过 LWJGL 项：{UID}")
                     Else
                         NotifyIncompatibleLoader(UID)
                     End If
             End Select
         Next
-        
+
         Dim Target As New McComponents(MinecraftVersion, ModLoaderVersions)
         Dim MergeLoaders = McInstallLoadersGet(New McInstallRequest With {
             .NewInstanceName = InstanceName, .InstanceFolder = VersionFolder,
             .Components = Target})
-        
+
         Dim Loaders As New List(Of LoaderBase)
         Loaders.Add(New LoaderCombo(Of String)("整合包安装", InstallLoaders) With {.Show = False, .Block = False, .ProgressWeight = InstallLoaders.Sum(Function(l) l.ProgressWeight)})
         Loaders.Add(New LoaderCombo(Of String)("游戏安装", MergeLoaders) With {.Show = False, .ProgressWeight = MergeLoaders.Sum(Function(l) l.ProgressWeight)})
 
-        
         Dim LoaderName As String = "MMC 整合包安装：" & InstanceName & " "
         If LoaderTaskbar.Any(Function(l) l.Name = LoaderName) Then
             Hint("该整合包正在安装中！", HintType.Red)
             Throw New OperationCanceledException
         End If
 
-        
         Dim Loader As New LoaderCombo(Of String)(LoaderName, Loaders) With {.OnStateChanged = AddressOf McInstallState}
         Loader.Start(VersionFolder)
         LoaderTaskbarAdd(Loader)
@@ -700,10 +666,9 @@ Public Module ModModpack
         Return Loader
     End Function
 
-    
     Private Function InstallPackMCBBS(FileAddress As String, Archive As ZipArchive, ArchiveBaseFolder As String,
                                       Optional InstanceName As String = Nothing) As LoaderCombo(Of String)
-        
+
         Dim Json As JObject
         Try
             Dim Entry = If(Archive.GetEntry(ArchiveBaseFolder & "mcbbs.packmeta"), Archive.GetEntry(ArchiveBaseFolder & "manifest.json"))
@@ -711,7 +676,7 @@ Public Module ModModpack
         Catch ex As Exception
             Throw New Exception("MCBBS 整合包安装信息存在问题", ex)
         End Try
-        
+
         If InstanceName Is Nothing Then
             InstanceName = If(Json("name"), "")
             Dim Validate As New ValidateFolderName(McFolderSelected & "versions")
@@ -720,7 +685,7 @@ Public Module ModModpack
             If String.IsNullOrEmpty(InstanceName) Then Throw New OperationCanceledException
         End If
         Dim VersionFolder As String = Path.Combine(McFolderSelected, "versions", InstanceName) & "\"
-        
+
         Dim InstallTemp As String = RequestTaskTempFolder()
         Dim SetupFile As String = VersionFolder & "PCL\Setup.ini"
         Dim InstallLoaders As New List(Of LoaderBase)
@@ -728,14 +693,14 @@ Public Module ModModpack
         Sub(Task As LoaderTask(Of String, Integer))
             ExtractModpackFiles(InstallTemp, FileAddress, Task.CreateCancellationToken(), Task.CreateSyncProgressProvider(ToPercentage:=0.6))
             CopyOverrideDirectory(InstallTemp & ArchiveBaseFolder & "overrides", VersionFolder, Task)
-            
+
             If Json("launchInfo") IsNot Nothing Then
                 Dim LaunchInfo As JObject = Json("launchInfo")
                 If LaunchInfo.ContainsKey("javaArgument") Then WriteIni(SetupFile, "VersionAdvanceJvm", String.Join(" ", LaunchInfo("javaArgument")))
                 If LaunchInfo.ContainsKey("launchArgument") Then WriteIni(SetupFile, "VersionAdvanceGame", String.Join(" ", LaunchInfo("launchArgument")))
             End If
-        End Sub) With {.ProgressWeight = FileUtils.GetInfo(FileAddress).Length / 1024 / 1024 / 6, .Block = False}) 
-        
+        End Sub) With {.ProgressWeight = FileUtils.GetInfo(FileAddress).Length / 1024 / 1024 / 6, .Block = False})
+
         If Json("addons") Is Nothing Then Throw New Exception("该 MCBBS 整合包未提供游戏版本附加信息，无法安装！")
         Dim Addons As New Dictionary(Of String, String)
         For Each Entry In Json("addons")
@@ -755,7 +720,7 @@ Public Module ModModpack
             Dim MinecraftVersion = Addons("game")
             If MinecraftVersion.EndsWithF(".0") Then MinecraftVersion = MinecraftVersion.Substring(0, MinecraftVersion.Length - 2)
             Dim OptiFineFileSuffix = "_HD_" & Addons("optifine").AfterLast("HD_") & ".jar"
-            
+
             If DlOptiFineListBmclapiLoader.State <> LoadState.Finished Then DlOptiFineListBmclapiLoader.WaitForExit()
             Dim Entry = DlOptiFineListBmclapiLoader.Output.Value.FirstOrDefault(
                 Function(v) v.Inherit = MinecraftVersion AndAlso v.FileName.EndsWithF(OptiFineFileSuffix))
@@ -766,42 +731,39 @@ Public Module ModModpack
         Dim MergeLoaders = McInstallLoadersGet(New McInstallRequest With {
             .NewInstanceName = InstanceName, .InstanceFolder = VersionFolder,
             .Components = Target})
-        
+
         Dim Loaders As New List(Of LoaderBase)
         Loaders.Add(New LoaderCombo(Of String)("整合包安装", InstallLoaders) With {.Show = False, .Block = False, .ProgressWeight = InstallLoaders.Sum(Function(l) l.ProgressWeight)})
         Loaders.Add(New LoaderCombo(Of String)("游戏安装", MergeLoaders) With {.Show = False, .ProgressWeight = MergeLoaders.Sum(Function(l) l.ProgressWeight)})
 
-        
         Dim LoaderName As String = "MCBBS 整合包安装：" & InstanceName & " "
         If LoaderTaskbar.Any(Function(l) l.Name = LoaderName) Then
             Hint("该整合包正在安装中！", HintType.Red)
             Throw New OperationCanceledException
         End If
 
-        
         Dim Loader As New LoaderCombo(Of String)(LoaderName, Loaders) With {.OnStateChanged = AddressOf McInstallState}
-        
+
         Loader.Start(VersionFolder)
         LoaderTaskbarAdd(Loader)
         FrmMain.BtnExtraDownload.ShowRefresh()
         Return Loader
     End Function
 
-    
     Private Function InstallPackLauncherPack(FileAddress As String, Archive As ZipArchive, ArchiveBaseFolder As String) As LoaderCombo(Of String)
-        
+
         MyMsgBox("接下来请选择一个空文件夹，它会被安装到这个文件夹里。", "安装", "继续", ForceWait:=True)
         Dim TargetFolder As String = Dialogs.SelectFolder("选择安装目标（必须是一个空文件夹）", False).FirstOrDefault
         If TargetFolder Is Nothing Then Throw New OperationCanceledException
         If Not DirectoryUtils.IsEmpty(TargetFolder) Then Hint("请选择一个空文件夹作为安装目标！", HintType.Red) : Throw New OperationCanceledException
-        
+
         Dim Loader As New LoaderCombo(Of String)("解压压缩包", {
             New LoaderTask(Of String, Integer)("解压压缩包",
             Sub(Task As LoaderTask(Of String, Integer))
                 ExtractModpackFiles(TargetFolder, FileAddress, Task.CreateCancellationToken(), Task.CreateSyncProgressProvider(ToPercentage:=0.9))
                 OpenExplorer(TargetFolder)
-                Thread.Sleep(400) 
-                
+                Thread.Sleep(400)
+
                 Dim Launcher As String = Nothing
                 For Each ExeFile In DirectoryUtils.EnumerateFiles(TargetFolder, searchPattern:="*.exe")
                     Dim Info = FileVersionInfo.GetVersionInfo(ExeFile)
@@ -818,11 +780,11 @@ Public Module ModModpack
                     End If
                 Next
                 Task.Progress = 0.95
-                
+
                 If Launcher IsNot Nothing Then
                     Logger.Info($"找到压缩包中附带的启动器：{Launcher}")
                     If MyMsgBox($"整合包里似乎自带了启动器，是否换用它继续安装？{vbCrLf}即将打开：{Launcher}", "换用整合包启动器？", "换用", "不换用") = 1 Then
-                        StartProcess(Launcher, "--wait") 
+                        StartProcess(Launcher, "--wait")
                         Logger.Info("为换用整合包中的启动器启动，强制结束程序")
                         FrmMain.EndProgram(False)
                         Return
@@ -830,13 +792,13 @@ Public Module ModModpack
                 Else
                     Logger.Info("未找到压缩包中附带的启动器")
                 End If
-                
+
                 Dim InstanceName As String = PathUtils.GetLastPart(TargetFolder)
                 DirectoryUtils.Create(TargetFolder & ".minecraft\")
                 PageSelectLeft.AddFolder(
-                    TargetFolder & ".minecraft\" & ArchiveBaseFolder.Replace("/", "\").TrimStart("\"), 
+                    TargetFolder & ".minecraft\" & ArchiveBaseFolder.Replace("/", "\").TrimStart("\"),
                     InstanceName, False)
-                
+
                 Dim ModpackFile = DirectoryUtils.EnumerateFiles(TargetFolder, True, "modpack.*").First
                 Logger.Info($"调用 modpack 文件继续安装：{ModpackFile}")
                 ModpackInstall(ModpackFile)
@@ -849,9 +811,8 @@ Public Module ModModpack
         Return Loader
     End Function
 
-    
     Private Function InstallPackCompress(FileAddress As String, Archive As ZipArchive) As LoaderCombo(Of String)
-        
+
         Dim Match As Match = Nothing
         Dim Regex As New Regex("^.*\/(?=versions\/(?<ver>[^\/]+)\/(\k<ver>)\.json$)", RegexOptions.IgnoreCase)
         For Each Entry In Archive.Entries
@@ -861,23 +822,23 @@ Public Module ModModpack
                 Exit For
             End If
         Next
-        If Match Is Nothing Then Throw New Exception("文件结构不匹配，这可能不是 Minecraft 客户端压缩包？") 
-        Dim ArchiveBaseFolder As String = Match.Value.Replace("/", "\").TrimStart("\") 
+        If Match Is Nothing Then Throw New Exception("文件结构不匹配，这可能不是 Minecraft 客户端压缩包？")
+        Dim ArchiveBaseFolder As String = Match.Value.Replace("/", "\").TrimStart("\")
         Logger.Info($"检测到压缩包的 .minecraft 根目录：{ArchiveBaseFolder}，命中的版本名：{Match.Groups(1).Value}")
-        
+
         MyMsgBox("接下来请选择一个空文件夹，它会被安装到这个文件夹里。", "安装", "继续", ForceWait:=True)
         Dim TargetFolder As String = Dialogs.SelectFolder("选择安装目标（必须是一个空文件夹）", False).FirstOrDefault
         If TargetFolder Is Nothing Then Throw New OperationCanceledException
         If TargetFolder.Contains("!") OrElse TargetFolder.Contains(";") Then Hint("Minecraft 文件夹路径中不能含有感叹号或分号！", HintType.Red) : Throw New OperationCanceledException
         If Not DirectoryUtils.IsEmpty(TargetFolder) Then Hint("请选择一个空文件夹作为安装目标！", HintType.Red) : Throw New OperationCanceledException
-        
+
         Dim Loader As New LoaderCombo(Of String)("解压压缩包", {
             New LoaderTask(Of String, Integer)("解压压缩包",
             Sub(Task As LoaderTask(Of String, Integer))
                 ExtractModpackFiles(TargetFolder, FileAddress, Task.CreateCancellationToken(), Task.CreateSyncProgressProvider(ToPercentage:=0.95))
-                
+
                 PageSelectLeft.AddFolder(TargetFolder & ArchiveBaseFolder, PathUtils.GetLastPart(TargetFolder), False)
-                Thread.Sleep(400) 
+                Thread.Sleep(400)
                 RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.InstanceSelect))
             End Sub)
         }) With {.OnStateChanged = AddressOf McInstallState}

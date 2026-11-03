@@ -1,20 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 Namespace Controls.Behaviors
     Public NotInheritable Class ClipboardInterceptor
         Private Sub New()
@@ -59,10 +42,10 @@ Namespace Controls.Behaviors
         End Sub
 
         Private Shared Sub SetClipboardText(text As String)
-            Forms.Clipboard.SetDataObject(text, False, retryTimes:=10, retryDelay:=100) 
+            Forms.Clipboard.SetDataObject(text, False, retryTimes:=10, retryDelay:=100)
             Try
-                System.Windows.Clipboard.Flush() 
-            Catch ex As Exception 
+                System.Windows.Clipboard.Flush()
+            Catch ex As Exception
                 Logger.Warn(ex, $"剪贴板持久化失败（错误码：0x{ex.HResult:X8}）")
             End Try
         End Sub
@@ -114,7 +97,6 @@ Namespace Controls.Behaviors
                 End Function, maxAttempts:=10, delay:=Function() TimeSpan.FromMilliseconds(100))
                 If pasteText IsNot Nothing Then
 
-                    
                     If Not tb.AcceptsReturn Then pasteText = pasteText.ReplaceLineEndings(" ", mergeMultiple:=True)
 
                     Dim start = tb.SelectionStart

@@ -1,21 +1,17 @@
 Public Class MyComboBoxItem
     Inherits ComboBoxItem
 
-    
-
     Public Uuid As Integer = GetUuid()
     Public Sub New()
         Style = FindResource("MyComboBoxItem")
     End Sub
-
-    
 
     Private Const AnimationTimeIn As Integer = 100
     Private Const AnimationTimeOut As Integer = 300
     Private BackColorName As String, FontOpacity As Double
 
     Private Sub RefreshColor() Handles Me.Unselected, Me.MouseMove, Me.MouseLeave, Me.Selected, Me.IsEnabledChanged
-        
+
         Dim NewBackColorName As String, NewFontOpacity As Double
         Dim Time As Integer
         If IsSelected Then
@@ -38,15 +34,15 @@ Public Class MyComboBoxItem
         If BackColorName = NewBackColorName AndAlso FontOpacity = NewFontOpacity Then Return
         BackColorName = NewBackColorName
         FontOpacity = NewFontOpacity
-        
-        If IsLoaded AndAlso AniControlEnabled = 0 Then 
-            
+
+        If IsLoaded AndAlso AniControlEnabled = 0 Then
+
             AniStart({
                 AaColor(Me, BackgroundProperty, BackColorName, Time),
                 AaOpacity(Me, FontOpacity - Opacity, Time)
             }, "ComboBoxItem Color " & Uuid)
         Else
-            
+
             AniStop("ComboBoxItem Color " & Uuid)
             SetResourceReference(BackgroundProperty, BackColorName)
             Opacity = FontOpacity

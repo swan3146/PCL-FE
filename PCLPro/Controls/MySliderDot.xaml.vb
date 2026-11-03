@@ -1,12 +1,8 @@
 Public Class MySliderDot
 
-    
-
     Public Uuid As Integer = GetUuid()
     Public Event Change(sender As Object, user As Boolean)
     Public Event PreviewChange(sender As Object, e As RouteEventArgs)
-
-    
 
     Private _MaxValue As Integer = 100
     Public Property MaxValue As Integer
@@ -31,7 +27,6 @@ Public Class MySliderDot
                 newValue = MathRange(newValue, 0, MaxValue)
                 If _Value = newValue Then Exit Property
 
-                
                 Dim OldValue = _Value
                 _Value = newValue
                 If AniControlEnabled = 0 Then
@@ -72,11 +67,9 @@ Public Class MySliderDot
         SetTop(ShapeDot, NewHeight)
     End Sub
 
-    
-
     Public GetHintText As [Delegate]
     Private Sub DragStart(sender As Object, e As MouseButtonEventArgs) Handles ShapeDot.MouseLeftButtonDown
-        e.Handled = True 
+        e.Handled = True
         DragControl = Me
         AniStart({
                  AaScaleTransform(ShapeDot, 2 - CType(ShapeDot.RenderTransform, ScaleTransform).ScaleX, 100,, New AniEaseOutFluent)
@@ -99,71 +92,8 @@ Public Class MySliderDot
         End If
     End Sub
 
-    
-
     Private Sub RefreshColor() Handles Me.IsEnabledChanged, Me.MouseEnter, Me.MouseLeave
-        
 
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-
-        
-        
-        
     End Sub
-
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
 
 End Class

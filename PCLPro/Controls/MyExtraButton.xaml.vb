@@ -1,10 +1,8 @@
 Public Class MyExtraButton
 
-    
-    Public Event Click(sender As Object, e As MouseButtonEventArgs) 
+    Public Event Click(sender As Object, e As MouseButtonEventArgs)
     Public Event RightClick(sender As Object, e As MouseButtonEventArgs)
 
-    
     Private _Progress As Double = 0
     Public Property Progress As Double
         Get
@@ -22,7 +20,6 @@ Public Class MyExtraButton
         End Set
     End Property
 
-    
     Public Uuid As Integer = GetUuid()
     Private _Logo As String = ""
     Public Property Logo As String
@@ -56,7 +53,7 @@ Public Class MyExtraButton
             RunInUi(
             Sub()
                 If value Then
-                    
+
                     Visibility = Visibility.Visible
                     AniStart({
                         AaScaleTransform(Me, 0.3 - CType(RenderTransform, ScaleTransform).ScaleX, 500, 60, New AniEaseOutFluent(AniEasePower.Weak)),
@@ -64,14 +61,14 @@ Public Class MyExtraButton
                         AaHeight(Me, 50 - Height, 200,, New AniEaseOutFluent(AniEasePower.Weak))
                     }, "MyExtraButton MainScale " & Uuid)
                 Else
-                    
+
                     AniStart({
                         AaScaleTransform(Me, -CType(RenderTransform, ScaleTransform).ScaleX, 100,, New AniEaseInFluent(AniEasePower.Weak)),
                         AaHeight(Me, -Height, 400, 100, New AniEaseOutFluent()),
                         AaCode(Sub() Visibility = Visibility.Collapsed,, True)
                     }, "MyExtraButton MainScale " & Uuid)
                 End If
-                IsHitTestVisible = value 
+                IsHitTestVisible = value
             End Sub)
         End Set
     End Property
@@ -81,7 +78,6 @@ Public Class MyExtraButton
         If ShowCheck IsNot Nothing Then Show = ShowCheck()
     End Sub
 
-    
     Private Sub Button_LeftMouseUp(sender As Object, e As MouseButtonEventArgs) Handles PanClick.MouseLeftButtonUp
         If IsLeftMouseHeld Then
             Logger.Info($"按下附加按钮{If(ToolTip = "", "", "：" & ToolTip)}")
@@ -108,7 +104,6 @@ Public Class MyExtraButton
         End Set
     End Property
 
-    
     Private IsLeftMouseHeld As Boolean = False
     Private IsRightMouseHeld As Boolean = False
     Private Sub Button_LeftMouseDown(sender As Object, e As MouseButtonEventArgs) Handles PanClick.MouseLeftButtonDown
@@ -140,7 +135,7 @@ Public Class MyExtraButton
         End If
         If IsLeftMouseHeld Then RaiseCustomEvent()
         IsLeftMouseHeld = False
-        RefreshColor() 
+        RefreshColor()
     End Sub
     Private Sub Button_RightMouseUp() Handles PanClick.MouseRightButtonUp
         If Not CanRightClick Then Return
@@ -150,7 +145,7 @@ Public Class MyExtraButton
             }, "MyExtraButton Scale " & Uuid)
         End If
         IsRightMouseHeld = False
-        RefreshColor() 
+        RefreshColor()
     End Sub
     Private Sub Button_MouseLeave() Handles PanClick.MouseLeave
         IsLeftMouseHeld = False
@@ -158,25 +153,23 @@ Public Class MyExtraButton
         AniStart({
             AaScaleTransform(PanScale, 1 - CType(PanScale.RenderTransform, ScaleTransform).ScaleX, 500,, New AniEaseOutFluent)
         }, "MyExtraButton Scale " & Uuid)
-        RefreshColor() 
+        RefreshColor()
     End Sub
 
-    
-    
     Private Const AnimationColorIn As Integer = 120
     Private Const AnimationColorOut As Integer = 150
     Public Sub RefreshColor() Handles PanClick.MouseEnter, PanClick.MouseLeave, Me.Loaded, Me.IsEnabledChanged
         Try
-            If IsLoaded AndAlso AniControlEnabled = 0 Then 
+            If IsLoaded AndAlso AniControlEnabled = 0 Then
 
                 If Not IsEnabled Then
-                    
+
                     AniStart(AaColor(PanColor, BackgroundProperty, "ColorBrushGray4", AnimationColorIn), "MyExtraButton Color " & Uuid)
                 ElseIf IsMouseOver Then
-                    
+
                     AniStart(AaColor(PanColor, BackgroundProperty, "ColorBrush4", AnimationColorIn), "MyExtraButton Color " & Uuid)
                 Else
-                    
+
                     AniStart(AaColor(PanColor, BackgroundProperty, "ColorBrush3", AnimationColorOut), "MyExtraButton Color " & Uuid)
                 End If
 
@@ -197,9 +190,6 @@ Public Class MyExtraButton
         End Try
     End Sub
 
-    
-    
-    
     Public Sub Ribble()
         RunInUi(
         Sub()

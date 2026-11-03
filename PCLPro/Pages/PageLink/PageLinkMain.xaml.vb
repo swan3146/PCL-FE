@@ -9,36 +9,29 @@ Imports PCL
 
 Public Class PageLinkMain
 
-    
-    
-    
-
-    
-    
     Private Const TC_CHARS As String = "0123456789ABCDEFGHJKLMNPQRSTUVWXYZ"
-    
+
     Private Const TC_CODE_LEN As Integer = 21
-    
+
     Private Shared ReadOnly TC_CodeRange As BigInteger = BigInteger.Pow(34, 16)
 
-    
     Private Shared Function TcRandomRoom() As Tuple(Of String, String, String)
         Dim Bytes(15) As Byte
         Using Rng As RandomNumberGenerator = RandomNumberGenerator.Create()
             Rng.GetBytes(Bytes)
         End Using
-        Dim Buffer(16) As Byte 
+        Dim Buffer(16) As Byte
         Array.Copy(Bytes, Buffer, 16)
         Dim Value As New BigInteger(Buffer)
         Value = Value Mod TC_CodeRange
         Value -= Value Mod 7
         Return TcFormat(Value)
     End Function
-    
+
     Private Shared Function TcFormat(Value As BigInteger) As Tuple(Of String, String, String)
         Return TcFormatCore(Value, False)
     End Function
-    
+
     Private Shared Function TcFormatLegacy(Value As BigInteger) As Tuple(Of String, String, String)
         Return TcFormatCore(Value, True)
     End Function
@@ -61,9 +54,7 @@ Public Class PageLinkMain
         Dim Secret As String = New String(Chars, 8, 4) & "-" & New String(Chars, 12, 4)
         Return New Tuple(Of String, String, String)(Code, Name, Secret)
     End Function
-    
-    
-    
+
     Private Shared Function TcParse(Code As String) As Tuple(Of String, String, String)
         If String.IsNullOrEmpty(Code) Then Return Nothing
         Dim Index As Integer = Code.IndexOf("U/", StringComparison.Ordinal)
@@ -72,7 +63,7 @@ Public Class PageLinkMain
         If Body.Length <> 19 Then Return Nothing
         If Body(4) <> "-"c OrElse Body(9) <> "-"c OrElse Body(14) <> "-"c Then Return Nothing
         Body = Body.Replace("-", "")
-        
+
         Dim Digits(15) As Integer
         For i = 0 To 15
             Dim Ch As Char = Char.ToUpperInvariant(Body(i))
@@ -82,13 +73,13 @@ Public Class PageLinkMain
             If Pos < 0 Then Return Nothing
             Digits(i) = Pos
         Next
-        
+
         Dim Value As BigInteger = BigInteger.Zero
         For i = 0 To 15
             Value = Value * 34 + Digits(i)
         Next
         If Value Mod 7 = 0 Then Return TcFormat(Value)
-        
+
         Value = BigInteger.Zero
         Dim Power As BigInteger = BigInteger.One
         For i = 0 To 15
@@ -101,9 +92,6 @@ Public Class PageLinkMain
         End If
         Return Nothing
     End Function
-    
-    
-    
 
 #Region "状态管理"
 
@@ -115,15 +103,12 @@ Public Class PageLinkMain
     End Enum
     Public Shared LinkState As LinkStates = LinkStates.Waiting
 
-    
-    
-    
     Private Sub ChangeState(NewState As LinkStates)
         If LinkState = NewState Then Return
         Dim OldState = LinkState
         LinkState = NewState
         Logger.Info($"主状态由 {OldState} 变更为 {NewState}")
-        
+
         RunInUi(
         Sub()
             Select Case NewState
@@ -139,7 +124,6 @@ Public Class PageLinkMain
         End Sub)
     End Sub
 
-    
     Private Sub LoaderInit() Handles Me.Initialized
         PageLoaderInit(Load, PanLoad, PanContent, PanAlways, LinkLoader, AutoRun:=False)
         AddHandler LinkLoader.OnStateChangedUi,
@@ -154,7 +138,6 @@ Public Class PageLinkMain
         End Sub
     End Sub
 
-    
     Private Sub UpdatePanelVisibility() Handles Me.PageEnter
         FrmLinkMain.PanSelect.Visibility = If(LinkState = LinkStates.Waiting, Visibility.Visible, Visibility.Collapsed)
         FrmLinkMain.PanFinish.Visibility = If(LinkState = LinkStates.Finished, Visibility.Visible, Visibility.Collapsed)
@@ -164,42 +147,35 @@ Public Class PageLinkMain
 
 #Region "初始页面 (Waiting)"
 
-    
     Private Sub SwitchToWaiting(OldState As LinkStates)
-        
+
         HostGuideToken += 1
         LinkLoader.Cancel()
         SyncLock LinkLoader.LockState
             LinkLoader.State = LoadState.Waiting
         End SyncLock
         ProcessStop()
-        
+
         If OldState <> LinkStates.Finished Then
-            
-            
+
             UpdatePanelVisibility()
         End If
         PageOnContentExit()
     End Sub
 
-    
-    
-    
-
-    
     Private LastCreateTrigger As Long = 0
     Private Sub BtnCreate_Click() Handles BtnCreate.Click
-        
+
         If Math.Abs(GetTimeMs() - LastCreateTrigger) < 500 Then Return
         LastCreateTrigger = GetTimeMs()
-        
+
         If Not TcGameRunning() Then
             If MyMsgBox("还没有检测到正在运行的游戏。" & vbCrLf &
                         "请先进入存档并在游戏里选择「对局域网开放」，聊天栏会显示本地游戏端口。" & vbCrLf &
                         "记下端口后再创建房间，朋友才能连进来。" & vbCrLf & vbCrLf &
                         "是否仍然创建房间？", "创建联机房间", "仍然创建", "取消") = 2 Then Return
         End If
-        
+
         Dim PortInput As String = MyMsgBoxInput("输入游戏端口",
             "请填写游戏聊天栏「本地游戏已在端口 XXXXX 上开放」里的端口号。",
             DefaultInput:=If(HostPort > 0, HostPort.ToString(), "25565"),
@@ -215,9 +191,9 @@ Public Class PageLinkMain
         End If
         ManualPort = NewPort
         Logger.Info($"手动指定游戏端口 {NewPort}（当前监听：{PortAlive}）")
-        
+
         IsServerSide = True
-        
+
         Dim NodeItem = TryCast(ComboCreateNode.SelectedItem, MyComboBoxItem)
         If NodeItem IsNot Nothing Then TcSelectedNode = TryCast(NodeItem.Tag, String)
         Dim Room = TcRandomRoom()
@@ -225,19 +201,16 @@ Public Class PageLinkMain
         NetworkName = Room.Item2
         NetworkSecret = Room.Item3
         Logger.Info($"尝试创建陶瓦房间，房间码 {RoomCode}，网络名 {NetworkName}")
-        
+
         ModFirewall.CheckTerracottaFirewall()
-        
+
         ChangeState(LinkStates.Loading)
     End Sub
 
-    
     Private Shared LastCode As String = Nothing
-    
-    
-    
+
     Public Shared Sub Join()
-        
+
         Try
             If FrmLinkMain IsNot Nothing AndAlso FrmLinkMain.TextJoinCode IsNot Nothing AndAlso FrmLinkMain.PanSelectJoin.IsVisible Then
                 FrmLinkMain.TextJoinCode.Focus()
@@ -245,7 +218,7 @@ Public Class PageLinkMain
             End If
         Catch
         End Try
-        
+
         Dim Code As String = MyMsgBoxInput("输入房间码", "输入房主发给你的房间码。",
             HintText:=If(String.IsNullOrEmpty(LastCode), "", "使用上一次的房间码"))
         If Not String.IsNullOrEmpty(LastCode) AndAlso Code IsNot Nothing AndAlso Code = "" Then Code = LastCode
@@ -266,7 +239,7 @@ Public Class PageLinkMain
     End Sub
     Public Sub JoinInternal(Code As String)
         If Code Is Nothing Then Return
-        
+
         Dim ValidateResult = ValidateCodeFormat(Code)
         If ValidateResult IsNot Nothing Then
             Hint(ValidateResult, HintType.Red)
@@ -274,7 +247,7 @@ Public Class PageLinkMain
         End If
         Code = FixCodeFormat(Code)
         Logger.Info($"实际使用的联机房间码：{Code}")
-        
+
         Dim Room = TcParse(Code)
         If Room Is Nothing Then
             Hint("房间码有误，请让房主重新发送房间码！", HintType.Red)
@@ -285,9 +258,9 @@ Public Class PageLinkMain
         NetworkName = Room.Item2
         NetworkSecret = Room.Item3
         Logger.Info($"尝试加入陶瓦房间，房间码 {RoomCode}，网络名 {NetworkName}")
-        
+
         ModFirewall.CheckTerracottaFirewall()
-        
+
         LastCode = Code
         ChangeState(LinkStates.Loading)
     End Sub
@@ -297,30 +270,27 @@ Public Class PageLinkMain
         If TcParse(Code) Is Nothing Then Return "房间码有误，请让房主重新发送房间码！"
         Return Nothing
     End Function
-    
+
     Private Shared Function FixCodeFormat(Code As String) As String
-        Code = Code.Between("【", "】").Between("[", "]").Upper.Trim 
+        Code = Code.Between("【", "】").Between("[", "]").Upper.Trim
         Code = TcNormalizeWidth(Code)
         Code = Code.Replace(" ", "").Replace(vbCrLf, "").Replace(vbCr, "")
         Dim Index As Integer = Code.IndexOf("U/", StringComparison.Ordinal)
         If Index > 0 Then Code = Code.Substring(Index)
         Return Code
     End Function
-    
-    
-    
-    
+
     Private Shared Function TcNormalizeWidth(Text As String) As String
         If String.IsNullOrEmpty(Text) Then Return Text
         Dim Buffer As New Text.StringBuilder(Text.Length)
         For Each C As Char In Text
             Dim CharCode As Integer = AscW(C)
             Select Case CharCode
-                Case &HFF01 To &HFF5E 
+                Case &HFF01 To &HFF5E
                     Buffer.Append(ChrW(CharCode - &HFEE0))
-                Case &H3000 
+                Case &H3000
                     Buffer.Append(" "c)
-                Case &H2010, &H2011, &H2013, &H2014, &H2212 
+                Case &H2010, &H2011, &H2013, &H2014, &H2212
                     Buffer.Append("-"c)
                 Case Else
                     Buffer.Append(C)
@@ -329,11 +299,6 @@ Public Class PageLinkMain
         Return Buffer.ToString()
     End Function
 
-    
-
-    
-    
-    
     Public Shared Sub Join(Code As String)
         If LinkState <> LinkStates.Waiting Then
             Hint("你已经在联机房间中了！", HintType.Red)
@@ -344,7 +309,7 @@ Public Class PageLinkMain
             FrmMain.PageChange(FormMain.PageType.Link, FormMain.PageSubType.LinkMain)
         End If
     End Sub
-    
+
     Private Shared AutoJoinCode As String = Nothing
     Private Sub PanSelectJoin_Loaded() Handles PanSelectJoin.Loaded
         If AutoJoinCode Is Nothing Then Return
@@ -356,32 +321,29 @@ Public Class PageLinkMain
 
 #Region "加载页面 (Loading | Failed)"
 
-    
     Private Sub SwitchToLoading(OldState As LinkStates)
-        
+
         TcFailCount = 0
         HostGuideToken += 1
         HostPort = 0
         HostNodeText = ""
         ClientAddress = Nothing
-        
+
         LinkLoader.Start(IsForceRestart:=True)
-        
-        
+
         UpdateProgressBar(0)
         LabLoadTitle.Text = If(IsServerSide, "创建房间中", "加入房间中")
         UpdateLoadingPage("正在初始化……", "准备初始化")
     End Sub
 
-    
     Private Sub SwitchToFailed(OldState As LinkStates)
-        
+
         HostGuideToken += 1
         LinkLoader.Cancel()
         ProcessStop()
-        
+
         UpdateProgressBar(1)
-        
+
         LabLoadTitle.Text = FailReason
         Dim Brief As String = LinkLoader.Error.GetDisplay(False)
         Dim InnerEx As Exception = LinkLoader.Error
@@ -393,10 +355,6 @@ Public Class PageLinkMain
         LabLoadDesc.Text = If(Brief.StartsWithF("$"), Brief.TrimStart("$"), LinkLoader.Error.GetDisplay(True))
         Logger.Warn(LinkLoader.Error, LabLoadTitle.Text)
     End Sub
-
-    
-    
-    
 
     Private Sub UpdateLoadingPage(Title As String, FailBrief As String)
         If FailReason = FailBrief & "失败" Then Return
@@ -410,17 +368,14 @@ Public Class PageLinkMain
     End Sub
     Private FailReason As String = "准备初始化"
 
-    
     Private Sub BtnLoadCancel_Click() Handles BtnLoadCancel.Click
         ChangeState(LinkStates.Waiting)
     End Sub
 
-    
     Private Sub CardLoad_MouseLeftButtonUp() Handles CardLoad.MouseLeftButtonUp
         ChangeState(LinkStates.Loading)
     End Sub
 
-    
     Private Sub UpdateProgressBar(Optional Value As Double = -1)
         If Value = -1 Then Value = LinkLoader.Progress
         Dim DisplayingProgress As Double = ColumnProgressA.Width.Value
@@ -446,12 +401,10 @@ Public Class PageLinkMain
 
 #Region "完成页面 (Finished)"
 
-    
     Private Sub SwitchToFinished(OldState As LinkStates)
-        
-        UpdatePanelVisibility() 
 
-        
+        UpdatePanelVisibility()
+
         If IsServerSide Then
             LabFinishTitle.Text = "已创建房间"
             HostNodeText = TcNodeText()
@@ -460,8 +413,8 @@ Public Class PageLinkMain
             BtnFinishExit.Text = "关闭"
             BtnFinishPing.ToolTip = "网络延迟"
             BtnFinishCopy.Visibility = Visibility.Visible
-            Copy() 
-            
+            Copy()
+
             BtnFinishPort.Visibility = Visibility.Collapsed
             LabFinishPort.Visibility = Visibility.Collapsed
             LineFinishPort.Visibility = Visibility.Collapsed
@@ -473,7 +426,7 @@ Public Class PageLinkMain
             BtnFinishExit.Text = "离开"
             BtnFinishPing.ToolTip = "与房主的延迟"
             BtnFinishCopy.Visibility = Visibility.Collapsed
-            
+
             BtnFinishPort.Visibility = Visibility.Collapsed
             LabFinishPort.Visibility = Visibility.Collapsed
             LineFinishPort.Visibility = Visibility.Collapsed
@@ -481,21 +434,13 @@ Public Class PageLinkMain
             LabFinishIp.Text = ClientAddress
             BtnFinishIp.Visibility = Visibility.Visible
         End If
-        Update() 
+        Update()
     End Sub
 
-    
-    
-    
-
-    
     Private Sub BtnFinishExit_Click() Handles BtnFinishExit.Click
         TryExit(False, False)
     End Sub
-    
-    
-    
-    
+
     Public Function TryExit(Silent As Boolean, Closing As Boolean) As Boolean
         If LinkState = LinkStates.Waiting OrElse LinkState = LinkStates.Failed Then Return False
         If Not Silent Then
@@ -509,7 +454,6 @@ Public Class PageLinkMain
         Return False
     End Function
 
-    
     Private Sub Copy() Handles BtnFinishCopy.Click
         Dim CodeText As String = $"在 Plain Craft Launcher Fork Enhanced 启动器中输入房间码【{GetInviteCode()}】，即可加入联机房间！"
         ClipboardSet(CodeText, False)
@@ -520,10 +464,6 @@ Public Class PageLinkMain
         Return RoomCode
     End Function
 
-    
-    
-    
-    
     Private Sub RefreshHostGuide()
         If FrmLinkMain Is Nothing Then Return
         Dim Alive As Boolean = HostPort > 0 AndAlso TcGamePortAlive(HostPort)
@@ -540,32 +480,27 @@ Public Class PageLinkMain
         LabFinishDesc.Text = Text
     End Sub
 
-    
-    
-    
-    
-    
     Private Sub StartHostGuideWatch()
-        
+
         HostGuideToken += 1
         Dim MyToken As Integer = HostGuideToken
-        
+
         If ManualPort > 0 Then TcBroadcastPort(ManualPort)
         RunInNewThread(
         Sub()
-            For i = 1 To 600 
+            For i = 1 To 600
                 Thread.Sleep(3000)
                 If MyToken <> HostGuideToken OrElse LinkState <> LinkStates.Finished Then Exit For
-                
+
                 If ManualPort > 0 Then TcBroadcastPort(ManualPort)
-                
+
                 Dim Json As JObject = TcGetStateJson(1500)
                 Dim Port As Integer = 0
                 If Json IsNot Nothing Then Integer.TryParse(If(Json("port")?.ToString, ""), Port)
                 If Port <= 0 Then Port = HostPort
                 Dim PortChanged As Boolean = Port <> HostPort
                 If PortChanged Then HostPort = Port
-                
+
                 If PortChanged Then
                     RunInUi(Sub()
                                 If MyToken <> HostGuideToken Then Return
@@ -576,7 +511,6 @@ Public Class PageLinkMain
         End Sub, "陶瓦房主端口检测")
     End Sub
 
-    
     Private Shared Function TcGamePortAlive(Port As Integer) As Boolean
         If Port <= 0 Then Return False
         Try
@@ -589,10 +523,6 @@ Public Class PageLinkMain
         End Try
     End Function
 
-    
-    
-    
-    
     Private Shared Sub TcBroadcastPort(Port As Integer)
         If Port <= 0 OrElse Port > 65535 Then Return
         Try
@@ -601,7 +531,7 @@ Public Class PageLinkMain
                 Udp.EnableBroadcast = True
                 For Each Ip As System.Net.IPAddress In System.Net.Dns.GetHostAddresses(System.Net.Dns.GetHostName())
                     If Ip.AddressFamily <> AddressFamily.InterNetwork OrElse System.Net.IPAddress.IsLoopback(Ip) Then Continue For
-                    If Ip.ToString().StartsWithF("10.144.144.") Then Continue For 
+                    If Ip.ToString().StartsWithF("10.144.144.") Then Continue For
                     Try
                         Udp.Send(Payload, Payload.Length, New System.Net.IPEndPoint(Ip, 4445))
                     Catch
@@ -617,8 +547,6 @@ Public Class PageLinkMain
         End Try
     End Sub
 
-
-    
     Private Shared Function TcGameRunning() As Boolean
         Try
             Dim Game As Process = McLaunchProcess
@@ -629,7 +557,6 @@ Public Class PageLinkMain
         End Try
     End Function
 
-    
     Private Sub BtnFinishIp_MouseLeftButtonUp(sender As Object, e As MouseButtonEventArgs) Handles BtnFinishIp.MouseLeftButtonUp
         ClipboardSet(ClientAddress, False)
         Hint("已复制服务器地址！", HintType.Green)
@@ -637,51 +564,41 @@ Public Class PageLinkMain
 
 #End Region
 
-    
-    
-    
-
-    
     Private ReadOnly PathTerracotta As String = Paths.AppDataThenName & "Terracotta\"
     Private Const TcExeName As String = "terracotta.exe"
-    
+
     Private Const TcStartupTimeout As Integer = 60
-    
+
     Private Const TcRoomTimeout As Integer = 180
 
-    
     Private IsServerSide As Boolean
-    
+
     Private ClientAddress As String = Nothing
-    
+
     Private HostPort As Integer = 0
-    
+
     Private ManualPort As Integer = 0
-    
+
     Private HostNodeText As String = ""
-    
-    
-    
-    
-    
+
     Private Shared HostGuideToken As Integer = 0
-    
+
     Private RoomCode As String
-    
+
     Private NetworkName As String, NetworkSecret As String
-    
+
     Private Shared ProcessTc As Process
-    
+
     Private Shared TcPortDir As String
-    
+
     Private Shared TcPort As Integer = 0
-    
+
     Private Shared TcOwned As Boolean = False
-    
+
     Private Shared LastTcState As String = Nothing
-    
+
     Private Shared TcFailCount As Integer = 0
-    
+
     Private Shared ReadOnly LogHistory As New Queue(Of String)(20)
 
 #Region "加载"
@@ -693,7 +610,6 @@ Public Class PageLinkMain
         New LoaderTask(Of Integer, Integer)("进入联机房间", AddressOf InitEnterRoom) With {.ProgressWeight = 70}
     })
 
-    
     Private Sub InitConfig(Task As LoaderTask(Of Integer, Integer))
         UpdateLoadingPage("正在获取联机配置……", "获取联机配置")
         Try
@@ -705,14 +621,11 @@ Public Class PageLinkMain
             Logger.Warn("没有可用的联机配置，将直接使用陶瓦联机")
             Return
         End If
-        
+
         Dim DisableReason = ServerConfig("Link")?("DisableReason2")?.ToString
         If Not String.IsNullOrEmpty(DisableReason) Then Throw New Exception("$" & DisableReason)
     End Sub
 
-    
-    
-    
     Private Shared Function ExtractEmbeddedTerracotta(TargetFolder As String) As Boolean
         Try
             Dim Asm As Reflection.Assembly = Reflection.Assembly.GetExecutingAssembly()
@@ -746,7 +659,6 @@ Public Class PageLinkMain
         End Try
     End Function
 
-    
     Private Sub InitPrepare(Task As LoaderTask(Of Integer, Integer))
         UpdateLoadingPage("正在准备陶瓦联机模块……", "准备联机模块")
         If Not System.IO.Directory.Exists(PathTerracotta) Then System.IO.Directory.CreateDirectory(PathTerracotta)
@@ -760,14 +672,14 @@ Public Class PageLinkMain
                 End If
             Next
             If Source Is Nothing Then
-                
+
                 UpdateLoadingPage("正在准备陶瓦联机模块……", "解压联机模块")
                 If ExtractEmbeddedTerracotta(PathTerracotta) Then
                     Source = Target
                 End If
             End If
             If Source Is Nothing Then
-                
+
                 UpdateLoadingPage("正在下载陶瓦联机模块……", "下载联机模块")
                 If DownloadTerracottaModule(Paths.Base & "Terracotta\") Then
                     Source = Paths.Base & "Terracotta\" & TcExeName
@@ -780,7 +692,7 @@ Public Class PageLinkMain
                 Logger.Info($"已复制陶瓦联机模块：{Source} -> {Target}")
             End If
         End If
-        
+
         For Each DllName As String In {"VCRUNTIME140.dll", "MSVCP140.dll"}
             If Not FileUtils.Exists(PathTerracotta & DllName) Then
                 For Each Candidate As String In {Paths.Base & "Terracotta\" & DllName, Paths.Base & DllName}
@@ -794,18 +706,17 @@ Public Class PageLinkMain
         Task.Progress = 0.1
     End Sub
 
-    
     Private Sub InitLaunch(Task As LoaderTask(Of Integer, Integer))
         UpdateLoadingPage("正在启动陶瓦联机……", "启动联机模块")
-        
+
         TcKillStaleProcesses()
-        
+
         ProcessStop()
-        
+
         TcPortDir = IO.Path.Combine(IO.Path.GetTempPath(), "PCLPro-Terracotta-" & Guid.NewGuid().ToString("N"))
         If Not IO.Directory.Exists(TcPortDir) Then IO.Directory.CreateDirectory(TcPortDir)
         Dim PortFile As String = IO.Path.Combine(TcPortDir, "http")
-        
+
         Dim Info As New ProcessStartInfo With {
             .FileName = PathTerracotta & TcExeName,
             .Arguments = $"--hmcl2 ""{PortFile}""",
@@ -829,7 +740,7 @@ Public Class PageLinkMain
         AddHandler ProcessTc.ErrorDataReceived, Sub(sender, e) TcLogLine(e.Data)
         ProcessTc.BeginOutputReadLine()
         ProcessTc.BeginErrorReadLine()
-        
+
         Dim Start As Long = GetTimeMs()
         Do
             If Task.IsCanceled Then Throw New OperationCanceledException
@@ -855,7 +766,7 @@ Public Class PageLinkMain
             Thread.Sleep(150)
         Loop
         Logger.Info($"陶瓦本地接口端口：{TcPort}")
-        
+
         Dim ApiStart As Long = GetTimeMs()
         Do
             If Task.IsCanceled Then Throw New OperationCanceledException
@@ -866,9 +777,8 @@ Public Class PageLinkMain
         Task.Progress = 0.25
     End Sub
 
-    
     Private Sub InitEnterRoom(Task As LoaderTask(Of Integer, Integer))
-        
+
         If Not IsServerSide AndAlso Not TcEnsureNodesUsable() Then
             Throw New Exception("$找不到可用的陶瓦联机节点，无法加入房间。" & vbCrLf &
                                 "当前网络下陶瓦的公共节点都连不上（它内置的节点已经失效）。" & vbCrLf &
@@ -884,7 +794,7 @@ Public Class PageLinkMain
         Dim LastStateIndex As Integer = -1
         Do
             If Task.IsCanceled Then Throw New OperationCanceledException
-            
+
             If (CurState = "" OrElse CurState = "waiting") AndAlso GetTimeMs() - LastRequest > 1000 Then
                 LastRequest = GetTimeMs()
                 Dim EnterBody As String = Nothing
@@ -894,26 +804,26 @@ Public Class PageLinkMain
                 Else
                     EnterStatus = TcApiStatus($"/state/guesting?room={Uri.EscapeDataString(RoomCode)}&player={Uri.EscapeDataString(TcPlayerName())}{TcPublicNodesQuery()}", EnterBody, 4000)
                 End If
-                
+
                 If EnterStatus >= 400 Then
                     EnterFailCount += 1
                     Logger.Warn($"陶瓦拒绝联机请求（HTTP {EnterStatus}，第 {EnterFailCount} 次）：{EnterBody}")
-                    
+
                     If EnterFailCount >= 8 Then
                         Throw New Exception("$" & $"陶瓦联机模块拒绝了{If(IsServerSide, "创建房间", "加入房间")}请求（HTTP {EnterStatus}）。{vbCrLf}服务端回应：{If(EnterBody, "（无）")}{vbCrLf}请点击重试；如果反复失败，请让房主重新创建房间后把新的房间码发给你。")
                     End If
                     TcApi("/state/ide", 1200)
-                    LastStateIndex = -1 
+                    LastStateIndex = -1
                     Thread.Sleep(600 + EnterFailCount * 250)
                 ElseIf EnterStatus > 0 Then
                     EnterFailCount = 0
                     Logger.Info($"陶瓦已接受联机请求（HTTP {EnterStatus}）：{EnterBody}")
                 Else
-                    
+
                     Logger.Warn($"调用陶瓦联机接口无响应：{If(IsServerSide, "/state/scanning", "/state/guesting")}")
                 End If
             End If
-            
+
             Dim Json As JObject = TcGetStateJson(1500)
             If Json Is Nothing Then
                 FailCount += 1
@@ -923,8 +833,7 @@ Public Class PageLinkMain
             End If
             FailCount = 0
             Dim State As String = If(Json("state")?.ToString, "")
-            
-            
+
             Dim StateIndex As Integer = -1
             Integer.TryParse(If(Json("index")?.ToString, ""), StateIndex)
             If StateIndex >= 0 AndAlso StateIndex <= LastStateIndex AndAlso State <> "host-ok" AndAlso State <> "guest-ok" Then
@@ -952,7 +861,7 @@ Public Class PageLinkMain
                 Case "guest-connecting"
                     UpdateLoadingPage("正在连接陶瓦公共节点……", "连接联机节点")
                 Case "guest-starting"
-                    
+
                     Dim Difficulty As String = If(Json("difficulty")?.ToString, "").ToUpperInvariant
                     Dim GuestText As String = "正在与房主建立点对点连接……"
                     Select Case Difficulty
@@ -974,11 +883,11 @@ Public Class PageLinkMain
                 Case "exception"
                     Dim Kind As Integer = -1
                     Integer.TryParse(If(Json("type")?.ToString, ""), Kind)
-                    
+
                     If Not IsServerSide AndAlso (Kind = 0 OrElse Kind = 1 OrElse Kind = 5) AndAlso RecoverCount < 10 Then
                         RecoverCount += 1
                         Logger.Info($"陶瓦返回异常 {Kind}，复位后重试第 {RecoverCount} 次")
-                        
+
                         Dim RetryText As String
                         Select Case Kind
                             Case 1
@@ -998,7 +907,7 @@ Public Class PageLinkMain
                     Throw New Exception("$" & TcExceptionText(Json))
             End Select
             If Succeeded Then Exit Do
-            
+
             Dim Elapsed As Double = (GetTimeMs() - Start) / 1000.0
             If Elapsed > TcRoomTimeout Then
                 If IsServerSide Then
@@ -1015,7 +924,6 @@ Public Class PageLinkMain
         Task.Progress = 1
     End Sub
 
-    
     Private Shared Function TcExceptionText(Json As JObject) As String
         Dim Kind As Integer = -1
         Integer.TryParse(If(Json("type")?.ToString, ""), Kind)
@@ -1040,31 +948,22 @@ Public Class PageLinkMain
         End Select
     End Function
 
-    
     Private Function TcPlayerName() As String
         Return If(IsServerSide, "PCL-Host-", "PCL-Guest-") & Identify.GetStableHashCode().ConvertRadix(36).TrimStart("-"c).EnsureLength("0", 6)
     End Function
 
-    
     Private Shared PublicNodeCache As List(Of String) = Nothing
-    
+
     Private Const TcNodeCacheMs As Integer = 10 * 60 * 1000
     Private Shared PublicNodeCacheTime As Long = 0
-    
+
     Private Shared TcHasReachableNode As Boolean = False
 
-    
-    
-    
-    
-    
-    
-    
     Private Shared Function TcFetchPublicNodes() As List(Of String)
         If PublicNodeCache IsNot Nothing AndAlso GetTimeMs() - PublicNodeCacheTime < TcNodeCacheMs Then Return PublicNodeCache
         Dim Nodes As New List(Of String)
         Dim Sources As New List(Of String)
-        
+
         Try
             Dim Text As String = TcHttpGet("https://terracotta.glavo.site/nodes")
             Dim Json = Text.DeserializeJson()
@@ -1077,12 +976,12 @@ Public Class PageLinkMain
         Catch ex As Exception
             Logger.Warn(ex, "获取陶瓦节点清单失败")
         End Try
-        
+
         If Sources.Count = 0 Then
             Sources.Add("https://etnode.zkitefly.eu.org/node1")
             Sources.Add("https://etnode.zkitefly.eu.org/node2")
         End If
-        
+
         For Each Source As String In Sources
             Try
                 TcResolveNode(Source, Nodes)
@@ -1090,7 +989,7 @@ Public Class PageLinkMain
                 Logger.Warn(ex, "解析陶瓦公共节点失败：" & Source)
             End Try
         Next
-        
+
         Dim Reachable As New List(Of String)
         For Each Node As String In Nodes
             If TcNodeReachable(Node) Then Reachable.Add(Node)
@@ -1103,7 +1002,7 @@ Public Class PageLinkMain
             Logger.Warn("没有可连通的陶瓦公共节点：" & If(Nodes.Count > 0, String.Join("，", Nodes), "（节点清单为空）"))
         End If
         Logger.Info("陶瓦公共节点：" & If(Nodes.Count > 0, String.Join("，", Nodes), "（无）"))
-        
+
         If Nodes.Count > 0 Then
             PublicNodeCache = Nodes
             PublicNodeCacheTime = GetTimeMs()
@@ -1114,19 +1013,16 @@ Public Class PageLinkMain
         Return Nodes
     End Function
 
-    
     Private Shared Function TcNodeReachable(Node As String) As Boolean
         If Node.StartsWith("udp://", StringComparison.OrdinalIgnoreCase) Then Return True
         Return TcPingNode(Node) >= 0
     End Function
 
-    
     Private Shared Function TcEnsureNodesUsable() As Boolean
         TcFetchPublicNodes()
         Return TcHasReachableNode
     End Function
 
-    
     Private Shared Sub TcResolveNode(Source As String, Nodes As List(Of String))
         For Each Prefix As String In {"tcp://", "udp://", "ws://", "wss://"}
             If Source.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase) Then
@@ -1148,7 +1044,6 @@ Public Class PageLinkMain
         Logger.Warn($"节点解析地址没有返回有效中继：{Source}")
     End Sub
 
-    
     Private Shared Function TcHttpGet(Url As String) As String
         Dim Request As HttpWebRequest = CType(WebRequest.Create(Url), HttpWebRequest)
         Request.Timeout = 5000
@@ -1160,10 +1055,6 @@ Public Class PageLinkMain
         End Using
     End Function
 
-    
-    
-    
-    
     Private Shared Function TcPublicNodesQuery() As String
         Dim Nodes As List(Of String) = TcFetchPublicNodes()
         Dim Query As New Text.StringBuilder
@@ -1175,10 +1066,8 @@ Public Class PageLinkMain
         Return Query.ToString()
     End Function
 
-    
     Private Shared TcSelectedNode As String = ""
 
-    
     Private Shared Function TcNodeText() As String
         Dim Node As String = If(TcSelectedNode, "")
         Dim Nodes = TcFetchPublicNodes()
@@ -1188,14 +1077,12 @@ Public Class PageLinkMain
         Return TcNodeName(If(Index < 0, 0, Index))
     End Function
 
-    
     Private Shared Function TcNodeName(Index As Integer) As String
         Const Numerals As String = "一二三四五六七八九十"
         Dim Text As String = If(Index < Numerals.Length, Numerals.Substring(Index, 1), (Index + 1).ToString())
         Return Text & "号公共节点"
     End Function
 
-    
     Private Shared Function TcPingColor(Ping As Integer) As String
         If Ping < 0 Then Return "#B8B8B8"
         If Ping <= 80 Then Return "#2FA84F"
@@ -1203,12 +1090,10 @@ Public Class PageLinkMain
         Return "#E05B5B"
     End Function
 
-    
     Private Shared Function TcPingText(Ping As Integer) As String
         Return If(Ping >= 0, $"{Ping} ms", "不可用")
     End Function
 
-    
     Private Shared Function TcPingNode(Node As String) As Integer
         Try
             If Node.StartsWith("udp://", StringComparison.OrdinalIgnoreCase) Then Return -1
@@ -1232,7 +1117,6 @@ Public Class PageLinkMain
         End Try
     End Function
 
-    
     Private Sub ComboCreateNode_Loaded(sender As Object, e As RoutedEventArgs)
         If ComboCreateNode.Items.Count > 0 Then Return
         ComboCreateNode.Items.Add(New MyComboBoxItem With {.Content = "正在获取公共节点……", .Tag = ""})
@@ -1278,17 +1162,11 @@ Public Class PageLinkMain
             End Sub, "TcNodePing")
     End Sub
 
-    
     Private Sub ComboCreateNode_SelectionChanged(sender As Object, e As SelectionChangedEventArgs)
         Dim Item = TryCast(ComboCreateNode.SelectedItem, MyComboBoxItem)
         If Item IsNot Nothing Then TcSelectedNode = TryCast(Item.Tag, String)
     End Sub
 
-    
-    
-    
-    
-    
     Private Shared Sub TcKillStaleProcesses()
         For Each Proc As Process In Process.GetProcesses()
             Try
@@ -1297,7 +1175,7 @@ Public Class PageLinkMain
                 Try
                     FilePath = Proc.MainModule?.FileName
                 Catch
-                    
+
                 End Try
                 If Not String.IsNullOrEmpty(FilePath) Then
                     Dim IsOwnedPath As Boolean =
@@ -1307,7 +1185,7 @@ Public Class PageLinkMain
                     If Not IsOwnedPath Then Continue For
                 End If
                 Logger.Info($"发现残留的陶瓦进程，正在结束：PID {Proc.Id}，路径：{If(FilePath, "未知")}")
-                
+
                 Try
                     TcApi("/panic?peaceful=true", 800)
                 Catch
@@ -1317,7 +1195,7 @@ Public Class PageLinkMain
             Catch
             End Try
         Next
-        
+
         Thread.Sleep(300)
     End Sub
 
@@ -1325,17 +1203,12 @@ Public Class PageLinkMain
 
 #Region "接口与进程"
 
-    
     Private Shared Function TcApi(Path As String, Optional TimeoutMs As Integer = 1500) As String
         Dim Body As String = Nothing
         TcApiStatus(Path, Body, TimeoutMs)
         Return Body
     End Function
 
-    
-    
-    
-    
     Private Shared Function TcApiStatus(Path As String, ByRef Body As String, Optional TimeoutMs As Integer = 1500) As Integer
         Body = Nothing
         If TcPort <= 0 Then Return -1
@@ -1353,7 +1226,7 @@ Public Class PageLinkMain
                 Return CInt(Response.StatusCode)
             End Using
         Catch ex As WebException
-            
+
             Try
                 If ex.Response IsNot Nothing Then
                     Dim ErrorResponse As HttpWebResponse = CType(ex.Response, HttpWebResponse)
@@ -1370,7 +1243,6 @@ Public Class PageLinkMain
         End Try
     End Function
 
-    
     Private Shared Function TcGetStateJson(Optional TimeoutMs As Integer = 1500) As JObject
         Dim RawText As String = TcApi("/state", TimeoutMs)
         If String.IsNullOrEmpty(RawText) Then Return Nothing
@@ -1394,17 +1266,13 @@ Public Class PageLinkMain
         End SyncLock
     End Sub
 
-    
-    
-    
-    
     Public Shared Sub ProcessStop()
         Try
             If TcPort > 0 Then
-                
+
                 TcApi("/state/ide", 800)
                 If TcOwned Then
-                    
+
                     TcApi("/panic?peaceful=true", 800)
                     Thread.Sleep(250)
                 End If
@@ -1438,9 +1306,6 @@ Public Class PageLinkMain
         TcPortDir = Nothing
     End Sub
 
-    
-    
-    
     Private Sub Panic(Brief As String, Detail As String)
         If LinkState = LinkStates.Loading Then
             FailReason = Brief
@@ -1456,7 +1321,6 @@ Public Class PageLinkMain
 
 #Region "定时任务"
 
-    
     Private Sub StartTimerThread() Handles Me.Loaded
         Static IsTimerStarted As Boolean = False
         If IsTimerStarted Then Return
@@ -1467,12 +1331,12 @@ Public Class PageLinkMain
                 Try
                     Thread.Sleep(200)
                     Counter += 200
-                    
+
                     If Counter >= 1000 Then
                         Counter = 0
                         Update()
                     End If
-                    
+
                     If LinkState = LinkStates.Loading Then RunInUi(AddressOf UpdateProgressBar)
                 Catch ex As Exception
                     Logger.Error(ex, "联机模块主时钟出错")
@@ -1482,10 +1346,9 @@ Public Class PageLinkMain
         End Sub, "Link Timer")
     End Sub
 
-    
     Private Sub Update() Handles Me.Loaded
         If LinkState <> LinkStates.Finished Then Return
-        
+
         If FrmMain.PageCurrent = FormMain.PageType.Link Then
             RunInUi(
             Sub()
@@ -1494,12 +1357,12 @@ Public Class PageLinkMain
                 LabFinishPlayer.Text = "陶瓦联机"
             End Sub)
         End If
-        
+
         Dim Json As JObject = TcGetStateJson(1000)
         If Json Is Nothing Then
             TcFailCount += 1
             If TcFailCount >= 5 Then
-                
+
                 TcFailCount = 0
                 CheckCrash()
             End If
@@ -1519,7 +1382,6 @@ Public Class PageLinkMain
         End Select
     End Sub
 
-    
     Private Sub CheckCrash()
         If LinkState <> LinkStates.Finished Then Return
         If TcPort > 0 AndAlso TcGetStateJson(800) IsNot Nothing Then Return

@@ -3,13 +3,9 @@ Imports System.Windows.Markup
 <ContentProperty("Inlines")>
 Public Class MyIconTextButton
 
-    
-
     Public Uuid As Integer = GetUuid()
     Public Event Check(sender As Object, raiseByMouse As Boolean)
     Public Event Change(sender As Object, raiseByMouse As Boolean)
-
-    
 
     Public Property Logo As String
         Get
@@ -42,7 +38,7 @@ Public Class MyIconTextButton
         Set(value As String)
             SetValue(TextProperty, value)
         End Set
-    End Property 
+    End Property
     Public Shared ReadOnly TextProperty As DependencyProperty = DependencyProperty.Register("Text", GetType(String), GetType(MyIconTextButton), New PropertyMetadata(New PropertyChangedCallback(
     Sub(sender As DependencyObject, e As DependencyPropertyChangedEventArgs)
         If Not IsNothing(sender) Then CType(sender, MyIconTextButton).LabText.Text = e.NewValue
@@ -60,11 +56,9 @@ Public Class MyIconTextButton
             SetValue(ColorTypeProperty, value)
             RefreshColor()
         End Set
-    End Property 
+    End Property
     Public Shared ReadOnly ColorTypeProperty As DependencyProperty =
         DependencyProperty.Register("ColorType", GetType(ColorState), GetType(MyIconTextButton), New PropertyMetadata(ColorState.Black))
-
-    
 
     Public Event Click(sender As Object, e As RouteEventArgs)
     Private IsMouseDown As Boolean = False
@@ -73,7 +67,7 @@ Public Class MyIconTextButton
         Logger.Info($"按下带图标按钮：{Text}")
         IsMouseDown = False
         RaiseEvent Click(Me, New RouteEventArgs(True))
-        RaiseCustomEvent() 
+        RaiseCustomEvent()
         RefreshColor()
     End Sub
     Private Sub MyIconTextButton_MouseDown() Handles Me.MouseLeftButtonDown
@@ -85,35 +79,33 @@ Public Class MyIconTextButton
         RefreshColor()
     End Sub
 
-    
-
-    Private Const AnimationTimeOfMouseIn As Integer = 100 
-    Private Const AnimationTimeOfMouseOut As Integer = 150 
+    Private Const AnimationTimeOfMouseIn As Integer = 100
+    Private Const AnimationTimeOfMouseOut As Integer = 150
     Private Sub RefreshColor(Optional obj = Nothing, Optional e = Nothing) Handles Me.MouseEnter, Me.Loaded, Me.IsEnabledChanged
         Try
-            If IsLoaded AndAlso AniControlEnabled = 0 AndAlso Not False.Equals(e) Then 
+            If IsLoaded AndAlso AniControlEnabled = 0 AndAlso Not False.Equals(e) Then
 
                 Select Case ColorType
                     Case ColorState.Black
                         If IsMouseDown Then
-                            
+
                             AniStart(AaColor(Me, BackgroundProperty, "ColorBrush6", 70), "MyIconTextButton Color " & Uuid)
                         ElseIf IsMouseOver Then
-                            
+
                             AniStart({
                                 AaColor(ShapeLogo, Shapes.Path.FillProperty, "ColorBrush3", AnimationTimeOfMouseIn),
                                 AaColor(LabText, TextBlock.ForegroundProperty, "ColorBrush3", AnimationTimeOfMouseIn)
                             }, "MyIconTextButton Checked " & Uuid)
                             AniStart(AaColor(Me, BackgroundProperty, "ColorBrushBg1", AnimationTimeOfMouseIn), "MyIconTextButton Color " & Uuid)
                         ElseIf IsEnabled Then
-                            
+
                             AniStart({
                                 AaColor(ShapeLogo, Shapes.Path.FillProperty, "ColorBrush1", AnimationTimeOfMouseOut),
                                 AaColor(LabText, TextBlock.ForegroundProperty, "ColorBrush1", AnimationTimeOfMouseOut)
                             }, "MyIconTextButton Checked " & Uuid)
                             AniStart(AaColor(Me, BackgroundProperty, ColorSemiTransparent - Background, AnimationTimeOfMouseOut), "MyIconTextButton Color " & Uuid)
                         Else
-                            
+
                             AniStart({
                                 AaColor(ShapeLogo, Shapes.Path.FillProperty, "ColorBrushGray5", 100),
                                 AaColor(LabText, TextBlock.ForegroundProperty, "ColorBrushGray5", 100)
@@ -122,24 +114,24 @@ Public Class MyIconTextButton
                         End If
                     Case ColorState.Highlight
                         If IsMouseDown Then
-                            
+
                             AniStart(AaColor(Me, BackgroundProperty, "ColorBrush6", 70), "MyIconTextButton Color " & Uuid)
                         ElseIf IsMouseOver Then
-                            
+
                             AniStart({
                                 AaColor(ShapeLogo, Shapes.Path.FillProperty, "ColorBrush3", AnimationTimeOfMouseIn),
                                 AaColor(LabText, TextBlock.ForegroundProperty, "ColorBrush3", AnimationTimeOfMouseIn)
                             }, "MyIconTextButton Checked " & Uuid)
                             AniStart(AaColor(Me, BackgroundProperty, "ColorBrushBg1", AnimationTimeOfMouseIn), "MyIconTextButton Color " & Uuid)
                         ElseIf IsEnabled Then
-                            
+
                             AniStart({
                                 AaColor(ShapeLogo, Shapes.Path.FillProperty, "ColorBrush3", AnimationTimeOfMouseOut),
                                 AaColor(LabText, TextBlock.ForegroundProperty, "ColorBrush3", AnimationTimeOfMouseOut)
                             }, "MyIconTextButton Checked " & Uuid)
                             AniStart(AaColor(Me, BackgroundProperty, ColorSemiTransparent - Background, AnimationTimeOfMouseOut), "MyIconTextButton Color " & Uuid)
                         Else
-                            
+
                             AniStart({
                                 AaColor(ShapeLogo, Shapes.Path.FillProperty, "ColorBrushGray5", 100),
                                 AaColor(LabText, TextBlock.ForegroundProperty, "ColorBrushGray5", 100)
@@ -150,7 +142,6 @@ Public Class MyIconTextButton
 
             Else
 
-                
                 AniStop("MyIconTextButton Checked " & Uuid)
                 AniStop("MyIconTextButton Color " & Uuid)
                 Select Case ColorType

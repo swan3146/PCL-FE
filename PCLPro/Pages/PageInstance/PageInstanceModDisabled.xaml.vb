@@ -4,7 +4,7 @@ Public Class PageInstanceModDisabled
         FrmMain.PageChange(FormMain.PageType.Download, FormMain.PageSubType.DownloadInstall)
     End Sub
     Private Sub BtnVersion_Click(sender As Object, e As EventArgs) Handles BtnVersion.Click
-        FrmMain.PageChange(FormMain.PageType.Launch) 
+        FrmMain.PageChange(FormMain.PageType.Launch)
         FrmMain.PageChange(FormMain.PageType.InstanceSelect)
     End Sub
 

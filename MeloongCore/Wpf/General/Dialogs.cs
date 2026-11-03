@@ -4,10 +4,6 @@ namespace MeloongCore.Wpf;
 
 public static class Dialogs {
 
-    
-    
-    
-    
     public static string? SaveFile(string title, string defaultFileName = "", string? defaultDirectory = null, IEnumerable<(string Extension, string Display)>? filter = null) {
         var filters = filter?.ToList();
         var dialog = new SaveFileDialog {
@@ -26,7 +22,7 @@ public static class Dialogs {
         var result = dialog.FileName;
         Logger.Info($"保存弹窗返回：{result}");
         if (!result.Contains(Path.DirectorySeparatorChar)) return null;
-        
+
         if (filters != null && !string.IsNullOrEmpty(result) && !filters.Any(f => result.EndsWithF("." + f.Extension, true))) {
             result += "." + filters[dialog.FilterIndex - 1].Extension;
             Logger.Warn($"选择文件的返回无扩展名，将会手动添加，修改后为：{result}");
@@ -34,10 +30,6 @@ public static class Dialogs {
         return result;
     }
 
-    
-    
-    
-    
     public static List<string> SelectFile(string title, bool multiselect, string? defaultDirectory = null, OneOf<IEnumerable<(string[] Extensions, string Display)>, string>? filter = null) {
         var dialog = new OpenFileDialog {
             AddExtension = true,
@@ -66,9 +58,6 @@ public static class Dialogs {
         return results;
     }
 
-    
-    
-    
     public static List<string> SelectFolder(string title, bool multiselect, string? defaultDirectory = null) {
         var dialog = new Ookii.Dialogs.Wpf.VistaFolderBrowserDialog {
             ShowNewFolderButton = true,

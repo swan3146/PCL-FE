@@ -1,12 +1,6 @@
-﻿
-
-#Region "附加属性"
+﻿#Region "附加属性"
 
 Imports PCL.FormMain
-
-
-
-
 
 <Markup.ContentProperty("Events")>
 Public Class CustomEventCollection
@@ -25,12 +19,8 @@ Public Class CustomEventCollection
     End Function
 End Class
 
-
-
-
 Public Class CustomEventService
 
-    
     Public Shared ReadOnly EventsProperty As DependencyProperty =
             DependencyProperty.RegisterAttached("Events", GetType(CustomEventCollection), GetType(CustomEventService), New PropertyMetadata(Nothing))
     <AttachedPropertyBrowsableForType(GetType(DependencyObject))>
@@ -43,7 +33,6 @@ Public Class CustomEventService
         Return d.GetValue(EventsProperty)
     End Function
 
-    
     Public Shared ReadOnly EventTypeProperty As DependencyProperty =
             DependencyProperty.RegisterAttached("EventType", GetType(CustomEvent.EventType), GetType(CustomEventService), New PropertyMetadata(Nothing))
     <AttachedPropertyBrowsableForType(GetType(DependencyObject))>
@@ -55,7 +44,6 @@ Public Class CustomEventService
         Return d.GetValue(EventTypeProperty)
     End Function
 
-    
     Public Shared ReadOnly EventDataProperty As DependencyProperty =
             DependencyProperty.RegisterAttached("EventData", GetType(String), GetType(CustomEventService), New PropertyMetadata(Nothing))
     <AttachedPropertyBrowsableForType(GetType(DependencyObject))>
@@ -71,17 +59,13 @@ End Class
 
 Partial Public Module ModMain
 
-    
-    
-    
-    
     <Runtime.CompilerServices.Extension>
     Public Sub RaiseCustomEvent(Control As DependencyObject)
-        
+
         Dim Events = CustomEventService.GetEvents(Control).ToList
         Dim EventType = CustomEventService.GetEventType(Control)
         If EventType <> CustomEvent.EventType.None Then Events.Add(New CustomEvent(EventType, CustomEventService.GetEventData(Control)))
-        
+
         If Not Events.Any Then Return
         RunInNewThread(
         Sub()
@@ -94,9 +78,6 @@ Partial Public Module ModMain
 End Module
 
 #End Region
-
-
-
 
 Public Class CustomEvent
     Inherits DependencyObject
@@ -136,9 +117,6 @@ Public Class CustomEvent
         Me.Data = Data
     End Sub
 
-    
-    
-    
     Public Sub Raise()
         Raise(Type, Data)
     End Sub
@@ -172,9 +150,6 @@ Public Class CustomEvent
         检查更新
     End Enum
 
-    
-    
-    
     Public Shared Sub Raise(Type As EventType, Arg As String)
         If Type = EventType.None Then Return
         Logger.Info($"执行自定义事件：{Type}, {Arg}")
@@ -186,7 +161,7 @@ Public Class CustomEvent
             Select Case Type
                 Case EventType.打开网页
                     Arg = Arg.Replace("\", "/")
-                    If Not Arg.Contains("://") OrElse Arg.StartsWithF("file", True) Then 
+                    If Not Arg.Contains("://") OrElse Arg.StartsWithF("file", True) Then
                         MyMsgBox("EventData 必须为一个网址。" & vbCrLf & "如果想要启动程序，请将 EventType 改为 打开文件。", "事件执行失败")
                         Return
                     End If
@@ -197,11 +172,11 @@ Public Class CustomEvent
                     RunInThread(
                     Sub()
                         Try
-                            
+
                             Dim ActualPaths = GetAbsoluteUrls(Arg0, Type)
                             Dim Location = ActualPaths(0), WorkingDir = ActualPaths(1)
                             Logger.Info($"打开类自定义事件实际路径：{Location}，工作目录：{WorkingDir}")
-                            
+
                             If Not EventSafetyConfirm("即将执行：" & Location & If(Args.Length >= 2, " " & Arg1, "")) Then Return
                             Dim Info As New ProcessStartInfo With {
                                 .Arguments = If(Args.Length >= 2, Arg1, ""),
@@ -346,18 +321,13 @@ Public Class CustomEvent
         End Try
     End Sub
 
-    
-    
-    
-    
     Public Shared Function GetAbsoluteUrls(RelativeUrl As String, Type As EventType) As String()
 
-        
         If RelativeUrl.StartsWithF("http", True) Then
             If RunInUi() Then
                 Throw New Exception("能打开联网帮助页面的 MyListItem 必须手动设置 Title、Info 属性！")
             End If
-            
+
             Dim RawFileName As String
             Try
                 RawFileName = PathUtils.GetLastPart(RelativeUrl)
@@ -368,7 +338,7 @@ Public Class CustomEvent
                                     " - https://www.baidu.com/test.json（填写这个路径）" & vbCrLf &
                                     " - https://www.baidu.com/test.xaml（同时也需要包含这个文件）", ex)
             End Try
-            
+
             Dim LocalTemp As String = RequestTaskTempFolder() & RawFileName
             Logger.Info($"转换网络资源：{RelativeUrl} -> {LocalTemp}")
             Try
@@ -385,36 +355,32 @@ Public Class CustomEvent
         End If
         RelativeUrl = RelativeUrl.Replace("/", "\").Lower.TrimStart("\")
 
-        
         Dim Location As String, WorkingDir As String = Paths.Base & "PCL"
         If RelativeUrl.Contains(":\") Then
-            
+
             Location = RelativeUrl
             Logger.Info($"自定义事件中由绝对路径{Type}：{Location}")
         ElseIf FileUtils.Exists(Paths.Base & "PCL\" & RelativeUrl) Then
-            
+
             Location = Paths.Base & "PCL\" & RelativeUrl
             Logger.Info($"自定义事件中由相对 PCL 文件夹的路径{Type}：{Location}")
         ElseIf FileUtils.Exists(Paths.Base & "PCL\Help\" & RelativeUrl) Then
-            
+
             Location = Paths.Base & "PCL\Help\" & RelativeUrl
             WorkingDir = Paths.Base & "PCL\Help\"
             Logger.Info($"自定义事件中由相对 PCL 本地帮助文件夹的路径{Type}：{Location}")
         ElseIf Type = EventType.打开文件 OrElse Type = EventType.执行命令 Then
-            
+
             Location = RelativeUrl
             Logger.Info($"自定义事件中直接{Type}：{Location}")
         Else
-            
+
             Throw New FileNotFoundException("未找到 EventData 指向的本地 xaml 文件：" & RelativeUrl, RelativeUrl)
         End If
 
         Return {Location, WorkingDir}
     End Function
 
-    
-    
-    
     Private Shared Function EventSafetyConfirm(Message As String) As Boolean
         If Settings.Get(Of Boolean)("HintCustomCommand") Then Return True
         Select Case MyMsgBox(Message & vbCrLf & "请在确认没有安全隐患后再继续。", "执行确认", "继续", "继续且今后不再要求确认", "取消")

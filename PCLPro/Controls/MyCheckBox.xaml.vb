@@ -4,17 +4,11 @@ Imports System.Windows.Markup
 Public Class MyCheckBox
     Implements ISettingControl
 
-    
-
     Public Uuid As Integer = GetUuid()
-    
-    
-    
-    
+
     Public Event Change(sender As Object, user As Boolean)
     Public Event PreviewChange(sender As Object, e As RouteEventArgs)
 
-    
     Public Property Checked As Boolean
         Get
             Return GetValue(CheckedProperty)
@@ -26,21 +20,16 @@ Public Class MyCheckBox
     Public Shared ReadOnly CheckedProperty As DependencyProperty =
         DependencyProperty.Register("Checked", GetType(Boolean), GetType(MyCheckBox), New PropertyMetadata(False,
         Sub(d As MyCheckBox, e As DependencyPropertyChangedEventArgs)
-            
+
             If Not d.IsLoaded Then d.SyncUI()
         End Sub))
 
-    Private Const AnimationTimeOfCheck As Integer = 150 
-    
-    
-    
-    
-    
+    Private Const AnimationTimeOfCheck As Integer = 150
+
     Public Sub SetChecked(value As Boolean, user As Boolean)
         Try
             If value = Checked Then Return
 
-            
             If value AndAlso user Then
                 Dim e = New RouteEventArgs(user)
                 RaiseEvent PreviewChange(Me, e)
@@ -55,7 +44,6 @@ Public Class MyCheckBox
             SetValue(CheckedProperty, value)
             If IsLoaded Then RaiseEvent Change(Me, user)
 
-            
             SyncUI()
             RaiseCustomEvent()
         Catch ex As Exception
@@ -63,10 +51,10 @@ Public Class MyCheckBox
         End Try
     End Sub
     Private Sub SyncUI()
-        If AniControlEnabled = 0 AndAlso IsLoaded Then 
+        If AniControlEnabled = 0 AndAlso IsLoaded Then
             AllowMouseDown = False
             If Checked Then
-                
+
                 AniStart({
                       AaScale(ShapeBorder, 12 - ShapeBorder.Width, AnimationTimeOfCheck, , New AniEaseOutFluent, , True),
                       AaScaleTransform(ShapeCheck, 1 - CType(ShapeCheck.RenderTransform, ScaleTransform).ScaleX, AnimationTimeOfCheck * 2, AnimationTimeOfCheck * 0.7, New AniEaseOutBack(AniEasePower.Weak)),
@@ -79,7 +67,7 @@ Public Class MyCheckBox
                       AaCode(Sub() AllowMouseDown = True, AnimationTimeOfCheck * 2)
                  }, "MyCheckBox AllowMouseDown " & Uuid)
             Else
-                
+
                 AniStart({
                       AaScale(ShapeBorder, 12 - ShapeBorder.Width, AnimationTimeOfCheck, , New AniEaseOutFluent, , True),
                       AaScaleTransform(ShapeCheck, -CType(ShapeCheck.RenderTransform, ScaleTransform).ScaleX, AnimationTimeOfCheck * 0.9, , New AniEaseInFluent(AniEasePower.Weak)),
@@ -93,7 +81,7 @@ Public Class MyCheckBox
                  }, "MyCheckBox AllowMouseDown " & Uuid)
             End If
         Else
-            
+
             AniStop("MyCheckBox Scale " & Uuid)
             AniStop("MyCheckBox BorderColor " & Uuid)
             AniStop("MyCheckBox AllowMouseDown " & Uuid)
@@ -121,13 +109,11 @@ Public Class MyCheckBox
         Set(value As String)
             SetValue(TextProperty, value)
         End Set
-    End Property 
+    End Property
     Public Shared ReadOnly TextProperty As DependencyProperty = DependencyProperty.Register("Text", GetType(String), GetType(MyCheckBox), New PropertyMetadata(New PropertyChangedCallback(
     Sub(sender As DependencyObject, e As DependencyPropertyChangedEventArgs)
         If Not IsNothing(sender) Then CType(sender, MyCheckBox).LabText.Text = e.NewValue
     End Sub)))
-
-    
 
     Private MouseDowned As Boolean = False
     Private AllowMouseDown As Boolean = True
@@ -166,18 +152,16 @@ Public Class MyCheckBox
         End If
     End Sub
 
-    
-
     Private Const AnimationTimeOfMouseIn As Integer = 100
     Private Const AnimationTimeOfMouseOut As Integer = 200
     Private Sub Checkbox_IsEnabledChanged() Handles Me.IsEnabledChanged
-        If IsLoaded AndAlso AniControlEnabled = 0 Then 
-            
+        If IsLoaded AndAlso AniControlEnabled = 0 Then
+
             If IsEnabled Then
-                
+
                 Checkbox_MouseLeaveAnimation()
             Else
-                
+
                 AniStart({
                          AaColor(ShapeBorder, Border.BorderBrushProperty, ColorGray5 - ShapeBorder.BorderBrush, AnimationTimeOfMouseOut)
                  }, "MyCheckBox BorderColor " & Uuid)
@@ -186,7 +170,7 @@ Public Class MyCheckBox
                  }, "MyCheckBox TextColor " & Uuid)
             End If
         Else
-            
+
             AniStop("MyCheckBox TextColor " & Uuid)
             AniStop("MyCheckBox BorderColor " & Uuid)
             LabText.SetResourceReference(TextBlock.ForegroundProperty, If(Me.IsEnabled, "ColorBrush1", "ColorBrushGray5"))
@@ -202,7 +186,7 @@ Public Class MyCheckBox
          }, "MyCheckBox BorderColor " & Uuid)
     End Sub
     Private Sub Checkbox_MouseLeaveAnimation() Handles Me.MouseLeave
-        If Not IsEnabled Then Return 
+        If Not IsEnabled Then Return
         AniStart({
                  AaColor(LabText, TextBlock.ForegroundProperty, If(Me.IsEnabled, "ColorBrush1", "ColorBrushGray5"), AnimationTimeOfMouseOut)
          }, "MyCheckBox TextColor " & Uuid)

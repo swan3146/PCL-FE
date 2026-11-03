@@ -5,18 +5,12 @@ Public Class PageResource
 
 #Region "属性"
 
-    
-    
-    
     Public ReadOnly Property SearchTags As ItemCollection
         Get
             Return ComboSearchTag.Items
         End Get
     End Property
 
-    
-    
-    
     Public Property TypeName As String
         Get
             Return _TypeName
@@ -29,9 +23,6 @@ Public Class PageResource
     End Property
     Private _TypeName As String = ""
 
-    
-    
-    
     Public Property TypeNameSpaced As String
         Get
             Return _TypeNameSpaced
@@ -45,9 +36,6 @@ Public Class PageResource
     End Property
     Private _TypeNameSpaced As String = ""
 
-    
-    
-    
     Public Property PageType As ResourceTypes
         Get
             Return _Type
@@ -64,25 +52,19 @@ Public Class PageResource
 
 #Region "加载"
 
-    
-    
-    
     Public Shared TargetInstance As McInstance = Nothing
-    
-    
-    
+
     Public Shared TargetName As String = Nothing
 
-    
     Public Loader As LoaderTask(Of ResourceSearcher.SearchRequest, Integer) = ResourceSearcher.GetLoader(AddressOf LoaderInput)
 
     Private Sub PageResource_Loaded(sender As Object, e As EventArgs) Handles Me.Loaded
         Static IsFirstLoaded As Boolean = False
         ApplyCurseForgeOnly()
-        
+
         If TargetInstance IsNot Nothing Then
-            
-            ResetFilter() 
+
+            ResetFilter()
             TextSearchVersion.Text = TargetInstance.Version.VanillaName
             Dim GetTargetItemByName =
             Function(Name As String) As MyComboBoxItem
@@ -103,18 +85,18 @@ Public Class PageResource
                 TextSearchName.Text = TargetName
                 TargetName = Nothing
             End If
-            
+
             If IsFirstLoaded Then StartNewSearch()
             ScrollToHome()
         End If
-        
+
         If IsFirstLoaded Then Return
         IsFirstLoaded = True
         CType(Parent, MyPageRight).PageLoaderInit(Load, PanLoad, PanContent, PanAlways, Loader, AddressOf Load_OnFinish, AddressOf LoaderInput)
-        
+
         If AllDrops IsNot Nothing AndAlso AllDrops.First > 250 Then
             Dim HighestVersion As String = McVersion.DropToVersion(AllDrops.First)
-            If CType(TextSearchVersion.Items(1), MyComboBoxItem).Content.ToString <> HighestVersion Then 
+            If CType(TextSearchVersion.Items(1), MyComboBoxItem).Content.ToString <> HighestVersion Then
                 TextSearchVersion.Items.Insert(1, New MyComboBoxItem With {.Content = HighestVersion})
             End If
         End If
@@ -136,17 +118,14 @@ Public Class PageResource
 #End Region
 
     Public Storage As New ResourceSearcher.SearchResult
-    
-    
-    
+
     Public Const PAGE_SIZE = 40
     Public Page As Integer = 0
 
-    
     Private Sub Load_OnFinish()
         Try
             Logger.Info($"开始可视化{TypeNameSpaced}列表，已储藏 {Storage.Results.Count} 个结果，当前在第 {Page + 1} 页")
-            
+
             PanProjects.Children.Clear()
             Dim Index As Integer = Math.Min(Page * PAGE_SIZE, Storage.Results.Count - 1)
             For Each Result In Storage.Results.GetRange(Index, Math.Min(Storage.Results.Count - Index, PAGE_SIZE))
@@ -154,7 +133,7 @@ Public Class PageResource
                     ShowMcVersionDesc:=Loader.Input.GameVersion Is Nothing,
                     ShowLoaderDesc:=Loader.Input.ModLoaders = ModLoaders.None AndAlso (PageType = ResourceTypes.Mod OrElse PageType = ResourceTypes.ModPack)))
             Next
-            
+
             CardPages.Visibility = If(Storage.Results.Count > 40 OrElse
                                       Storage.CurseForgeOffset < Storage.CurseForgeTotal OrElse Storage.ModrinthOffset < Storage.ModrinthTotal,
                                       Visibility.Visible, Visibility.Collapsed)
@@ -163,26 +142,25 @@ Public Class PageResource
             BtnPageFirst.Opacity = If(Page > 1, 1, 0.2)
             BtnPageLeft.IsEnabled = Page > 0
             BtnPageLeft.Opacity = If(Page > 0, 1, 0.2)
-            Dim IsRightEnabled As Boolean = 
+            Dim IsRightEnabled As Boolean =
                 Storage.Results.Count > PAGE_SIZE * (Page + 1) OrElse
                 Storage.CurseForgeOffset < Storage.CurseForgeTotal OrElse Storage.ModrinthOffset < Storage.ModrinthTotal
             BtnPageRight.IsEnabled = IsRightEnabled
             BtnPageRight.Opacity = If(IsRightEnabled, 1, 0.2)
-            
+
             If Storage.ErrorMessage Is Nothing Then
                 HintError.Visibility = Visibility.Collapsed
             Else
                 HintError.Visibility = Visibility.Visible
                 HintError.Text = Storage.ErrorMessage
             End If
-            
+
             ScrollToTop()
         Catch ex As Exception
             Logger.Error(ex, $"可视化{TypeNameSpaced}列表出错")
         End Try
     End Sub
 
-    
     Private Sub Load_State(sender As Object, state As MyLoading.MyLoadingState, oldState As MyLoading.MyLoadingState) Handles Load.StateChanged
         Select Case Loader.State
             Case LoadState.Failed
@@ -195,7 +173,6 @@ Public Class PageResource
         End Select
     End Sub
 
-    
     Private Sub BtnPageFirst_Click(sender As Object, e As RoutedEventArgs) Handles BtnPageFirst.Click
         ChangePage(0)
     End Sub
@@ -212,7 +189,7 @@ Public Class PageResource
         Logger.Info($"{TypeName}：切换到第 {Page + 1} 页")
         RunInThread(
         Sub()
-            Thread.Sleep(100) 
+            Thread.Sleep(100)
             RunInUi(Sub() CardPages.IsEnabled = True)
             Loader.Start()
         End Sub)
@@ -220,17 +197,15 @@ Public Class PageResource
 
 #Region "搜索"
 
-    
     Private Sub StartNewSearch() Handles BtnSearchRun.Click
         Page = 0
-        If Loader.ShouldStart(LoaderInput()) Then Storage = New ResourceSearcher.SearchResult 
+        If Loader.ShouldStart(LoaderInput()) Then Storage = New ResourceSearcher.SearchResult
         Loader.Start()
     End Sub
     Private Sub EnterTrigger(sender As Object, e As KeyEventArgs) Handles TextSearchName.KeyDown, TextSearchVersion.KeyDown
         If e.Key = Key.Enter Then StartNewSearch()
     End Sub
 
-    
     Private Sub ResetFilter() Handles BtnSearchReset.Click
         TextSearchName.Text = ""
         TextSearchVersion.Text = "全部 (也可自行输入)"
@@ -238,10 +213,9 @@ Public Class PageResource
         ComboSearchSource.SelectedIndex = If(PageType = ResourceTypes.Map, 1, 0)
         ComboSearchTag.SelectedIndex = 0
         ComboSearchLoader.SelectedIndex = 0
-        Loader.LastFinishedTime = 0 
+        Loader.LastFinishedTime = 0
     End Sub
 
-    
     Private Sub ApplyCurseForgeOnly()
         If PageType <> ResourceTypes.Map OrElse ComboSearchSource Is Nothing Then Return
         For Each Item In ComboSearchSource.Items
@@ -254,8 +228,6 @@ Public Class PageResource
         ComboSearchSource.SelectedIndex = 1
     End Sub
 
-    
-    
     Private Sub TextSearchVersion_TextChanged() Handles TextSearchVersion.TextChanged
         If Not TextSearchVersion.IsDropDownOpen Then UpdateSearchLoaderVisibility()
     End Sub
@@ -272,7 +244,6 @@ Public Class PageResource
 
 #End Region
 
-    
     Private Sub BtnSearchInstallModPack_Click(sender As Object, e As EventArgs) Handles BtnSearchInstallModPack.Click
         ModpackInstall()
     End Sub

@@ -3,36 +3,24 @@ using System.Net.Sockets;
 namespace MeloongCore.Extensions;
 public static class ExceptionExtensions {
 
-    
-    
-    
     public static Exception RootException(this Exception ex) {
         while (ex.InnerException is { } inner) ex = inner;
         return ex;
     }
 
-    
-    
-    
     public static bool IsCanceled(this Exception ex) {
         foreach (var inner in ex.Flatten()) {
             if (inner is OperationCanceledException or TaskCanceledException or ThreadInterruptedException) return true;
         }
         return false;
     }
-    
-    
-    
+
     public static void ThrowIfCanceled(this Exception ex) {
         foreach (var inner in ex.Flatten()) {
             if (inner is OperationCanceledException or TaskCanceledException or ThreadInterruptedException) throw inner;
         }
     }
 
-    
-    
-    
-    
     public static IEnumerable<Exception> Flatten(this Exception ex) {
         var toFlatten = new Stack<Exception>();
         toFlatten.Push(ex);
@@ -47,14 +35,9 @@ public static class ExceptionExtensions {
         }
     }
 
-    
-    
-    
-    
     public static string GetDisplay(this Exception? ex, bool multiline) {
         if (ex is null) return "无可用错误信息！";
 
-        
         var lines = new List<string>();
         bool isInnerException = false;
         static string getExceptionMessage(Exception e) => e.Message + (e switch {
@@ -76,7 +59,6 @@ public static class ExceptionExtensions {
             isInnerException = true;
         }
 
-        
         string? commonReason = null;
         var rootException = ex.RootException();
         if (rootException is TypeLoadException or BadImageFormatException or MissingMethodException or NotImplementedException or TypeInitializationException)
@@ -90,7 +72,6 @@ public static class ExceptionExtensions {
         else if (ex.IsBadNetwork())
             commonReason = "你的网络环境不佳，请稍后再试，或使用 VPN 改善网络环境。";
 
-        
         if (multiline) {
             if (commonReason is null) {
                 return lines.Join("\r\n");
@@ -108,9 +89,6 @@ public static class ExceptionExtensions {
         }
     }
 
-    
-    
-    
     public static bool IsBadNetwork(this Exception ex) {
         foreach (var currentEx in ex.Flatten()) {
             if (currentEx is TimeoutException) {
@@ -125,12 +103,12 @@ public static class ExceptionExtensions {
                     if (response.StatusCode is HttpStatusCode.Forbidden) return false;
                     if (response.StatusCode is HttpStatusCode.RequestTimeout) return true;
                 }
-                if (webEx.Status is WebExceptionStatus.NameResolutionFailure or WebExceptionStatus.ConnectFailure or WebExceptionStatus.ReceiveFailure or 
-                    WebExceptionStatus.SendFailure or WebExceptionStatus.ConnectionClosed or WebExceptionStatus.KeepAliveFailure or WebExceptionStatus.Timeout or 
+                if (webEx.Status is WebExceptionStatus.NameResolutionFailure or WebExceptionStatus.ConnectFailure or WebExceptionStatus.ReceiveFailure or
+                    WebExceptionStatus.SendFailure or WebExceptionStatus.ConnectionClosed or WebExceptionStatus.KeepAliveFailure or WebExceptionStatus.Timeout or
                     WebExceptionStatus.ProxyNameResolutionFailure or WebExceptionStatus.SecureChannelFailure) return true;
             } else if (currentEx is SocketException socketEx) {
-                if (socketEx.SocketErrorCode is SocketError.NetworkDown or SocketError.NetworkUnreachable or SocketError.NetworkReset or SocketError.ConnectionAborted or 
-                    SocketError.ConnectionReset or SocketError.TimedOut or SocketError.ConnectionRefused or SocketError.HostUnreachable or 
+                if (socketEx.SocketErrorCode is SocketError.NetworkDown or SocketError.NetworkUnreachable or SocketError.NetworkReset or SocketError.ConnectionAborted or
+                    SocketError.ConnectionReset or SocketError.TimedOut or SocketError.ConnectionRefused or SocketError.HostUnreachable or
                     SocketError.HostNotFound or SocketError.TryAgain or SocketError.NoData) return true;
             }
         }

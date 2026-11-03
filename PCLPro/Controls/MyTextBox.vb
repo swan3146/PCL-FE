@@ -2,8 +2,6 @@ Public Class MyTextBox
     Inherits TextBox
     Implements ISettingControl
 
-    
-
     Public Property HasBackground As Boolean = True
     Public Property ShowValidateResult As Boolean = True
     Public Property CornerRadius As CornerRadius
@@ -16,8 +14,6 @@ Public Class MyTextBox
     End Property
     Public Shared ReadOnly CornerRadiusProperty As DependencyProperty =
         DependencyProperty.Register("CornerRadius", GetType(CornerRadius), GetType(MyTextBox), New PropertyMetadata(New CornerRadius(3)))
-
-    
 
     Private _labWrong As TextBlock = Nothing
     Private ReadOnly Property labWrong As TextBlock
@@ -40,8 +36,6 @@ Public Class MyTextBox
         If HintText = "" OrElse labHint.Text <> "" Then Return
         labHint.Text = If(Text = "", HintText, "")
     End Sub
-
-    
 
     Public Uuid As Integer = GetUuid()
     Public Shared Event ValidateChanged(sender As Object, e As EventArgs)
@@ -66,11 +60,6 @@ Public Class MyTextBox
         End RaiseEvent
     End Event
 
-    
-
-    
-    
-    
     Public Property ValidateResult As String
         Get
             Return GetValue(ValidateResultProperty)
@@ -85,9 +74,6 @@ Public Class MyTextBox
             d.SetValue(IsValidatedPropertyKey, String.IsNullOrEmpty(e.NewValue))
         End Sub))
 
-    
-    
-    
     Public ReadOnly Property IsValidated As Boolean
         Get
             Return GetValue(IsValidatedProperty)
@@ -97,9 +83,6 @@ Public Class MyTextBox
         DependencyProperty.RegisterReadOnly("IsValidated", GetType(Boolean), GetType(MyTextBox), New PropertyMetadata(True))
     Public Shared ReadOnly IsValidatedProperty As DependencyProperty = IsValidatedPropertyKey.DependencyProperty
 
-    
-    
-    
     Public Property ValidateRules As ObjectModel.Collection(Of Validate)
         Get
             Return _ValidateRules
@@ -110,13 +93,11 @@ Public Class MyTextBox
         End Set
     End Property
     Private _ValidateRules As New ObjectModel.Collection(Of Validate)
-    
-    
-    
+
     Public Sub Validate() Handles Me.Loaded
-        
+
         ValidateResult = ModValidate.Validate(Text, ValidateRules)
-        
+
         If ShownValidateResult <> If(IsValidated, ValidateState.Success, ValidateState.FailedAndShowDetail) Then
             If IsLoaded AndAlso labWrong IsNot Nothing Then
                 ChangeValidateResult(IsValidated, True)
@@ -128,7 +109,7 @@ Public Class MyTextBox
                 End Sub, "DelayedValidate Change")
             End If
         End If
-        
+
         If ShowValidateResult AndAlso Not IsValidated Then
             If IsLoaded AndAlso labWrong IsNot Nothing Then
                 labWrong.Text = ValidateResult
@@ -152,9 +133,6 @@ Public Class MyTextBox
         End If
     End Sub
 
-    
-    
-    
     Public Sub ForceShowAsSuccess()
         IsTextChanged = False
         ChangeValidateResult(IsValidated, True)
@@ -163,7 +141,7 @@ Public Class MyTextBox
     Private Sub ChangeValidateResult(IsSuccessful As Boolean, IsLoaded As Boolean)
         If IsLoaded AndAlso AniControlEnabled = 0 AndAlso labWrong IsNot Nothing Then
             If IsSuccessful OrElse Not IsTextChanged Then
-                
+
                 ShownValidateResult = If(IsSuccessful, ValidateState.Success, ValidateState.FailedButTextNotChanged)
                 AniStart({
                      AaOpacity(labWrong, -labWrong.Opacity, 150),
@@ -171,7 +149,7 @@ Public Class MyTextBox
                      AaCode(Sub() labWrong.Visibility = Visibility.Collapsed,, True)
                 }, "MyTextBox Validate " & Uuid)
             ElseIf ShowValidateResult Then
-                
+
                 ShownValidateResult = ValidateState.FailedAndShowDetail
                 labWrong.Visibility = Visibility.Visible
                 AniStart({
@@ -179,7 +157,7 @@ Public Class MyTextBox
                      AaHeight(labWrong, 21 - labWrong.Height, 150,, New AniEaseOutFluent)
                 }, "MyTextBox Validate " & Uuid)
             Else
-                
+
                 ShownValidateResult = ValidateState.FailedAndHideDetail
             End If
         Else
@@ -197,11 +175,6 @@ Public Class MyTextBox
         NotLoaded
     End Enum
 
-    
-
-    
-    
-    
     Private IsTextChanged As Boolean = False
     Public Property HintText As String
         Get
@@ -218,27 +191,25 @@ Public Class MyTextBox
         End Sub))
     Private Sub MyTextBox_TextChanged(sender As MyTextBox, e As TextChangedEventArgs) Handles Me.TextChanged
         Try
-            
+
             If labHint IsNot Nothing Then labHint.Text = If(Text = "", HintText, "")
-            
+
             IsTextChanged = IsLoaded
-            
+
             Validate()
             If Not IsValidated Then Return
-            
+
             RaiseEvent ValidatedTextChanged(sender, e)
         Catch ex As Exception
             Logger.Error(ex, "进行输入验证时出错")
         End Try
     End Sub
 
-    
-
     Private Sub RefreshColor() Handles Me.IsEnabledChanged, Me.MouseEnter, Me.MouseLeave, Me.GotFocus, Me.LostFocus
         Try
-            
+
             If TemplatedParent IsNot Nothing AndAlso TypeOf TemplatedParent Is MyComboBox Then Return
-            
+
             Dim ForeColorName As String, BackColorName As String
             Dim AnimationTime As Integer
             If IsEnabled Then
@@ -251,7 +222,7 @@ Public Class MyTextBox
                         ForeColorName = "ColorBrush4"
                         BackColorName = "ColorBrush7"
                         AnimationTime = 100
-                    Else 
+                    Else
                         ForeColorName = "ColorBrushBg0"
                         BackColorName = "ColorBrushHalfWhite"
                         AnimationTime = 100
@@ -267,15 +238,15 @@ Public Class MyTextBox
                 AnimationTime = 200
             End If
             If Not HasBackground Then BackColorName = "ColorBrushTransparent"
-            
-            If IsLoaded AndAlso AniControlEnabled = 0 Then 
-                
+
+            If IsLoaded AndAlso AniControlEnabled = 0 Then
+
                 AniStart({
                          AaColor(Me, BorderBrushProperty, ForeColorName, AnimationTime),
                          AaColor(Me, BackgroundProperty, BackColorName, AnimationTime)
                      }, "MyTextBox Color " & Uuid)
             Else
-                
+
                 AniStop("MyTextBox Color " & Uuid)
                 SetResourceReference(BorderBrushProperty, ForeColorName)
                 SetResourceReference(BackgroundProperty, BackColorName)
@@ -289,16 +260,15 @@ Public Class MyTextBox
         Dim NewColor As MyColor = If(IsEnabled, ColorGray1, ColorGray4)
         If CType(Foreground, SolidColorBrush).Color.R = NewColor.R Then Return
         If IsLoaded AndAlso AniControlEnabled = 0 AndAlso Not Text = "" Then
-            
+
             AniStart({AaColor(Me, ForegroundProperty, If(IsEnabled, "ColorBrushGray1", "ColorBrushGray4"), 200)}, "MyTextBox TextColor " & Uuid)
         Else
-            
+
             AniStop("MyTextBox TextColor " & Uuid)
             Foreground = NewColor
         End If
     End Sub
 
-    
     Private Sub MyTextBox_KeyUp(sender As Object, e As KeyEventArgs) Handles Me.KeyUp
         If e.Key = Key.Enter Then RaiseCustomEvent()
     End Sub

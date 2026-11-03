@@ -1,20 +1,11 @@
 namespace PCLCS;
 
-
-
-
-
-
-
-
 public record McInstallManifest(int SchemaVersion, McComponents Components, DateTime LastModifiedUtc, IReadOnlyList<McInstallManifest.ManagedFile> ManagedFiles) {
-    
-    
-    
+
     public McInstallManifest RefreshModComponents(string gameFolder) {
         List<ManagedFile> invalidFiles = [];
         foreach (ManagedFile entry in ManagedFiles) {
-            if (entry.Component is null) continue; 
+            if (entry.Component is null) continue;
             FileInfo file = new(Path.Combine(gameFolder, entry.RelativePath));
             if (!file.Exists || file.LastWriteTimeUtc != entry.LastWriteTimeUtc.ToUniversalTime()) invalidFiles.Add(entry);
         }
@@ -30,21 +21,9 @@ public record McInstallManifest(int SchemaVersion, McComponents Components, Date
         };
     }
 
-    
-    
-    
-    
-    
-    
-    
     public record ManagedFile(string RelativePath, string Sha1, DateTime LastWriteTimeUtc,
         [property: JsonProperty(NullValueHandling = NullValueHandling.Ignore)] string? Component = null);
 }
-
-
-
-
-
 
 [method: JsonConstructor]
 public record McComponents(string MinecraftVersion, Dictionary<ModLoaders, string> ModLoaderVersions,

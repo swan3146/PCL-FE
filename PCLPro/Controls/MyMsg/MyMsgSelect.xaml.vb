@@ -19,7 +19,7 @@ Public Class MyMsgSelect
             Btn2.Text = Converter.Button2
             Btn2.Visibility = If(Converter.Button2 = "", Visibility.Collapsed, Visibility.Visible)
             ShapeLine.StrokeThickness = GetWPFSize(1)
-            
+
             Btn1.IsEnabled = False
             For Each Content In Converter.Content
                 Content = MyVirtualizingElement.TryInit(Content)
@@ -42,11 +42,10 @@ Public Class MyMsgSelect
     Private Sub Load(sender As Object, e As EventArgs) Handles MyBase.Loaded
         Try
 
-            
             If Settings.Get(Of Integer)("UiUiStyle") = 1 Then GlassAttachDialog(PanBorder)
-            
+
             If Btn2.IsVisible AndAlso Not Btn1.ColorType = MyButton.ColorState.Red Then Btn1.ColorType = MyButton.ColorState.Highlight
-            
+
             Opacity = 0
             AniStart(AaColor(FrmMain.PanMsg, Grid.BackgroundProperty, If(MyConverter.IsWarn, New MyColor(140, 80, 0, 0), New MyColor(90, 0, 0, 0)) - FrmMain.PanMsg.Background, 200), "PanMsg Background")
             AniStart({
@@ -54,7 +53,7 @@ Public Class MyMsgSelect
                 AaDouble(Sub(i) TransformPos.Y += i, -TransformPos.Y, 300, 60, New AniEaseOutBack(AniEasePower.Weak)),
                 AaDouble(Sub(i) TransformRotate.Angle += i, -TransformRotate.Angle, 300, 60, New AniEaseOutFluent(AniEasePower.Weak))
             }, "MyMsgBox " & Uuid)
-            
+
             Logger.Info($"选择弹窗：{LabTitle.Text}")
 
         Catch ex As Exception
@@ -62,10 +61,10 @@ Public Class MyMsgSelect
         End Try
     End Sub
     Private Sub Close()
-        
+
         MyConverter.WaitFrame.Continue = False
         Interop.ComponentDispatcher.PopModal()
-        
+
         AniStart({
             AaCode(
             Sub()

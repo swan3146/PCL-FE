@@ -3,15 +3,8 @@ Public Class MyImage
 
 #Region "公开属性"
 
-    
-    
-    
-    
-    Public FileCacheExpiredTime As New TimeSpan(7, 0, 0, 0) 
+    Public FileCacheExpiredTime As New TimeSpan(7, 0, 0, 0)
 
-    
-    
-    
     Public Property EnableCache As Boolean
         Get
             Return GetValue(EnableCacheProperty)
@@ -23,12 +16,7 @@ Public Class MyImage
     Public Shared Shadows ReadOnly EnableCacheProperty As DependencyProperty = DependencyProperty.Register(
         "EnableCache", GetType(Boolean), GetType(MyImage), New PropertyMetadata(True))
 
-    
-    
-    
-    
-    
-    Public Shadows Property Source As String 
+    Public Shadows Property Source As String
         Get
             Return _Source
         End Get
@@ -36,7 +24,7 @@ Public Class MyImage
             If value = "" Then value = Nothing
             If _Source = value Then Return
             _Source = value
-            If Not IsInitialized Then Return 
+            If Not IsInitialized Then Return
             Load()
         End Set
     End Property
@@ -45,9 +33,6 @@ Public Class MyImage
         "Source", GetType(String), GetType(MyImage), New PropertyMetadata(New PropertyChangedCallback(
     Sub(sender, e) If sender IsNot Nothing Then CType(sender, MyImage).Source = e.NewValue.ToString())))
 
-    
-    
-    
     Public Property FallbackSource As String
         Get
             Return _FallbackSource
@@ -58,9 +43,6 @@ Public Class MyImage
     End Property
     Private _FallbackSource As String = Nothing
 
-    
-    
-    
     Public Property LoadingSource As String
         Get
             Return _LoadingSource
@@ -73,9 +55,6 @@ Public Class MyImage
 
 #End Region
 
-    
-    
-    
     Public Property ActualSource As String
         Get
             Return _ActualSource
@@ -85,7 +64,7 @@ Public Class MyImage
             If _ActualSource = value Then Return
             _ActualSource = value
             Try
-                Dim Bitmap As ImageSource = If(value Is Nothing, Nothing, New MyBitmap(value)) 
+                Dim Bitmap As ImageSource = If(value Is Nothing, Nothing, New MyBitmap(value))
                 RunInUi(Sub() MyBase.Source = Bitmap)
             Catch ex As Exception
                 Logger.Warn(ex, $"加载图片失败（{value}）")
@@ -99,32 +78,32 @@ Public Class MyImage
     Private _ActualSource As String = Nothing
 
     Private Sub Load() _
-        Handles Me.Initialized 
-        
+        Handles Me.Initialized
+
         If Source Is Nothing Then
             ActualSource = Nothing
             Return
         End If
-        
+
         If Not Source.StartsWithF("http") Then
             ActualSource = Source
             Return
         End If
-        
+
         Dim EnableCache As Boolean = Me.EnableCache
-        Dim TempPath As String = $"{PathTemp}MyImage\{Source.GetStableHashCode()}.png{If(EnableCache, "", GetUuid())}" 
+        Dim TempPath As String = $"{PathTemp}MyImage\{Source.GetStableHashCode()}.png{If(EnableCache, "", GetUuid())}"
         Dim TempFile = FileUtils.GetInfo(TempPath)
         If EnableCache AndAlso TempFile.Exists Then
-            ActualSource = TempPath 
-            If (Date.Now - TempFile.LastWriteTime) < FileCacheExpiredTime Then Return 
+            ActualSource = TempPath
+            If (Date.Now - TempFile.LastWriteTime) < FileCacheExpiredTime Then Return
         Else
-            ActualSource = LoadingSource 
+            ActualSource = LoadingSource
         End If
         RunInNewThread(
         Sub()
             Dim IsLocalFallback As Boolean = Not String.IsNullOrEmpty(FallbackSource) AndAlso Not FallbackSource.StartsWithF("http")
             Try
-                
+
                 NetDownloadByLoader(
                     If(FallbackSource IsNot Nothing AndAlso FallbackSource.StartsWithF("http") AndAlso Source <> FallbackSource,
                         {Source, FallbackSource}, {Source}),
@@ -136,7 +115,7 @@ Public Class MyImage
                     If TempPath IsNot Nothing Then FileUtils.Delete(TempPath)
                 Catch
                 End Try
-                
+
                 If IsLocalFallback Then
                     Try
                         ActualSource = FallbackSource

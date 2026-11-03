@@ -3,7 +3,6 @@ Public Class MyComboBox
     Implements ISettingControl
     Public Event TextChanged(sender As Object, e As TextChangedEventArgs)
 
-    
     Public Uuid As Integer = GetUuid()
     Private TextBox As MyTextBox
     Public Property HintText As String = ""
@@ -14,7 +13,7 @@ Public Class MyComboBox
             TextBox = Template.FindName("PART_EditableTextBox", Me)
             TextBox.AddHandler(LostFocusEvent, New RoutedEventHandler(AddressOf RefreshColor))
             TextBox.ChangedEventList.Add(New RoutedEventHandler(Sub(sender, e) RaiseEvent TextChanged(sender, e)))
-            TextBox.Tag = Tag 
+            TextBox.Tag = Tag
             If Text = "" Then
                 TextBox.Text = _Text
             Else
@@ -51,7 +50,6 @@ Public Class MyComboBox
         End Set
     End Property
 
-    
     Private IsMouseDown As Boolean = False
     Private Sub MyComboBox_PreviewMouseLeftButtonDown(sender As Object, e As MouseButtonEventArgs) Handles Me.PreviewMouseLeftButtonDown
         IsMouseDown = True
@@ -60,9 +58,8 @@ Public Class MyComboBox
         IsMouseDown = False
     End Sub
 
-    
     Public Sub RefreshColor() Handles Me.IsEnabledChanged, Me.MouseEnter, Me.MouseLeave, Me.PreviewMouseLeftButtonDown, Me.PreviewMouseLeftButtonUp, Me.GotKeyboardFocus
-        
+
         Dim ForeColorName As String
         Dim BackColorName As String
         Dim Time As Integer
@@ -85,26 +82,26 @@ Public Class MyComboBox
             BackColorName = "ColorBrushGray6"
             Time = 200
         End If
-        
-        If IsLoaded AndAlso AniControlEnabled = 0 Then 
-            
+
+        If IsLoaded AndAlso AniControlEnabled = 0 Then
+
             AniStart({
                      AaColor(Me, ForegroundProperty, ForeColorName, Time),
                      AaColor(Me, BackgroundProperty, BackColorName, Time)
                  }, "MyComboBox Color " & Uuid)
         Else
-            
+
             AniStop("MyComboBox Color " & Uuid)
             SetResourceReference(ForegroundProperty, ForeColorName)
             SetResourceReference(BackgroundProperty, BackColorName)
         End If
     End Sub
 
-    Private RealWidth As Double 
+    Private RealWidth As Double
     Private Sub MyComboBox_DropDownOpened(sender As Object, e As EventArgs) Handles Me.DropDownOpened
         RealWidth = Width
         Width = ActualWidth
-        
+
         Try
             CType(Template.FindName("PanPopup", Me), Grid).Opacity = FrmMain.Opacity
         Catch ex As Exception
@@ -115,7 +112,6 @@ Public Class MyComboBox
         Width = RealWidth
     End Sub
 
-    
     Private IsTextChanging As Boolean = False
     Private Sub MyComboBox_TextChanged(sender As Object, e As TextChangedEventArgs) Handles Me.TextChanged
         If IsTextChanging OrElse Not IsEditable Then Return

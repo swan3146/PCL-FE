@@ -3,10 +3,6 @@ Imports System.Collections.ObjectModel
 Public Class PageDownloadResourceDetail
     Private ResourceItem As MyResourceItem = Nothing
 
-    
-    
-    
-    
     Private TargetResourceType As ResourceTypes
     Private Project As ResourceProject
     Private TargetVersion As String
@@ -15,7 +11,7 @@ Public Class PageDownloadResourceDetail
         Project = FrmMain.PageCurrent.Additional(0)
         TargetVersion = FrmMain.PageCurrent.Additional(2)
         TargetLoaders = CType(FrmMain.PageCurrent.Additional(3), ModLoaders)
-        If TargetLoaders <> ModLoaders.None AndAlso Not TargetLoaders.Flags.IsSingle Then TargetLoaders = TargetLoaders.Flags.First() 
+        If TargetLoaders <> ModLoaders.None AndAlso Not TargetLoaders.Flags.IsSingle Then TargetLoaders = TargetLoaders.Flags.First()
         TargetResourceType = FrmMain.PageCurrent.Additional(4)
     End Sub
 
@@ -30,12 +26,11 @@ Public Class PageDownloadResourceDetail
             Task.Output = Result
         End Sub)
 
-    
     Private Sub PageDownloadResourceDetail_Inited(sender As Object, e As EventArgs) Handles Me.Initialized
         LoadPageArguments()
         PageLoaderInit(Load, PanLoad, PanMain, CardIntro, ResourceFileLoader, AddressOf Load_OnFinish)
     End Sub
-    
+
     Private Sub Load_State(sender As Object, state As MyLoading.MyLoadingState, oldState As MyLoading.MyLoadingState) Handles Load.StateChanged
         Select Case ResourceFileLoader.State
             Case LoadState.Failed
@@ -47,26 +42,26 @@ Public Class PageDownloadResourceDetail
                 End If
         End Select
     End Sub
-    
+
     Private Class CardSorter
         Implements IComparer(Of String)
         Public Topmost As String = ""
         Public Function Compare(x As String, y As String) As Integer Implements IComparer(Of String).Compare
-            
+
             If x = y Then Return 0
-            
+
             If x = Topmost Then Return -1
             If y = Topmost Then Return 1
-            
+
             Dim IsXSpecial As Boolean = Not x.Contains(".")
             Dim IsYSpecial As Boolean = Not y.Contains(".")
             If IsXSpecial AndAlso IsYSpecial Then Return x.CompareTo(y)
             If IsXSpecial Then Return 1
             If IsYSpecial Then Return -1
-            
+
             Dim VersionCodeSort = -McUtils.CompareVersion(x.Replace(x.BeforeFirst(" ") & " ", ""), y.Replace(y.BeforeFirst(" ") & " ", ""))
             If VersionCodeSort <> 0 Then Return VersionCodeSort
-            
+
             Return -McUtils.CompareVersion(x, y)
         End Function
         Public Sub New(Optional Topmost As String = "")
@@ -75,24 +70,24 @@ Public Class PageDownloadResourceDetail
     End Class
 
     Private VersionFilter As String
-    Private GroupedDrop As Boolean 
-    Private GroupedOld As Boolean 
-    
+    Private GroupedDrop As Boolean
+    Private GroupedOld As Boolean
+
     Private Function GetResults() As List(Of ResourceVersion)
         Dim Results As List(Of ResourceVersion) = ResourceFileLoader.Output
         If TargetResourceType = CType(0, ResourceTypes) Then
-            
+
             Return Results.Where(Function(r) r.ResourceType <> ResourceTypes.Plugin).ToList
         End If
         Select Case TargetResourceType
             Case ResourceTypes.Any
                 Results = Results.Where(Function(r) r.ResourceType <> ResourceTypes.Plugin).ToList
             Case ResourceTypes.Shader, ResourceTypes.ResourcePack
-                
+
             Case Else
                 Results = Results.Where(Function(r) r.ResourceType = TargetResourceType).ToList
         End Select
-        
+
         If Results.Count = 0 Then
             Logger.Warn($"按类型 {TargetResourceType} 过滤后版本列表为空，已退回展示全部版本")
             Results = ResourceFileLoader.Output.Where(Function(r) r.ResourceType <> ResourceTypes.Plugin).ToList
@@ -102,7 +97,6 @@ Public Class PageDownloadResourceDetail
     Private Sub Load_OnFinish()
         Dim Results = GetResults()
 
-        
         Dim Filters As List(Of String) = Nothing
         Dim UpdateFilters =
         Sub()
@@ -110,7 +104,6 @@ Public Class PageDownloadResourceDetail
                 Distinct.OrderByDescending(Function(s) s, Comparer(Of String).Create(Function(x, y) McUtils.CompareVersion(x, y))).ToList
         End Sub
 
-        
         GroupedDrop = False : GroupedOld = False
         UpdateFilters()
         If Filters.Count < 9 Then GoTo GroupDone
@@ -124,7 +117,6 @@ Public Class PageDownloadResourceDetail
         UpdateFilters()
 GroupDone:
 
-        
         PanFilter.Children.Clear()
         If Filters.Count < 2 Then
             CardFilter.Visibility = Visibility.Collapsed
@@ -132,7 +124,7 @@ GroupDone:
         Else
             CardFilter.Visibility = Visibility.Visible
             Filters.Insert(0, "全部")
-            
+
             For Each Version As String In Filters
                 Dim NewButton As New MyRadioButton With {
                     .Text = Version, .Margin = New Thickness(2, 0, 2, 0), .ColorType = MyRadioButton.ColorState.Highlight}
@@ -144,7 +136,7 @@ GroupDone:
                 End Sub
                 PanFilter.Children.Add(NewButton)
             Next
-            
+
             Dim ToCheck As MyRadioButton = Nothing
             If TargetVersion <> "" Then
                 Dim TargetFile = Results.FirstOrDefault(Function(v) v.GameVersions.Contains(TargetVersion))
@@ -161,7 +153,6 @@ GroupDone:
             ToCheck.Checked = True
         End If
 
-        
         UpdateFilterResult()
     End Sub
     Private Sub UpdateFilterResult()
@@ -169,25 +160,25 @@ GroupDone:
 
         Dim TargetCardName As String = If(TargetVersion <> "" OrElse TargetLoaders <> ModLoaders.None,
             $"{If(TargetLoaders <> ModLoaders.None, TargetLoaders.ToString + " ", "")}{TargetVersion}（所选版本）", "")
-        
+
         Dim Dict As New SortedDictionary(Of String, List(Of ResourceVersion))(New CardSorter(TargetCardName))
         Dict.Add("其他", New List(Of ResourceVersion))
         For Each Version As ResourceVersion In Results
             For Each GameVersion In Version.GameVersions
-                
+
                 If VersionFilter IsNot Nothing AndAlso
                     GetGroupedVersionName(GameVersion, GroupedDrop, GroupedOld) <> VersionFilter Then Continue For
-                
+
                 Dim VerName As String = GetGroupedVersionName(GameVersion, False, False)
-                
+
                 Dim Loaders As New List(Of String)
-                If Project.ModLoaders.Flags.Count > 1 AndAlso 
-                    Version.ResourceType = ResourceTypes.Mod AndAlso 
-                    McVersion.IsStandardFormat(VerName) Then 
+                If Project.ModLoaders.Flags.Count > 1 AndAlso
+                    Version.ResourceType = ResourceTypes.Mod AndAlso
+                    McVersion.IsStandardFormat(VerName) Then
                     Loaders.AddRange(Version.ModLoaders.Flags.Select(Function(f) f.ToString & " "))
                 End If
-                If Not Loaders.Any() Then Loaders.Add("") 
-                
+                If Not Loaders.Any() Then Loaders.Add("")
+
                 For Each Loader In Loaders
                     Dim TargetCard As String = Loader & VerName
                     If Not Dict.ContainsKey(TargetCard) Then Dict.Add(TargetCard, New List(Of ResourceVersion))
@@ -195,50 +186,50 @@ GroupDone:
                 Next
             Next
         Next
-        
+
         If TargetCardName <> "" AndAlso (VersionFilter Is Nothing OrElse GetGroupedVersionName(TargetVersion, GroupedDrop, GroupedOld).StartsWithF(VersionFilter)) Then
             Dict.Add(TargetCardName, New List(Of ResourceVersion))
             For Each Version As ResourceVersion In Results
                 If Version.GameVersions.Contains(TargetVersion) AndAlso
                    (TargetLoaders = ModLoaders.None OrElse TargetLoaders.Flags.Intersect(Version.ModLoaders.Flags).Any) Then
-                    
+
                     If VersionFilter IsNot Nothing AndAlso
                         Not Version.GameVersions.Any(Function(v) GetGroupedVersionName(v, GroupedDrop, GroupedOld) = VersionFilter) Then Continue For
                     If Not Dict(TargetCardName).Contains(Version) Then Dict(TargetCardName).Add(Version)
                 End If
             Next
         End If
-        
+
         Try
             PanResults.Children.Clear()
             For Each Pair As KeyValuePair(Of String, List(Of ResourceVersion)) In Dict
                 If Not Pair.Value.Any() Then Continue For
                 If Pair.Key = TargetCardName.Replace("（所选版本）", "") Then Continue For
-                
+
                 Dim NewCard As New MyCard With {.Title = Pair.Key, .Margin = New Thickness(0, 0, 0, 15)}
                 Dim NewStack As New StackPanel With {.Margin = New Thickness(20, MyCard.SwapedHeight, 18, 0), .VerticalAlignment = VerticalAlignment.Top, .RenderTransform = New TranslateTransform(0, 0), .Tag = Pair.Value}
                 NewCard.Children.Add(NewStack)
                 NewCard.SwapControl = NewStack
                 NewCard.SetContentBuilder(AddressOf InitializeStackResourceVersions)
                 PanResults.Children.Add(NewCard)
-                
+
                 If Pair.Key = TargetCardName OrElse
-                   (FrmMain.PageCurrent.Additional IsNot Nothing AndAlso 
+                   (FrmMain.PageCurrent.Additional IsNot Nothing AndAlso
                    CType(FrmMain.PageCurrent.Additional(1), List(Of String)).Contains(NewCard.Title)) Then
                     NewCard.BuildContent()
                 Else
                     NewCard.IsSwapped = True
                 End If
-                
+
                 If Pair.Key = "其他" Then
                     NewStack.Children.Add(New MyHint With {.Text = "由于版本信息更新缓慢，可能无法识别刚更新的 MC 版本。几天后即可正常识别。", .Theme = MyHint.Themes.Yellow, .Margin = New Thickness(5, 0, 0, 8)})
                 End If
             Next
-            
+
             If PanResults.Children.Count = 1 Then
                 CType(PanResults.Children(0), MyCard).IsSwapped = False
             End If
-            
+
             If Project.Types = ResourceTypes.ModOrDataPack AndAlso (TargetResourceType = ResourceTypes.Mod OrElse TargetResourceType = ResourceTypes.DataPack) Then
                 HintAlternative.Visibility = Visibility.Visible
                 HintAlternative.Text = If(TargetResourceType = ResourceTypes.Mod,
@@ -250,16 +241,14 @@ GroupDone:
             Logger.Error(ex, "可视化工程下载列表出错")
         End Try
     End Sub
-    
-    
-    
+
     Private Sub InitializeStackResourceVersions(Stack As StackPanel)
         Dim Versions = CType(Stack.Tag, List(Of ResourceVersion)).SortByComparison(Function(a, b) a.ReleaseDate > b.ReleaseDate)
         Dim HasDuplicates = Versions.DistinctBy(Function(a) a.Display).Count <> Versions.Count
         Dim Dependences As List(Of String)
-        
+
         If TargetResourceType = ResourceTypes.ModPack Then
-            Dependences = New List(Of String) 
+            Dependences = New List(Of String)
         Else
             Dependences = Versions.SelectMany(Function(f) f.Dependencies).Distinct.Ordered.ToList()
         End If
@@ -269,17 +258,17 @@ GroupDone:
                 If Not ResourceProject.Cache.ContainsKey(d) Then Logger.Warn($"未找到 ID {d} 的前置信息")
                 Return ResourceProject.Cache.ContainsKey(d)
             End Function).ToList
-            
+
             Stack.Children.Add(New TextBlock With {.Text = "前置资源", .FontSize = 14, .HorizontalAlignment = HorizontalAlignment.Left, .Margin = New Thickness(6, 2, 0, 5)})
-            
+
             For Each Dep In Dependences
                 Dim Item = ResourceProject.Cache(Dep).ToResourceItem(False, False)
                 Stack.Children.Add(Item)
             Next
-            
+
             Stack.Children.Add(New TextBlock With {.Text = "版本列表", .FontSize = 14, .HorizontalAlignment = HorizontalAlignment.Left, .Margin = New Thickness(6, 12, 0, 5)})
         End If
-        
+
         For Each Version In Versions
             If Not RestrictMcDownload AndAlso TargetResourceType = ResourceTypes.ModPack Then
                 Stack.Children.Add(Version.ToListItem(AddressOf Install_Click, AddressOf Save_Click, IsBadDisplay:=HasDuplicates))
@@ -313,44 +302,37 @@ GroupDone:
         Project = FrmMain.PageCurrent.Additional(0)
         PanBack.ScrollToHome()
 
-        
         If IsFirstInit Then
-            
+
             IsFirstInit = False
         Else
             PageLoaderRestart(IsForceRestart:=True)
         End If
 
-        
         If ResourceItem IsNot Nothing Then PanIntro.Children.Remove(ResourceItem)
         ResourceItem = Project.ToResourceItem(True, True).Init()
         ResourceItem.CanInteraction = False
         ResourceItem.Margin = New Thickness(-7, -7, 0, 8)
         PanIntro.Children.Insert(0, ResourceItem)
 
-        
         BtnIntroWeb.Text = $"转到 {Project.Platform}"
         BtnIntroWiki.Visibility = If(Project.WikiId = 0, Visibility.Collapsed, Visibility.Visible)
 
         AniControlEnabled -= 1
     End Sub
 
-    
     Public Sub Install_Click(sender As MyListItem, e As EventArgs)
         Try
 
-            
             Dim File As ResourceVersion = sender.Tag
             Dim LoaderName As String = $"{Project.Platform} 整合包下载：{Project.TranslatedName} "
 
-            
             Dim PackName As String = Project.TranslatedName.Replace(".zip", "").Replace(".rar", "").Replace(".mrpack", "").Replace("\", "＼").Replace("/", "／").Replace("|", "｜").Replace(":", "：").Replace("<", "＜").Replace(">", "＞").Replace("*", "＊").Replace("?", "？").Replace("""", "").Replace("： ", "：")
             Dim Validate As New ValidateFolderName(McFolderSelected & "versions")
             If Validate.Validate(PackName) <> "" Then PackName = ""
             Dim InstanceName As String = MyMsgBoxInput("输入版本名称", "", PackName, New Collection(Of Validate) From {Validate})
             If String.IsNullOrEmpty(InstanceName) Then Return
 
-            
             Dim Loaders As New List(Of LoaderBase)
             Dim Target As String = $"{McFolderSelected}versions\{InstanceName}\原始整合包.{If(Project.Platform = ResourcePlatforms.CurseForge, "zip", "mrpack")}"
             Dim LogoFileAddress As String = ResourceItem.PathLogo.ActualSource
@@ -360,7 +342,6 @@ GroupDone:
             Loaders.Add(New LoaderTask(Of Integer, Integer)("准备安装整合包",
             Sub() ModpackInstall(Target, InstanceName, If(FileUtils.Exists(LogoFileAddress), LogoFileAddress, Nothing))) With {.ProgressWeight = 0.1})
 
-            
             Dim Loader As New LoaderCombo(Of String)(LoaderName, Loaders) With {.OnStateChanged =
             Sub(MyLoader)
                 Select Case MyLoader.State
@@ -369,7 +350,7 @@ GroupDone:
                     Case LoadState.Canceled
                         Hint(MyLoader.Name & "已取消！", HintType.Blue)
                     Case LoadState.Loading
-                        Return 
+                        Return
                 End Select
                 McInstallFailedClearFolder(MyLoader)
             End Sub}
@@ -382,8 +363,8 @@ GroupDone:
             Logger.Error(ex, "下载资源整合包失败")
         End Try
     End Sub
-    
-    Public Shared CachedFolder As New Dictionary(Of ResourceTypes, String) 
+
+    Public Shared CachedFolder As New Dictionary(Of ResourceTypes, String)
     Public Sub Save_Click(sender As Object, e As EventArgs)
         Dim File As ResourceVersion = If(TypeOf sender Is MyListItem, sender, sender.Parent).Tag
         RunInNewThread(
@@ -398,7 +379,7 @@ GroupDone:
                     Case ResourceTypes.DataPack : Desc = "数据包"
                     Case ResourceTypes.Map : Desc = "地图"
                 End Select
-                
+
                 Dim DefaultFolder As String = Nothing
                 If File.ResourceType <> ResourceTypes.ModPack Then
                     Dim SubFolder As String = Nothing
@@ -406,11 +387,11 @@ GroupDone:
                         Case ResourceTypes.Mod : SubFolder = "mods\"
                         Case ResourceTypes.ResourcePack : SubFolder = "resourcepacks\"
                         Case ResourceTypes.Shader : SubFolder = "shaderpacks\"
-                        Case ResourceTypes.DataPack : SubFolder = "" 
-                        Case ResourceTypes.Map : SubFolder = "" 
+                        Case ResourceTypes.DataPack : SubFolder = ""
+                        Case ResourceTypes.Map : SubFolder = ""
                     End Select
                     Dim IsInstanceSuitable As Func(Of McInstance, Boolean) = Nothing
-                    
+
                     Dim AllowedLoaders As ModLoaders = ModLoaders.None
                     If File.ModLoaders <> ModLoaders.None Then
                         AllowedLoaders = File.ModLoaders
@@ -418,49 +399,49 @@ GroupDone:
                         AllowedLoaders = Project.ModLoaders
                     End If
                     Logger.Info($"{Desc}要求的加载器种类：{AllowedLoaders}")
-                    
+
                     IsInstanceSuitable =
                     Function(Instance As McInstance)
                         If Not Instance.IsLoaded Then Instance.Load()
-                        
+
                         If File.ResourceType = ResourceTypes.Mod OrElse File.ResourceType = ResourceTypes.DataPack Then
-                            If Not File.GameVersions.Any( 
+                            If Not File.GameVersions.Any(
                             Function(FileVersion)
                                 Dim FileIsSnapshot As Boolean = FileVersion.Contains("预览版") OrElse Not FileVersion.Contains(".")
                                 Dim InstanceIsSnapshot As Boolean = Instance.Version.VanillaName.Contains("snapshot") OrElse Not Instance.Version.VanillaName.Contains(".")
                                 If FileIsSnapshot <> InstanceIsSnapshot Then
-                                    
+
                                     Return False
                                 ElseIf Not FileIsSnapshot AndAlso Not InstanceIsSnapshot Then
-                                    
+
                                     Return FileVersion = Instance.Version.VanillaName
                                 Else
-                                    
+
                                     Dim FileIsNewFormat As Boolean = FileVersion.Contains(".") AndAlso Val(FileVersion.BeforeFirst(".")) > 1
                                     Dim InstanceIsNewFormat As Boolean = Instance.Version.Drop > 250
                                     If FileIsNewFormat <> InstanceIsNewFormat Then
-                                        
+
                                         Return False
                                     ElseIf FileIsNewFormat AndAlso InstanceIsNewFormat Then
-                                        
+
                                         Return FileVersion.BeforeFirst(" ") = Instance.Version.VanillaName.BeforeFirst("-")
                                     Else
-                                        
+
                                         If FileVersion.Contains("w") AndAlso Instance.Version.VanillaName.Contains("w") Then
-                                            
+
                                             Return FileVersion = Instance.Version.VanillaName
                                         Else
-                                            
-                                            Return True 
+
+                                            Return True
                                         End If
                                     End If
                                 End If
                             End Function) Then Return False
                         End If
-                        
+
                         Return AllowedLoaders = ModLoaders.None OrElse AllowedLoaders.Flags.Intersect(Instance.Version.ModLoaders.Flags).Any
                     End Function
-                    
+
                     If CachedFolder.ContainsKey(File.ResourceType) Then
                         DefaultFolder = CachedFolder(File.ResourceType)
                         Logger.Info($"使用上次下载时的文件夹作为默认下载位置：{DefaultFolder}")
@@ -469,7 +450,7 @@ GroupDone:
                         DirectoryUtils.Create(DefaultFolder)
                         Logger.Info($"使用当前版本作为默认下载位置：{DefaultFolder}")
                     Else
-                        
+
                         Dim NeedLoad As Boolean = McInstanceListLoader.State <> LoadState.Finished
                         If NeedLoad Then
                             Hint("正在查找适合的游戏版本……")
@@ -479,8 +460,8 @@ GroupDone:
                             Select(Function(v) DirectoryUtils.GetInfo($"{v.PathIndie}{SubFolder}"))
                         If SuitableInstanceList.Any Then
                             Dim SelectedInstance = SuitableInstanceList.
-                                OrderByDescending(Function(Dir) If(Dir.Exists, Dir.LastWriteTimeUtc, Date.MinValue)). 
-                                ThenByDescending(Function(Dir) If(Dir.Exists, Dir.GetFiles().Length, -1)). 
+                                OrderByDescending(Function(Dir) If(Dir.Exists, Dir.LastWriteTimeUtc, Date.MinValue)).
+                                ThenByDescending(Function(Dir) If(Dir.Exists, Dir.GetFiles().Length, -1)).
                                 First()
                             DefaultFolder = PathUtils.RemoveExtendedPrefix(SelectedInstance.FullName)
                             DirectoryUtils.Create(DefaultFolder)
@@ -495,7 +476,7 @@ GroupDone:
                         End If
                     End If
                 End If
-                
+
                 Dim FileName As String
                 If Project.TranslatedName = Project.RawName Then
                     FileName = File.FileName
@@ -515,8 +496,8 @@ GroupDone:
                             FileName = File.FileName
                     End Select
                 End If
-                If File.ResourceType = ResourceTypes.Mod Then FileName = FileName.Replace("~", "-") 
-                
+                If File.ResourceType = ResourceTypes.Mod Then FileName = FileName.Replace("~", "-")
+
                 Dim DepCandidates As New List(Of Tuple(Of ResourceProject, ResourceVersion))
                 If File.ResourceType = ResourceTypes.Mod Then
                     Try
@@ -528,10 +509,10 @@ GroupDone:
                 End If
                 RunInUi(
                 Sub()
-                    
+
                     Dim DepFiles As New List(Of Tuple(Of ResourceProject, ResourceVersion))
                     If File.ResourceType = ResourceTypes.Mod AndAlso DepCandidates.Any Then
-                        
+
                         Dim InstalledDeps As New List(Of String)
                         For Each Dep In DepCandidates
                             If IsDependencyInstalled(DefaultFolder, Dep.Item1) Then
@@ -554,7 +535,7 @@ GroupDone:
                             Hint($"该 Mod 需要的 {InstalledDeps.Count} 个前置均已安装，无需重复下载", HintType.Green)
                         End If
                     End If
-                    
+
                     Dim Target As String
                     Dim Ext As String = If(File.ResourceType = ResourceTypes.Mod,
                         If(PathUtils.GetExtension(File.FileName) = "litemod", "litemod", "jar"),
@@ -562,7 +543,7 @@ GroupDone:
                     Target = Dialogs.SaveFile("选择保存位置", FileName, DefaultFolder, {(Ext, Desc & "文件")})
                     If Target Is Nothing Then Return
                     Dim DepFolder As String = PathUtils.RemoveLastPart(Target)
-                    
+
                     Dim LoaderName As String = Desc & "下载：" & PathUtils.GetFileNameWithoutExtension(Target) & " "
                     If Not PathUtils.IsSame(PathUtils.RemoveLastPart(Target), DefaultFolder) Then CachedFolder(File.ResourceType) = PathUtils.RemoveLastPart(Target)
                     Dim Loaders As New List(Of LoaderBase)
@@ -578,7 +559,7 @@ GroupDone:
                         End If
                     Next
                     Loaders.Add(New LoaderDownload("下载文件", DownloadList) With {.ProgressWeight = 6, .Block = True})
-                    
+
                     Dim Loader As New LoaderCombo(Of Integer)(LoaderName, Loaders) With {.OnStateChanged =
                     Sub(MyLoader)
                         LoaderStateChangedHintOnly(MyLoader)
@@ -595,9 +576,6 @@ GroupDone:
         End Sub, "Download Resource Detail Save")
     End Sub
 
-    
-    
-    
     Private Function GetSuitableDependencyFiles(File As ResourceVersion) As List(Of Tuple(Of ResourceProject, ResourceVersion))
         Dim Result As New List(Of Tuple(Of ResourceProject, ResourceVersion))
         If File.ResourceType <> ResourceTypes.Mod OrElse Not File.Dependencies.Any Then Return Result
@@ -607,7 +585,7 @@ GroupDone:
                 DepProject = ResourceProject.Cache(DepId)
             Else
                 Try
-                    DepProject = ResourceProject.FromProjectId(DepId, Project.Platform) 
+                    DepProject = ResourceProject.FromProjectId(DepId, Project.Platform)
                 Catch ex As Exception
                     Logger.Warn($"获取前置项目 {DepId} 的信息失败：{ex.Message}")
                     Continue For
@@ -620,7 +598,7 @@ GroupDone:
                     (v.ModLoaders = ModLoaders.None OrElse File.ModLoaders = ModLoaders.None OrElse v.ModLoaders.Flags.Intersect(File.ModLoaders.Flags).Any)).
                     OrderByDescending(Function(v) v.ReleaseDate).FirstOrDefault()
                 If DepFile Is Nothing Then
-                    
+
                     DepFile = DepVersions.Where(Function(v) v.DownloadAvailable AndAlso
                         (Not v.GameVersions.Any() OrElse v.GameVersions.Any(Function(g) g.Contains("未知"))) AndAlso
                         (v.ModLoaders = ModLoaders.None OrElse File.ModLoaders = ModLoaders.None OrElse v.ModLoaders.Flags.Intersect(File.ModLoaders.Flags).Any)).
@@ -638,9 +616,6 @@ GroupDone:
         Return Result
     End Function
 
-    
-    
-    
     Private Function IsDependencyInstalled(Folder As String, DepProject As ResourceProject) As Boolean
         Try
             If Not Directory.Exists(Folder) Then Return False
@@ -680,10 +655,9 @@ GroupDone:
         ClipboardSet(ResourceItem.LabTitle.Text & ResourceItem.LabTitleRaw.Text)
     End Sub
 
-    
     Private Sub HintAlternative_Click() Handles HintAlternative.Click
         TargetResourceType = If(TargetResourceType = ResourceTypes.Mod, ResourceTypes.DataPack, ResourceTypes.Mod)
-        FrmMain.PageCurrent.Additional(4) = TargetResourceType 
+        FrmMain.PageCurrent.Additional(4) = TargetResourceType
         PageLoaderRestart(IsForceRestart:=True)
     End Sub
 

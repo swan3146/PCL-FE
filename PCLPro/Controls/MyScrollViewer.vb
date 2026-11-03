@@ -13,7 +13,7 @@ Public Class MyScrollViewer
                 GetType(ComboBoxItem).IsAssignableFrom(SourceType) OrElse
                 (TypeOf e.Source Is Visual AndAlso
                     PresentationSource.FromVisual(e.Source)?.RootVisual?.GetType().FullName = "System.Windows.Controls.Primitives.PopupRoot")) Then
-            
+
             Return
         End If
         e.Handled = True
@@ -41,6 +41,6 @@ Public Class MyScrollViewer
     End Sub
 
     Private Sub MyScrollViewer_PreviewGotKeyboardFocus(sender As Object, e As KeyboardFocusChangedEventArgs) Handles Me.PreviewGotKeyboardFocus
-        If e.NewFocus IsNot Nothing AndAlso TypeOf e.NewFocus Is MySlider Then e.Handled = True 
+        If e.NewFocus IsNot Nothing AndAlso TypeOf e.NewFocus Is MySlider Then e.Handled = True
     End Sub
 End Class

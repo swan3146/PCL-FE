@@ -1,9 +1,5 @@
 namespace MeloongCore.Tests;
 
-
-
-
-
 public abstract class TestBase {
 
     public TestBase() {
@@ -17,16 +13,8 @@ public abstract class TestBase {
 
 }
 
-
-
-
-
 public abstract class TestWithFolder : TestBase {
 
-    
-    
-    
-    
     public readonly string tempFolder;
     public TestWithFolder() : base() {
         tempFolder = Path.Combine(
@@ -37,9 +25,6 @@ public abstract class TestWithFolder : TestBase {
         DirectoryUtils.Create(tempFolder);
     }
 
-    
-    
-    
     public string GetTestFile(string fileName) {
         var sourceFilePath = Path.Combine(Paths.Base, "TestFiles", GetType().Name.Replace("Test", ""), fileName);
         var distPath = Path.Combine(tempFolder, PathUtils.GetLastPart(sourceFilePath));

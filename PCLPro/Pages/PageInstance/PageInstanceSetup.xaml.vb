@@ -3,24 +3,19 @@ Public Class PageInstanceSetup
     Private LoadedFirst As Boolean = False
     Private Sub PageSetupSystem_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
 
-        
         PanBack.ScrollToHome()
         RefreshRam(False)
 
-        
         AniControlEnabled += 1
         Reload()
         AniControlEnabled -= 1
 
-        
         If LoadedFirst Then Return
         LoadedFirst = True
 
-        
         AddHandler PageInstanceLeft.CurrentJavaWorker.Started, AddressOf UpdateJavaRelatedUi
         AddHandler PageInstanceLeft.CurrentJavaWorker.Stopped, AddressOf UpdateJavaRelatedUi
 
-        
         TextArgumentJavaRange.ValidateRules = New ObjectModel.Collection(Of Validate) From {New ValidateFunc(
         Function(Str As String)
             Try
@@ -38,7 +33,6 @@ Public Class PageInstanceSetup
             End Try
         End Function)}
 
-        
         Dim timer As New Threading.DispatcherTimer With {.Interval = New TimeSpan(0, 0, 0, 1)}
         AddHandler timer.Tick, AddressOf RefreshRam
         timer.Start()
@@ -47,17 +41,14 @@ Public Class PageInstanceSetup
     Public Sub Reload()
         Try
 
-            
-            Dim _unused = PageInstanceLeft.Instance.PathIndie 
+            Dim _unused = PageInstanceLeft.Instance.PathIndie
             ComboArgumentIndieV2.SelectedIndex = If(Settings.Get(Of Boolean)("VersionArgumentIndieV2", Instance:=PageInstanceLeft.Instance), 0, 1)
             UpdateJavaList()
 
-            
             ComboServerLogin.SelectedIndex = Settings.Get(Of Integer)("VersionServerLogin", Instance:=PageInstanceLeft.Instance)
             ComboServerLoginLast = ComboServerLogin.SelectedIndex
             UpdateServerLoginUI()
 
-            
             If Settings.Get(Of Integer)("VersionAdvanceAssets", Instance:=PageInstanceLeft.Instance) = 2 Then
                 Logger.Info("已迁移老版本的关闭文件校验设置")
                 Settings.Reset("VersionAdvanceAssets", Instance:=PageInstanceLeft.Instance)
@@ -66,10 +57,8 @@ Public Class PageInstanceSetup
 
             SettingService.RefreshSettings(Me)
 
-            
             OnVersionRamTypeChanged(Settings.Get(Of Integer)("VersionRamType", Instance:=PageInstanceLeft.Instance))
 
-            
             RefreshContentUI()
 
         Catch ex As Exception
@@ -77,7 +66,6 @@ Public Class PageInstanceSetup
         End Try
     End Sub
 
-    
     Public Sub Reset()
         Try
 
@@ -110,19 +98,16 @@ Public Class PageInstanceSetup
         SliderRamCustom.IsEnabled = (Type = 1)
     End Sub
 
-    
-    
-    
     Public Sub RefreshRam(ShowAnim As Boolean)
         If LabRamGame Is Nothing OrElse LabRamUsed Is Nothing OrElse FrmMain.PageCurrent <> FormMain.PageType.InstanceSetup OrElse FrmInstanceLeft.PageID <> FormMain.PageSubType.InstanceSetup Then Return
-        
+
         Dim RamGame As Double = Math.Round(GetRam(PageInstanceLeft.Instance), 5)
         Dim RamTotal As Double = Math.Round(My.Computer.Info.TotalPhysicalMemory / 1024 / 1024 / 1024, 1)
         Dim RamAvailable As Double = Math.Round(My.Computer.Info.AvailablePhysicalMemory / 1024 / 1024 / 1024, 1)
         Dim RamGameActual As Double = Math.Round(Math.Min(RamGame, RamAvailable), 5)
         Dim RamUsed As Double = Math.Round(RamTotal - RamAvailable, 5)
         Dim RamEmpty As Double = Math.Round((RamTotal - RamUsed - RamGame).Clamp(0, 1000), 1)
-        
+
         If RamTotal <= 1.5 Then
             SliderRamCustom.MaxValue = Math.Max(Math.Floor((RamTotal - 0.3) / 0.1), 1)
         ElseIf RamTotal <= 8 Then
@@ -132,20 +117,20 @@ Public Class PageInstanceSetup
         Else
             SliderRamCustom.MaxValue = Math.Floor((RamTotal - 16) / 2) + 33
         End If
-        
+
         LabRamGame.Text = If(RamGame = Math.Floor(RamGame), RamGame & ".0", RamGame) & " GB" &
                           If(RamGame <> RamGameActual, " (可用 " & If(RamGameActual = Math.Floor(RamGameActual), RamGameActual & ".0", RamGameActual) & " GB)", "")
         LabRamUsed.Text = If(RamUsed = Math.Floor(RamUsed), RamUsed & ".0", RamUsed) & " GB"
         LabRamTotal.Text = " / " & If(RamTotal = Math.Floor(RamTotal), RamTotal & ".0", RamTotal) & " GB"
         If ShowAnim Then
-            
+
             AniStart({
                 AaGridLengthWidth(ColumnRamUsed, RamUsed - ColumnRamUsed.Width.Value, 800,, New AniEaseOutFluent(AniEasePower.Strong)),
                 AaGridLengthWidth(ColumnRamGame, RamGameActual - ColumnRamGame.Width.Value, 800,, New AniEaseOutFluent(AniEasePower.Strong)),
                 AaGridLengthWidth(ColumnRamEmpty, RamEmpty - ColumnRamEmpty.Width.Value, 800,, New AniEaseOutFluent(AniEasePower.Strong))
             }, "VersionSetup Ram Grid")
         Else
-            
+
             ColumnRamUsed.Width = New GridLength(RamUsed, GridUnitType.Star)
             ColumnRamGame.Width = New GridLength(RamGameActual, GridUnitType.Star)
             ColumnRamEmpty.Width = New GridLength(RamEmpty, GridUnitType.Star)
@@ -156,25 +141,23 @@ Public Class PageInstanceSetup
     End Sub
 
     Private RamTextLeft As Integer = 2, RamTextRight As Integer = 1
-    
-    
-    
+
     Private Sub RefreshRamText() Handles RectRamGame.SizeChanged, RectRamEmpty.SizeChanged, LabRamGame.SizeChanged
-        
+
         Dim RectUsedWidth = RectRamUsed.ActualWidth
         Dim TotalWidth = PanRamDisplay.ActualWidth
         Dim LabGameWidth = LabRamGame.ActualWidth, LabUsedWidth = LabRamUsed.ActualWidth, LabTotalWidth = LabRamTotal.ActualWidth
         Dim LabGameTitleWidth = LabRamGameTitle.ActualWidth, LabUsedTitleWidth = LabRamUsedTitle.ActualWidth
-        
+
         Dim Left As Integer
         If RectUsedWidth - 30 < LabUsedWidth OrElse RectUsedWidth - 30 < LabUsedTitleWidth Then
-            
+
             Left = 0
         ElseIf RectUsedWidth - 25 < (LabUsedWidth + LabTotalWidth) Then
-            
+
             Left = 1
         Else
-            
+
             Left = 2
         End If
         If RamTextLeft <> Left Then
@@ -200,36 +183,36 @@ Public Class PageInstanceSetup
                         }, "VersionSetup Ram TextLeft")
             End Select
         End If
-        
+
         Dim Right As Integer
         If TotalWidth < LabGameWidth + 2 + RectUsedWidth OrElse TotalWidth < LabGameTitleWidth + 2 + RectUsedWidth Then
-            
+
             Right = 0
         Else
-            
+
             Right = 1
         End If
         If Right = 0 Then
             If AniControlEnabled = 0 AndAlso (RamTextRight <> Right OrElse AniIsRun("VersionSetup Ram TextRight")) Then
-                
+
                 AniStart({
                         AaX(LabRamGame, TotalWidth - LabGameWidth - LabRamGame.Margin.Left, 100,, New AniEaseOutFluent(AniEasePower.Weak)),
                         AaX(LabRamGameTitle, TotalWidth - LabGameTitleWidth - LabRamGameTitle.Margin.Left, 100,, New AniEaseOutFluent(AniEasePower.Weak))
                 }, "VersionSetup Ram TextRight")
             Else
-                
+
                 LabRamGame.Margin = New Thickness(TotalWidth - LabGameWidth, 3, 0, 0)
                 LabRamGameTitle.Margin = New Thickness(TotalWidth - LabGameTitleWidth, 0, 0, 5)
             End If
         Else
             If AniControlEnabled = 0 AndAlso (RamTextRight <> Right OrElse AniIsRun("VersionSetup Ram TextRight")) Then
-                
+
                 AniStart({
                         AaX(LabRamGame, 2 + RectUsedWidth - LabRamGame.Margin.Left, 100,, New AniEaseOutFluent(AniEasePower.Weak)),
                         AaX(LabRamGameTitle, 2 + RectUsedWidth - LabRamGameTitle.Margin.Left, 100,, New AniEaseOutFluent(AniEasePower.Weak))
                 }, "VersionSetup Ram TextRight")
             Else
-                
+
                 LabRamGame.Margin = New Thickness(2 + RectUsedWidth, 3, 0, 0)
                 LabRamGameTitle.Margin = New Thickness(2 + RectUsedWidth, 0, 0, 5)
             End If
@@ -237,32 +220,24 @@ Public Class PageInstanceSetup
         RamTextRight = Right
     End Sub
 
-    
-    
-    
     Public Shared Function GetRam(Instance As McInstance) As Double
-        
+
         If Settings.Get(Of Integer)("VersionRamType", Instance:=Instance) = 2 Then
             Return PageSetupLaunch.GetRam(Instance, True)
         End If
 
-        
-        
-        
-
-        
         Dim RamGive As Double
         If Settings.Get(Of Integer)("VersionRamType", Instance:=Instance) = 0 Then
-            
+
             Dim RamAvailable As Double = Math.Round(My.Computer.Info.AvailablePhysicalMemory / 1024 / 1024 / 1024 * 10) / 10
-            
-            Dim RamMininum As Double 
-            Dim RamTarget1 As Double 
-            Dim RamTarget2 As Double 
-            Dim RamTarget3 As Double 
+
+            Dim RamMininum As Double
+            Dim RamTarget1 As Double
+            Dim RamTarget2 As Double
+            Dim RamTarget3 As Double
             If Instance IsNot Nothing AndAlso Not Instance.IsLoaded Then Instance.Load()
             If Instance IsNot Nothing AndAlso Instance.Modable Then
-                
+
                 Dim ModDir = DirectoryUtils.GetInfo(Instance.PathIndie & "mods\")
                 Dim ModCount As Integer = If(ModDir.Exists, ModDir.GetFiles.Count(Function(f) {".jar", ".zip", ".litemod"}.Contains(f.Extension.Lower)), 0)
                 RamMininum = 0.5 + ModCount / 150
@@ -270,44 +245,44 @@ Public Class PageInstanceSetup
                 RamTarget2 = 2.7 + ModCount / 50
                 RamTarget3 = 4.5 + ModCount / 25
             ElseIf Instance IsNot Nothing AndAlso Instance.Version.HasOptiFine Then
-                
+
                 RamMininum = 0.5
                 RamTarget1 = 1.5
                 RamTarget2 = 3
                 RamTarget3 = 5
             Else
-                
+
                 RamMininum = 0.5
                 RamTarget1 = 1.5
                 RamTarget2 = 2.5
                 RamTarget3 = 4
             End If
             Dim RamDelta As Double
-            
+
             RamDelta = RamTarget1
             RamGive += Math.Min(RamAvailable, RamDelta)
             RamAvailable -= RamDelta
             If RamAvailable < 0.1 Then GoTo PreFin
-            
+
             RamDelta = RamTarget2 - RamTarget1
             RamGive += Math.Min(RamAvailable * 0.7, RamDelta)
             RamAvailable -= RamDelta / 0.7
             If RamAvailable < 0.1 Then GoTo PreFin
-            
+
             RamDelta = RamTarget3 - RamTarget2
             RamGive += Math.Min(RamAvailable * 0.4, RamDelta)
             RamAvailable -= RamDelta / 0.4
             If RamAvailable < 0.1 Then GoTo PreFin
-            
+
             RamDelta = RamTarget3
             RamGive += Math.Min(RamAvailable * 0.15, RamDelta)
             RamAvailable -= RamDelta / 0.15
             If RamAvailable < 0.1 Then GoTo PreFin
 PreFin:
-            
+
             RamGive = Math.Round(Math.Max(RamGive, RamMininum), 1)
         Else
-            
+
             Dim Value As Integer = Settings.Get(Of Integer)("VersionRamCustom", Instance:=Instance)
             If Value <= 12 Then
                 RamGive = Value * 0.1 + 0.3
@@ -326,8 +301,6 @@ PreFin:
 
 #Region "服务器"
 
-    
-    
     Public Shared Sub OnVersionServerLoginChanged(Type As Integer)
         If FrmInstanceSetup Is Nothing Then Return
         WriteIni(McFolderSelected & "PCL.ini", "InstanceCache", "")
@@ -336,26 +309,24 @@ PreFin:
         LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
     End Sub
 
-    
     Private Sub TextServerEnter_Change() Handles TextServerEnter.TextChanged
         Dim NewText = TextServerEnter.Text.Replace("：", ":").Replace("。", ".")
         If NewText = TextServerEnter.Text Then Return
-        Dim CurrentPosition = TextServerEnter.SelectionStart 
+        Dim CurrentPosition = TextServerEnter.SelectionStart
         TextServerEnter.Text = NewText
         TextServerEnter.SelectionStart = CurrentPosition
     End Sub
 
-    
     Private ComboServerLoginLast As Integer
     Private Sub ComboServerLogin_Changed() Handles ComboServerLogin.SelectionChanged, TextServerNide.ValidatedTextChanged, TextServerAuthServer.ValidatedTextChanged, TextServerAuthRegister.ValidatedTextChanged
         If AniControlEnabled <> 0 Then Return
         UpdateServerLoginUI()
-        
+
         If ComboServerLogin.SelectedIndex = 3 AndAlso Not TextServerNide.IsValidated Then Return
         If ComboServerLogin.SelectedIndex = 4 AndAlso Not TextServerAuthServer.IsValidated Then Return
-        
+
         If ComboServerLoginLast = ComboServerLogin.SelectedIndex Then Return
-        
+
         ComboServerLoginLast = ComboServerLogin.SelectedIndex
         Settings.Set("VersionServerLogin", ComboServerLogin.SelectedIndex, Instance:=PageInstanceLeft.Instance)
     End Sub
@@ -375,7 +346,6 @@ PreFin:
         CardServer.TriggerForceResize()
     End Sub
 
-    
     Private Sub BtnServerAuthLittle_Click(sender As Object, e As EventArgs) Handles BtnServerAuthLittle.Click
         If TextServerAuthServer.Text <> "" AndAlso TextServerAuthServer.Text <> "https://littleskin.cn/api/yggdrasil" AndAlso
             MyMsgBox("即将把第三方登录设置覆盖为 LittleSkin 登录。" & vbCrLf & "除非你是服主，或者服主要求你这样做，否则请不要继续。" & vbCrLf & vbCrLf & "是否确实需要覆盖当前设置？",
@@ -403,7 +373,7 @@ PreFin:
                 HintArgumentJava.Visibility = Visibility.Visible
                 TextArgumentJavaRange.Visibility = Visibility.Collapsed
                 PanArgumentJavaSelect.Visibility = Visibility.Collapsed
-                
+
                 If Not JavaWorker.LastSucceeded OrElse JavaWorker.Running Then
                     If Not JavaWorker.Running Then JavaWorker.Start()
                     HintArgumentJava.Text = $"正在查找 Java……"
@@ -424,19 +394,19 @@ PreFin:
                 HintArgumentJava.Visibility = Visibility.Visible
                 TextArgumentJavaRange.Visibility = Visibility.Visible
                 PanArgumentJavaSelect.Visibility = Visibility.Collapsed
-                
+
                 If Not Settings.HasSaved("VersionArgumentJavaRange", PageInstanceLeft.Instance) Then
                     Dim DefaultRange As String = GetJavaRequirement(PageInstanceLeft.Instance).Range.ToString.Replace("-∞", "").Replace("+∞", "")
                     Settings.Set("VersionArgumentJavaRange", DefaultRange, PageInstanceLeft.Instance)
                     TextArgumentJavaRange.Text = DefaultRange
                 End If
-                
+
                 If Not String.IsNullOrEmpty(TextArgumentJavaRange.ValidateResult) Then
                     HintArgumentJava.Text = $"Java 版本范围错误：{TextArgumentJavaRange.ValidateResult}"
                     HintArgumentJava.Theme = MyHint.Themes.Red
                     Return
                 End If
-                
+
                 If Not JavaWorker.LastSucceeded OrElse JavaWorker.Running Then
                     If Not JavaWorker.Running Then JavaWorker.Start()
                     HintArgumentJava.Text = $"正在查找 Java……"
@@ -461,24 +431,22 @@ PreFin:
 #End Region
 
 #Region "选择特定 Java 的下拉框"
-    
 
-    
     Public Sub UpdateJavaList()
         If ComboArgumentJavaSelect Is Nothing OrElse LabArgumentJava Is Nothing OrElse Not ComboArgumentJavaSelect.IsLoaded Then Return
         ComboArgumentJavaSelect.Items.Clear()
-        
+
         If JavaListRefreshWorker.Running Then
             BtnArgumentJavaSearch.IsEnabled = False
             ComboArgumentJavaSelect.IsEnabled = False
             LabArgumentJava.Text = "搜索中 …"
             Return
         End If
-        
+
         BtnArgumentJavaSearch.IsEnabled = True
         ComboArgumentJavaSelect.IsEnabled = True
         Dim SelectedJava As Java = Configs.JavaForced.Get(PageInstanceLeft.Instance.Config)
-        
+
         If Not Configs.JavaList.Get().Any() Then
             LabArgumentJava.Text = "未找到 Java，点击以导入已有的 Java"
         ElseIf SelectedJava Is Nothing Then
@@ -486,7 +454,7 @@ PreFin:
         Else
             LabArgumentJava.Text = SelectedJava.ToString
         End If
-        
+
         Try
             For Each JavaEntry In Configs.JavaList.Get()
                 Dim JavaItem As New MyListItem With {
@@ -501,7 +469,7 @@ PreFin:
                 End Sub
                 ComboArgumentJavaSelect.Items.Add(JavaItem)
                 Dim Buttons As New List(Of MyIconButton)
-                
+
                 Dim IsOfficial As Boolean = PathUtils.IsParentOf($"{Paths.AppData}.minecraft\runtime\", JavaEntry.Folder)
                 Dim DeleteButton As New MyIconButton With {.Logo = Logo.IconButtonStop, .Height = 24, .Width = 24}
                 DeleteButton.IsEnabled = Not IsOfficial
@@ -509,7 +477,7 @@ PreFin:
                 AddHandler DeleteButton.Click, Sub() ManuallyRemoveJava(JavaEntry)
                 ToolTipService.SetShowOnDisabled(DeleteButton, True)
                 Buttons.Add(DeleteButton)
-                
+
                 Dim OpenButton As New MyIconButton With {.Logo = Logo.IconButtonOpen, .LogoScale = 1.1, .Height = 24, .Width = 24}
                 OpenButton.ToolTip = "打开文件夹"
                 AddHandler OpenButton.Click, Sub() OpenExplorer(JavaEntry.JavaExePath)
@@ -534,7 +502,6 @@ PreFin:
 
 #End Region
 
-    
     Private Sub ComboArgumentIndieV2_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboArgumentIndieV2.SelectionChanged
         If AniControlEnabled <> 0 Then Return
         Static IsReverting As Boolean = False
@@ -547,21 +514,18 @@ PreFin:
             If e.RemovedItems.Count > 0 Then ComboArgumentIndieV2.SelectedItem = e.RemovedItems(0)
             IsReverting = False
         End If
-        
+
         Settings.Set("VersionArgumentIndieV2", sender.SelectedIndex = 0, Instance:=PageInstanceLeft.Instance)
     End Sub
 
-    
     Private Sub TextAdvanceRun_TextChanged(sender As Object, e As TextChangedEventArgs) Handles TextAdvanceRun.TextChanged
         CheckAdvanceRunWait.Visibility = (TextAdvanceRun.Text <> "").ToVisibility
     End Sub
 
-    
     Private Sub BtnSwitch_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnSwitch.Click
         FrmMain.PageChange(FormMain.PageType.Setup, FormMain.PageSubType.SetupLaunch)
     End Sub
 
-    
     Private Sub ReplaceEnter(sender As MyTextBox, e As TextChangedEventArgs) Handles TextAdvanceJvm.TextChanged, TextAdvanceGame.TextChanged
         Dim NewText = sender.Text.ReplaceLineEndings(" ", mergeMultiple:=True)
         If NewText = sender.Text Then Return
@@ -572,9 +536,6 @@ PreFin:
 
 #Region "卡片：内容管理"
 
-    
-    
-    
     Private Sub RefreshContentUI()
         If LabContentScreenshot Is Nothing Then Return
         Try
@@ -588,9 +549,6 @@ PreFin:
         End Try
     End Sub
 
-    
-    
-    
     Private Shared Function ContentSummary(Folder As String, Extensions As String()) As String
         Try
             If Not DirectoryUtils.Exists(Folder) Then Return "文件夹不存在"
@@ -616,7 +574,6 @@ PreFin:
         Return $"{Size} B"
     End Function
 
-    
     Private Sub BtnContentScreenshotOpen_Click() Handles BtnContentScreenshotOpen.Click
         OpenContentFolder("screenshots")
     End Sub
@@ -640,7 +597,6 @@ PreFin:
         End Try
     End Sub
 
-    
     Private Sub BtnContentSchematicPreview_Click() Handles BtnContentSchematicPreview.Click
         Dim Folder As String = PageInstanceLeft.Instance.PathIndie & "schematics\"
         Dim FileName As String = ""
@@ -686,7 +642,6 @@ PreFin:
             Lines.Add("描述：" & Description.ReplaceLineEndings(" "))
         End If
 
-        
         Dim SizeText As String = ""
         If Info.Regions.Count > 0 Then
             Dim Region As String = Info.Regions(0)
@@ -723,23 +678,17 @@ PreFin:
         End Try
     End Function
 
-    
-    
-    
     Private Shared Function ReadNbtPreview(FileName As String) As NbtPreview
         Using Reader As New NbtReader(FileName)
             Try
                 Reader.ReadRoot()
             Catch ex As StopPreviewException
-                
+
             End Try
             Return Reader.Info
         End Using
     End Function
 
-    
-    
-    
     Private Class NbtPreview
         Public ReadOnly Values As New Dictionary(Of String, String)
         Public ReadOnly Regions As New List(Of String)
@@ -756,16 +705,10 @@ PreFin:
         End Function
     End Class
 
-    
-    
-    
     Private Class StopPreviewException
         Inherits Exception
     End Class
 
-    
-    
-    
     Private Class NbtReader
         Implements IDisposable
 
@@ -787,7 +730,7 @@ PreFin:
         Public Sub ReadRoot()
             Dim RootType As Byte = ReadByte()
             If RootType <> 10 Then Throw New IO.InvalidDataException("不是有效的 NBT 文件")
-            ReadString() 
+            ReadString()
             ReadCompound("")
         End Sub
 
@@ -801,14 +744,14 @@ PreFin:
                     Case 1, 2, 3, 4
                         Info.SetValue(ChildPath, ReadNumber(If(TagType = 1, 1, If(TagType = 2, 2, If(TagType = 3, 4, 8)))).ToString())
                     Case 5, 6
-                        
+
                         Skip(TagType, 0)
                     Case 7
                         SkipBytes(ReadNumber(4))
                     Case 8
                         Dim Value As String = ReadString()
                         Info.SetValue(ChildPath, Value)
-                        
+
                         If (Path = "" OrElse Path = "Schematic") AndAlso TagName = "Length" Then Throw New StopPreviewException()
                     Case 9
                         Dim ItemType As Byte = ReadByte()
@@ -827,7 +770,7 @@ PreFin:
                         End If
                     Case 10
                         If Path = "Regions" Then
-                            
+
                             Info.Regions.Add(TagName)
                             ReadCompound(ChildPath)
                             Throw New StopPreviewException()
@@ -848,9 +791,6 @@ PreFin:
             Return ReadBytes(1)(0)
         End Function
 
-        
-        
-        
         Private Function ReadNumber(Size As Integer) As Long
             Dim Buffer As Byte() = ReadBytes(Size)
             Dim Value As Long = 0
@@ -886,7 +826,7 @@ PreFin:
             Dim Buffer(ChunkSize - 1) As Byte
             While Count > 0
                 Dim Want As Integer = CInt(Math.Min(Count, ChunkSize))
-                
+
                 Dim Done As Integer = 0
                 While Done < Want
                     Dim N As Integer = Strm.Read(Buffer, Done, Want - Done)

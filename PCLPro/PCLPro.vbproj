@@ -215,8 +215,6 @@
       <DependentUpon>MyIconTextButton.xaml</DependentUpon>
     </Compile>
 
-
-
     <Compile Include="Controls\MyVirtualizingElement.vb" />
     <Compile Include="Modules\Base\PclLogger.vb" />
     <Compile Include="Modules\Base\ModFirewall.vb" />
@@ -265,6 +263,7 @@
     <Compile Include="GlobalSuppressions.vb" />
     <Compile Include="Modules\Minecraft\ModCrash.vb" />
     <Compile Include="Modules\ModMusic.vb" />
+    <Compile Include="Modules\ModMedia.vb" />
     <Compile Include="Modules\ModDevelop.vb" />
     <Compile Include="Modules\Minecraft\ModWatcher.vb" />
     <Compile Include="Modules\ModSecret.vb" />

@@ -1,8 +1,5 @@
 namespace MeloongCore;
 
-
-
-
 public sealed class ValueRange<T>(
     T? lower, T? upper,
     bool isLowerInclusive, bool isUpperInclusive,
@@ -31,44 +28,38 @@ public sealed class ValueRange<T>(
         IsUpperInclusive = isInclusive;
     }
 
-    
     public bool IsLowerInclusive = isLowerInclusive;
-    
+
     public bool IsUpperInclusive = isUpperInclusive;
 
     #endregion
 
     #region ClosedOpen、AtLeast 等工厂方法
 
-    
     public static ValueRange<T> Closed(T lower, T upper) => new(lower, upper, true, true, true, true);
-    
+
     public static ValueRange<T> ClosedOpen(T lower, T upper) => new(lower, upper, true, false, true, true);
-    
+
     public static ValueRange<T> OpenClosed(T lower, T upper) => new(lower, upper, false, true, true, true);
-    
+
     public static ValueRange<T> Open(T lower, T upper) => new(lower, upper, false, false, true, true);
-    
+
     public static ValueRange<T> Exactly(T value) => new(value, value, true, true, true, true);
 
-    
     public static ValueRange<T> AtLeast(T lower) => new(lower, default, true, true, true, false);
-    
+
     public static ValueRange<T> GreaterThan(T lower) => new(lower, default, false, true, true, false);
-    
+
     public static ValueRange<T> AtMost(T upper) => new(default, upper, true, true, false, true);
-    
+
     public static ValueRange<T> LessThan(T upper) => new(default, upper, true, false, false, true);
-    
+
     public static ValueRange<T> All() => new(default, default, true, true, false, false);
 
     #endregion
 
     #region 字符串双向转换
 
-    
-    
-    
     public static ValueRange<T> FromString(string str, Func<string, T>? parseFunc = null) {
         if (string.IsNullOrEmpty(str)) throw new ArgumentException("不能为空");
         var isLowerInclusive = str[0] == '[';
@@ -99,9 +90,6 @@ public sealed class ValueRange<T>(
 
     #endregion
 
-    
-    
-    
     public bool Contains(T value) {
         if (HasLower) {
             var compareLower = value.CompareTo(Lower!);
@@ -116,19 +104,12 @@ public sealed class ValueRange<T>(
         return true;
     }
 
-    
-    
-    
     public bool IsEmpty() {
         if (!HasLower || !HasUpper) return false;
         int compared = Lower!.CompareTo(Upper!);
         return compared > 0 || (compared == 0 && (!IsLowerInclusive || !IsUpperInclusive));
     }
 
-    
-    
-    
-    
     public ValueRange<T> Intersect(ValueRange<T> other) {
         T? lower = default;
         T? upper = default;
@@ -208,9 +189,9 @@ public sealed class ValueRange<T>(
         hashCode=hashCode*-1521134295+IsUpperInclusive.GetHashCode();
         return hashCode;
     }
-#pragma warning disable CS8604 
+#pragma warning disable CS8604
     public static bool operator ==(ValueRange<T>? left, ValueRange<T>? right) => EqualityComparer<ValueRange<T>>.Default.Equals(left, right);
-#pragma warning restore CS8604 
+#pragma warning restore CS8604
     public static bool operator !=(ValueRange<T>? left, ValueRange<T>? right) => !(left==right);
 
     #endregion

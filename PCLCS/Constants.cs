@@ -1,32 +1,26 @@
 namespace PCLCS;
 
-
-
-
 [Flags]
 public enum ResourceTypes {
-    
+
     Mod = 1,
-    
+
     ModPack = 2,
-    
+
     ResourcePack = 4,
-    
+
     Shader = 8,
-    
+
     DataPack = 16,
-    
+
     Plugin = 32,
-    
+
     Map = 64,
-    
+
     ModOrDataPack = Mod | DataPack,
-    
+
     Any = Mod | ModPack | ResourcePack | Shader | DataPack | Plugin | Map,
 }
-
-
-
 
 [Flags]
 public enum ResourcePlatforms {
@@ -34,9 +28,6 @@ public enum ResourcePlatforms {
     Modrinth = 2,
     Any = CurseForge | Modrinth,
 }
-
-
-
 
 [Flags]
 public enum ModLoaders {
@@ -48,9 +39,6 @@ public enum ModLoaders {
     All = Forge | LiteLoader | Fabric | NeoForge,
 }
 
-
-
-
 public enum DonationRank {
     None = 0,
     Rank6 = 6,
@@ -61,24 +49,14 @@ public enum DonationRank {
 }
 
 public static class Versions {
-    
-    
-    
+
     public const char PotatoVersion = '1';
-    
-    
-    
+
     public const int LocalModCacheVersion = 21;
-    
-    
-    
+
     public const int McInstanceCacheVersion = 39;
-    
-    
-    
+
     public const int JavaConfigVersion = 1;
-    
-    
-    
+
     public const int McInstallManifestVersion = 1;
 }

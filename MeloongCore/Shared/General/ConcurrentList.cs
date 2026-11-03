@@ -1,30 +1,18 @@
 namespace MeloongCore;
 
-
-
-
-
 public class ConcurrentList<T> : IList<T>, IList {
 
     private readonly List<T> _items = [];
 
-    
     public ConcurrentList() { }
     public ConcurrentList(IEnumerable<T> data) => _items = new(data);
     public static implicit operator ConcurrentList<T>(List<T> data) => new(data);
     public static implicit operator List<T>(ConcurrentList<T> data) { lock (data.SyncRoot) { return new(data._items); } }
 
-    
-    
-    
-    
     public IEnumerator<T> GetEnumerator() { lock (SyncRoot) return _items.ToList().GetEnumerator(); }
-    
-    
-    
+
     IEnumerator IEnumerable.GetEnumerator() { lock (SyncRoot) return _items.ToList().GetEnumerator(); }
 
-    
     public int Count { get { lock (SyncRoot) { return _items.Count; } } }
     public bool IsReadOnly => false;
     bool IList.IsFixedSize => false;

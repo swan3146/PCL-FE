@@ -1,9 +1,4 @@
-﻿
-
-
-
-
-<local:MyCard Title="纯文本" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
+﻿<local:MyCard Title="纯文本" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="每个 local:MyCard 代表一张卡片，你可以添加、删除格式类似的 MyCard 来添加多个卡片。每个 TextBlock 代表一段文本，你可以在 Text 属性中书写任何你想写的内容，也可以自行添加更多的 TextBlock。" />
@@ -116,7 +111,7 @@
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,10"
                     Text="你需要使用 StackPanel 在一行里塞下多个按钮。你可以仅在这个教学卡片的基础上稍作调整，来实现自己的按钮布局。" />
-        
+
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
             <local:MyButton Margin="0,0,10,0" Width="140" Height="35" HorizontalAlignment="Left" Padding="13,0,13,0" ColorType="Highlight"
                         Text="打开 B 站" EventType="打开网页" EventData="https://www.bilibili.com/" />
@@ -125,7 +120,7 @@
             <local:MyButton Margin="0,0,10,0" Width="140" Height="35" HorizontalAlignment="Left" Padding="13,0,13,0"
                         Text="打开记事本" EventType="打开文件" EventData="notepad" />
         </StackPanel>
-        
+
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
             <local:MyButton Margin="0,0,10,0" Width="140" Height="35" HorizontalAlignment="Left" Padding="13,0,13,0" ColorType="Red"
                         Text="复制召唤命令" EventType="复制文本" EventData="/execute as @a at @s run summon Creeper ~ ~2 ~" ToolTip="这条 Minecraft 命令会在每个玩家头顶召唤一只苦力怕！" />
@@ -159,29 +154,29 @@
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="PCL 内置了一些 Minecraft 方块与物品图片，可以直接使用。"/>
         <StackPanel Orientation="Horizontal" Margin="10,8,0,15" Height="30">
-            
+
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/CommandBlock.png"/>
-            
+
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/Cobblestone.png"/>
-            
+
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/GoldBlock.png"/>
-            
+
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/Grass.png"/>
-            
+
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/GrassPath.png"/>
-            
+
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/Anvil.png"/>
-            
+
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/RedstoneBlock.png"/>
-            
+
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/RedstoneLampOn.png"/>
-            
+
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/RedstoneLampOff.png"/>
-            
+
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/Egg.png"/>
-            
+
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/Fabric.png"/>
-            
+
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/NeoForge.png"/>
         </StackPanel>
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
@@ -222,10 +217,10 @@
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*" />
-                <ColumnDefinition Width="1.6*" MinWidth="200" /> 
-                <ColumnDefinition Width="150" /> 
+                <ColumnDefinition Width="1.6*" MinWidth="200" />
+                <ColumnDefinition Width="150" />
             </Grid.ColumnDefinitions>
-            
+
             <local:MyButton Grid.Column="0" Margin="0,0,10,0" Height="35" ColorType="Highlight"
                         Text="打开 B 站" EventType="打开网页" EventData="https://www.bilibili.com/" />
             <local:MyButton Grid.Column="1" Margin="0,0,10,0" Height="35"
@@ -269,77 +264,3 @@
                     Text="打开 GitHub 讨论页" EventType="打开网页" EventData="https://github.com/Meloong-Git/PCL/discussions/2528" />
     </StackPanel>
 </local:MyCard>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

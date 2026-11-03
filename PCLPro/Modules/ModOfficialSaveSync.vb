@@ -1,23 +1,14 @@
 Imports System.IO
 
-
-
-
-
 Public Module ModOfficialSaveSync
 
-    
     Private HasAutoChecked As Boolean = False
 
-    
     Public Class SaveItem
         Public Property Source As String
         Public Property Name As String
     End Class
 
-    
-    
-    
     Public Sub StartAutoCheck()
         If HasAutoChecked Then Return
         HasAutoChecked = True
@@ -25,7 +16,7 @@ Public Module ModOfficialSaveSync
         RunInNewThread(
             Sub()
                 Try
-                    Thread.Sleep(2500) 
+                    Thread.Sleep(2500)
                     RunInUiWait(Sub() CheckAndSync(False))
                 Catch ex As Exception
                     Logger.Warn(ex, "自动检测官方存档失败")
@@ -33,14 +24,12 @@ Public Module ModOfficialSaveSync
             End Sub, "官方存档同步")
     End Sub
 
-    
     Public Function GetTargetSavesFolder() As String
         Dim Folder As String = McFolderSelected
         If String.IsNullOrWhiteSpace(Folder) Then Return Nothing
         Return Folder & "saves\"
     End Function
 
-    
     Public Function GetCandidateFolders() As List(Of String)
         Dim Raw As String() = {
             Paths.AppData & ".minecraft\",
@@ -60,12 +49,11 @@ Public Module ModOfficialSaveSync
         Return Result
     End Function
 
-    
     Public Function ScanPendingSaves() As List(Of SaveItem)
         Dim Result As New List(Of SaveItem)
         Dim Target As String = GetTargetSavesFolder()
         If Target Is Nothing Then Return Result
-        
+
         Dim Known As New List(Of String)
         If Directory.Exists(Target) Then
             For Each Dir As String In Directory.GetDirectories(Target)
@@ -73,7 +61,7 @@ Public Module ModOfficialSaveSync
             Next
         End If
         For Each Folder As String In GetCandidateFolders()
-            If Target.StartsWith(Folder, StringComparison.OrdinalIgnoreCase) Then Continue For 
+            If Target.StartsWith(Folder, StringComparison.OrdinalIgnoreCase) Then Continue For
             Dim Saves As String = Folder & "saves\"
             If Not Directory.Exists(Saves) Then Continue For
             Dim Dirs As String()
@@ -85,10 +73,10 @@ Public Module ModOfficialSaveSync
             End Try
             For Each Dir As String In Dirs
                 Try
-                    If Not File.Exists(Dir & "\level.dat") Then Continue For 
+                    If Not File.Exists(Dir & "\level.dat") Then Continue For
                     Dim Name As String = IO.Path.GetFileName(Dir)
                     Dim Key As String = Name.ToLowerInvariant()
-                    If Known.Contains(Key) Then Continue For 
+                    If Known.Contains(Key) Then Continue For
                     Known.Add(Key)
                     Result.Add(New SaveItem With {.Source = Dir, .Name = Name})
                 Catch ex As Exception
@@ -99,11 +87,6 @@ Public Module ModOfficialSaveSync
         Return Result
     End Function
 
-    
-    
-    
-    
-    
     Public Function CheckAndSync(IsManual As Boolean) As Integer
         If Not IsManual AndAlso Not Settings.Get(Of Boolean)("UiAutoSyncOfficialSaves") Then Return 0
         Dim Target As String = GetTargetSavesFolder()
@@ -123,7 +106,7 @@ Public Module ModOfficialSaveSync
             If IsManual Then Hint("没有发现需要同步的官方存档。", HintType.Green)
             Return 0
         End If
-        
+
         Dim Names As New List(Of String)
         For i As Integer = 0 To Math.Min(Pending.Count, 6) - 1
             Names.Add("· " & Pending(i).Name)
@@ -144,7 +127,7 @@ Public Module ModOfficialSaveSync
         For Each Item As SaveItem In Pending
             Try
                 Dim Dest As String = Target & Item.Name
-                If Directory.Exists(Dest) Then Continue For 
+                If Directory.Exists(Dest) Then Continue For
                 DirectoryUtils.Copy(Item.Source, Dest)
                 Copied += 1
                 Logger.Info($"已同步存档：{Item.Source} → {Dest}")

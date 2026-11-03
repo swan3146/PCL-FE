@@ -1,9 +1,6 @@
 Public Class PageInstanceLeft
     Implements IRefreshable
 
-    
-    
-    
     Public Shared Instance As McInstance = Nothing
 
     Private Sub PageInstanceLeft_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
@@ -22,17 +19,10 @@ Public Class PageInstanceLeft
 
 #Region "页面切换"
 
-    
-    
-    
     Public PageID As FormMain.PageSubType = FormMain.PageSubType.Default
 
-    
-    
-    
     Private Sub PageCheck(sender As FrameworkElement, e As RouteEventArgs) Handles ItemOverall.Check, ItemMod.Check, ItemModDisabled.Check, ItemSetup.Check, ItemModify.Check, ItemExport.Check
-        
-        
+
         If sender.Tag IsNot Nothing Then PageChange(Val(sender.Tag))
     End Sub
 
@@ -62,9 +52,6 @@ Public Class PageInstanceLeft
         End Select
     End Function
 
-    
-    
-    
     Public Sub PageChange(ID As FormMain.PageSubType)
         If PageID = ID Then Return
         If Instance IsNot Nothing AndAlso McInstanceLock.IsLocked(Instance) Then
@@ -82,7 +69,7 @@ Public Class PageInstanceLeft
         End Try
     End Sub
     Private Shared Sub PageChangeRun(Target As MyPageRight)
-        AniStop("FrmMain PageChangeRight") 
+        AniStop("FrmMain PageChangeRight")
         If Target.Parent IsNot Nothing Then Target.SetValue(ContentPresenter.ContentProperty, Nothing)
         FrmMain.PageRight = Target
         CType(FrmMain.PanMainRight.Child, MyPageRight).PageOnExit()
@@ -93,7 +80,7 @@ Public Class PageInstanceLeft
                        FrmMain.PageRight.Opacity = 0
                    End Sub, 130),
             AaCode(Sub()
-                       
+
                        FrmMain.PageRight.Opacity = 1
                        FrmMain.PageRight.PageOnEnter()
                    End Sub, 30, True)
@@ -102,7 +89,7 @@ Public Class PageInstanceLeft
 
 #End Region
 
-    Public Sub Refresh_Click(sender As Object, e As EventArgs) 
+    Public Sub Refresh_Click(sender As Object, e As EventArgs)
         Refresh(Val(sender.Tag))
     End Sub
     Public Sub Refresh() Implements IRefreshable.Refresh
@@ -134,7 +121,6 @@ Public Class PageInstanceLeft
         End If
     End Sub
 
-    
     Public Shared CurrentJavaWorker As New RedoableWorker(Of Java)(Function(c, p) SelectOrDownloadJava(PageInstanceLeft.Instance, False, c, p))
     Public Shared Sub ReloadCurrentJava() Handles Me.Loaded
         If AniControlEnabled <> 0 Then Return

@@ -7,13 +7,24 @@ Public Class FormMain
 
 #Region "基础"
 
-    
     Private Sub ShowUpdateLog(LastVersion As Integer)
         Dim FeatureCount As Integer = 0, BugCount As Integer = 0
         Dim FeatureList As New List(Of KeyValuePair(Of Integer, String))
-        
+
         If BuildType = BuildTypes.Release Then
-            If LastVersion < 434 Then 
+            If LastVersion < 435 Then
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "(｡•̀ᴗ-)✧ 修复 从毛玻璃模式切回简洁版时部分界面不立即生效 现在所有卡片与仍然打开的弹窗都会马上恢复平面样式"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "(๑•̀ㅂ•́)و✧ 新增 界面文字颜色可自定义 可随手挑颜色 也可以一键跟随主题 深色壁纸配浅色文字更清楚"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "(´･ω･`) 新增 界面文字大小可调 范围限制在 10 到 18 之间 不怕一不小心调得太大改不回来"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "(｡•̀ᴗ-)✧ 修复 视频壁纸后面那层关不掉的白色蒙版 磨砂强度设为0时卡片与侧栏完全透明"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "(๑•̀ㅂ•́)و✧ 修复 视频壁纸下「UI 模糊」调了没反应 现在卡片与侧栏的白霜会跟随 UI 模糊变化 视频画面本身保持清晰不模糊"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "(✿◡‿◡) 新增 界面字体可自定义 字体列表显示中文名称 还能导入自己的 ttf otf ttc 字体文件 背景全透明时换一款字重清晰的字体就能看清文字了"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "(´･ω･`) 新增 音乐支持更多格式 ogg opus ape m4a aac wma 等 系统解码不了的会自动提示下载 FFmpeg 并转换后播放"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "(๑˃̵ᴗ˂̵)و 新增 视频背景支持 mkv webm flv ts 等格式 首次使用会按需下载一次 FFmpeg 转换器 转换结果本地缓存 之后打开直接播放"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "( •̀ ω •́ )✧ 优化 FFmpeg 解码器走镜像源按需下载 只下载一次 约90MB 不用时完全不占空间"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "( •̀ ω •́ )✧ 修复 关闭启动动画后本次运行中修改的设置不会被保存 重新打开动画后也无法记住"))
+            End If
+            If LastVersion < 434 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "(｡•̀ᴗ-)✧ 修复 版本列表图标加载失败 升级后旧程序集名图标路径已自动归一化"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "(๑•̀ㅂ•́)و✧ 修复 高分屏250%缩放时启动与关闭动画只推进1到2帧 关闭卡顿约1秒"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "(´･ω･`) 修复 设置自定义背景图片或视频壁纸后启动与点击明显卡顿 背景模糊改为一次性预渲染 视频背景铺满内容区 切换静态壁纸时自动关闭视频 不再出现上下两截画面"))
@@ -21,12 +32,12 @@ Public Class FormMain
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "( •̀ ω •́ )✧ 优化 毛玻璃底图重写为一张缓存的模糊位图 去掉折射 色散 镜面高光与鼠标柔光等逐帧重绘装饰 滚动与拖动窗口不再掉帧"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ 新增 可关闭启动器启动时的窗口展开动画"))
             End If
-            If LastVersion < 433 Then 
+            If LastVersion < 433 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "修复：空闲时每隔几分钟会自动弹出用户账户控制（UAC）提示，已取消后台自动内存优化"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "修复：高分屏（250% 缩放）下启动后只剩任务栏图标、主界面显示不出来"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "调整：更新源迁移到新的 PCL-FE 仓库"))
             End If
-            If LastVersion < 432 Then 
+            If LastVersion < 432 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "更名：启动器应遵循PCL开源协议更名为 Plain Craft Launcher Fork Enhanced 简称 PCL  FE"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "图标：换用新的蓝色六边形图标 窗口 任务栏与关于页头像统一"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "合规：关于页首位署名原作者龙腾猫跃 并加入赞助原作者入口"))
@@ -35,20 +46,20 @@ Public Class FormMain
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "更新：检查更新时先测速 由你选择最快的下载源"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "整合包：导入整合包自动创建实例 不再需要手动新建文件夹"))
             End If
-            If LastVersion < 431 Then 
+            If LastVersion < 431 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "修复：版本选择页无法显示版本卡片、导入压缩包时报「无法创建未知类型 MyCard」"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "修复：更新后启动时窗口变暗且无法点击，更新日志弹窗不再卡住界面"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "联机：修正房间码解析方向，加入房间可能已恢复，需要双方都更新到 1.3.2"))
             End If
-            If LastVersion < 429 Then 
+            If LastVersion < 429 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "修复：更新下载进度窗口无法最小化，现在可最小化到任务栏并在后台继续下载"))
             End If
-            If LastVersion < 428 Then 
+            If LastVersion < 428 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "调整：内存优化改为实验性功能，执行前会二次确认，并提示可能造成的读盘变慢"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：内存优化会同时清理系统备用内存与文件缓存，释放效果更明显"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "修复：启动器放在中文、空格或含特殊符号的目录时，自动更新会提示「Windows 找不到文件」"))
             End If
-            If LastVersion < 427 Then 
+            If LastVersion < 427 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：更新流程加入下载进度条，实时显示下载源、速度与已完成大小"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：首次启动时可选择简洁版或毛玻璃版界面，之后可在 设置 → 个性化 中随时切换"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "新增：版本设置 → 内容管理，显示截图、资源包、光影包、投影原理图的数量与大小，并可一键打开文件夹"))
@@ -56,7 +67,7 @@ Public Class FormMain
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：更新并自动重启后，启动器窗口可能不显示（仅任务栏存在条目）的问题"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：陶瓦联机创建房间前检查游戏是否已启动"))
             End If
-            If LastVersion < 419 Then 
+            If LastVersion < 419 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "调整：为保持便捷开箱即用（无需安装），移除了内置动态壁纸，可前往作者群下载"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：视频壁纸选择改用启动器同款界面，并补上打开与关闭动画"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：设置 → 启动 中的存档同步，可自动检测官方版 PCL2 的存档并复制到当前游戏文件夹（同名存档不会被覆盖）"))
@@ -71,28 +82,28 @@ Public Class FormMain
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：启动器占用 UDP 4445 抢走陶瓦的局域网广播，导致房主房间建好却没有端口、客人必然连接失败"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：视频壁纸选择窗口与启动器风格不一致、关闭时没有过渡动画"))
             End If
-            If LastVersion < 415 Then 
+            If LastVersion < 415 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：恢复 MC 版本下载、整合包安装与联机入口"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "新增：解锁全部主题配色与自定义主题"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "优化：为设置更新添加部分黑名单"))
             End If
-            If LastVersion < 413 Then 
+            If LastVersion < 413 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "删除：为遵守相关法律法规，PCL 不再提供 MC 下载功能，非常抱歉 qwq……"))
             End If
-            If LastVersion < 411 Then 
+            If LastVersion < 411 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：允许修改、添加、移除、更新已安装版本的各个组件，可从版本设置中进入"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：启动游戏时允许按 Esc 取消"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：允许复制主页的启动日志中的内容"))
                 FeatureCount += 19
                 BugCount += 26
             End If
-            If LastVersion < 408 Then 
+            If LastVersion < 408 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：版本设置中，添加打开截图文件夹的快捷方式"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：导出整合包时，可以勾选导出光影设置文件"))
                 FeatureCount += 23
                 BugCount += 28
             End If
-            If LastVersion < 406 Then 
+            If LastVersion < 406 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：重做 Java 管理与相关设置，允许调整 Java 优先级、指定 Java 版本范围等"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：导出整合包时允许自动导出版本文件夹中的 Java"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：重做弹出提示的样式以及动画，以更符合现代 UI 审美"))
@@ -100,31 +111,31 @@ Public Class FormMain
                 FeatureCount += 35
                 BugCount += 17
             End If
-            If LastVersion < 404 Then 
+            If LastVersion < 404 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：Windows 7 无法正常联网"))
                 FeatureCount += 1
                 BugCount += 2
             End If
-            If LastVersion < 402 Then 
+            If LastVersion < 402 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：升级框架到 .NET Framework 4.8"))
                 FeatureCount += 35
                 BugCount += 21
             End If
-            If LastVersion < 398 Then 
+            If LastVersion < 398 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：下载游戏、整合包的稳定性"))
                 FeatureCount += 1
                 BugCount += 5
             End If
-            If LastVersion < 391 Then 
+            If LastVersion < 391 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：会为部分 Forge / NeoForge 选择不支持的 Java"))
                 BugCount += 4
             End If
-            If LastVersion < 389 Then 
+            If LastVersion < 389 Then
                 If LastVersion = 387 Then FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：无法使用 Java 25+ 启动 Forge"))
                 FeatureCount += 4
                 BugCount += 3
             End If
-            If LastVersion < 387 Then 
+            If LastVersion < 387 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：降低 Minecraft 的内存占用"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：Minecraft 使用 Java 25+ 时的一个性能问题"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：无法下载 NeoForge 26.1"))
@@ -135,7 +146,7 @@ Public Class FormMain
                 FeatureCount += 24
                 BugCount += 19
             End If
-            If LastVersion < 383 Then 
+            If LastVersion < 383 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：部分关键词搜不到资源，特别是中文 Mod 搜索经常没有结果"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：下载可能完全卡住，或是下载进度反复回退"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "新增：内存管理设置，可以选择 G1GC、ZGC 或分代 ZGC"))
@@ -143,11 +154,11 @@ Public Class FormMain
                 FeatureCount += 15
                 BugCount += 16
             End If
-            If LastVersion < 381 Then 
+            If LastVersion < 381 Then
                 FeatureCount += 3
                 BugCount += 13
             End If
-            If LastVersion < 379 Then 
+            If LastVersion < 379 Then
                 If LastVersion >= 376 Then
                     FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "删除：暂时隐藏联机入口……不过只是暂时关闭，它还会回来的！"))
                 End If
@@ -157,44 +168,40 @@ Public Class FormMain
                 FeatureCount += 33
                 BugCount += 29
             End If
-            If LastVersion < 376 Then 
-                
+            If LastVersion < 376 Then
+
                 FeatureCount += 32
                 BugCount += 21
             End If
         Else
-            
-            
-            
-            
-            
-            If LastVersion < 416 Then 
+
+            If LastVersion < 416 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：恢复 MC 版本下载、整合包安装与联机入口"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "新增：解锁全部主题配色与自定义主题"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "优化：为设置更新添加部分黑名单"))
             End If
-            If LastVersion < 414 Then 
+            If LastVersion < 414 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "删除：为遵守相关法律法规，PCL 不再提供 MC 下载功能，非常抱歉 qwq……"))
             End If
-            If LastVersion < 412 Then 
+            If LastVersion < 412 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：允许修改、添加、移除、更新已安装版本的各个组件，可从版本设置中进入"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：启动游戏时允许按 Esc 取消"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：允许复制主页的启动日志中的内容"))
                 FeatureCount += 19
                 BugCount += 26
             End If
-            If LastVersion < 410 Then 
+            If LastVersion < 410 Then
                 If LastVersion = 409 Then FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：更新 Mod 时可能更新成另一个 Mod 加载器的版本"))
                 FeatureCount += 2
                 BugCount += 6
             End If
-            If LastVersion < 409 Then 
+            If LastVersion < 409 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：版本设置中，添加打开截图文件夹的快捷方式"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：导出整合包时，可以勾选导出光影设置文件"))
                 FeatureCount += 21
                 BugCount += 22
             End If
-            If LastVersion < 407 Then 
+            If LastVersion < 407 Then
                 If LastVersion = 405 Then
                     FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：使用部分主页预设时崩溃"))
                     FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：无法删除部分文件夹"))
@@ -204,7 +211,7 @@ Public Class FormMain
                 End If
                 FeatureCount += 2
             End If
-            If LastVersion < 405 Then 
+            If LastVersion < 405 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：重做 Java 管理与相关设置，允许调整 Java 优先级、指定 Java 版本范围等"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：导出整合包时允许自动导出版本文件夹中的 Java"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：重做弹出提示的样式以及动画，以更符合现代 UI 审美"))
@@ -212,49 +219,49 @@ Public Class FormMain
                 FeatureCount += 35
                 BugCount += 17
             End If
-            If LastVersion < 403 Then 
+            If LastVersion < 403 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：Windows 7 无法正常联网"))
                 FeatureCount += 1
                 BugCount += 2
             End If
-            If LastVersion < 401 Then 
+            If LastVersion < 401 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：可能无法更换披风"))
                 FeatureCount += 8
                 BugCount += 6
             End If
-            If LastVersion < 399 Then 
+            If LastVersion < 399 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：升级框架到 .NET Framework 4.8"))
                 FeatureCount += 28
                 BugCount += 19
             End If
-            If LastVersion < 397 Then 
+            If LastVersion < 397 Then
                 If LastVersion >= 393 AndAlso LastVersion < 397 Then FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：无法使用自定义隐藏主题"))
             End If
-            If LastVersion < 395 Then 
+            If LastVersion < 395 Then
                 If LastVersion = 393 Then FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：部分个性化功能失效"))
             End If
-            If LastVersion < 393 Then 
+            If LastVersion < 393 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：允许永久关闭启动页面的快照版提示"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：下载游戏、整合包的稳定性"))
                 FeatureCount += 1
                 BugCount += 5
             End If
-            If LastVersion < 390 Then 
+            If LastVersion < 390 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：会为部分 Forge / NeoForge 选择不支持的 Java"))
                 BugCount += 4
             End If
-            If LastVersion < 388 Then 
+            If LastVersion < 388 Then
                 If LastVersion = 386 Then FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：无法使用 Java 25+ 启动 Forge"))
                 FeatureCount += 4
                 BugCount += 3
             End If
-            If LastVersion < 386 Then 
+            If LastVersion < 386 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：Minecraft 使用 Java 25+ 时的一个性能问题"))
                 If LastVersion = 384 OrElse LastVersion = 385 Then FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：无法正常重命名游戏版本"))
                 If LastVersion = 385 Then FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：无法显示 Modrinth 整合包的版本列表"))
                 BugCount += 1
             End If
-            If LastVersion < 385 Then 
+            If LastVersion < 385 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：无法下载 NeoForge 26.1"))
                 If LastVersion = 384 Then
                     FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：下载可能失败，提示任务管理刷新线程出错"))
@@ -264,7 +271,7 @@ Public Class FormMain
                 FeatureCount += 3
                 BugCount += 6
             End If
-            If LastVersion < 384 Then 
+            If LastVersion < 384 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：降低 Minecraft 的内存占用"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：部分关键词搜不到资源，特别是中文 Mod 搜索经常没有结果"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：老版本 Windows 无法启动游戏"))
@@ -273,24 +280,24 @@ Public Class FormMain
                 FeatureCount += 21
                 BugCount += 14
             End If
-            If LastVersion < 382 Then 
+            If LastVersion < 382 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：下载可能完全卡住，或是下载进度反复回退"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "新增：内存管理设置，可以选择 G1GC、ZGC 或分代 ZGC"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "优化：来自 Modrinth 的文件下载速度"))
                 FeatureCount += 15
                 BugCount += 16
             End If
-            If LastVersion < 380 Then 
+            If LastVersion < 380 Then
                 FeatureCount += 3
                 BugCount += 13
             End If
-            If LastVersion < 378 Then 
+            If LastVersion < 378 Then
                 If LastVersion >= 377 Then
                     FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：在版本列表中存在 OptiFine 时可能无法加载版本列表"))
                     BugCount += 2
                 End If
             End If
-            If LastVersion < 377 Then 
+            If LastVersion < 377 Then
                 If LastVersion >= 373 Then
                     FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "删除：暂时隐藏联机入口……不过只是暂时关闭，它还会回来的！"))
                 End If
@@ -300,36 +307,27 @@ Public Class FormMain
                 FeatureCount += 33
                 BugCount += 29
             End If
-            If LastVersion < 375 Then 
-                
-                
-                
-                
+            If LastVersion < 375 Then
+
                 FeatureCount += 16
                 BugCount += 4
             End If
-            If LastVersion < 374 Then 
-                
-                
-                
-                
-                
-                
-                
+            If LastVersion < 374 Then
+
                 FeatureCount += 9
                 BugCount += 7
             End If
-            If LastVersion < 373 Then 
-                
+            If LastVersion < 373 Then
+
                 FeatureCount += 7
                 BugCount += 10
             End If
         End If
-        
+
         Dim ContentList As New List(Of String)
         Dim SortedFeatures = FeatureList.OrderByDescending(Function(f) f.Key).ToList
         If Not SortedFeatures.Any() AndAlso FeatureCount = 0 AndAlso BugCount = 0 Then ContentList.Add("没有更新日志……")
-        For i = 0 To Math.Min(14, SortedFeatures.Count - 1) 
+        For i = 0 To Math.Min(14, SortedFeatures.Count - 1)
             ContentList.Add(CleanUpdateLine(SortedFeatures(i).Value))
         Next
         If SortedFeatures.Count > 15 Then FeatureCount += SortedFeatures.Count - 15
@@ -340,10 +338,9 @@ Public Class FormMain
                 "详见完整更新日志"))
         End If
         Dim Content As String = "· " & ContentList.Join(vbCrLf & "· ")
-        
+
         Content &= vbCrLf & vbCrLf & "注意：PCL  FE 是第三方基于 PCL2 开发的非官方分支 并非 PCL2 官方发布 请注意辨别"
-        
-        
+
         Dim ShowLog As Action =
             Sub()
                 If MyMsgBox(Content, "PCL  FE 已更新至 " & VersionBaseName, "确定", "完整更新日志") = 2 Then
@@ -359,7 +356,7 @@ Public Class FormMain
             End If
         End Sub)
     End Sub
-    
+
     Private Shared Function CleanUpdateLine(Text As String) As String
         Dim Result As String = Text.Replace("，", " ").Replace(",", " ").Replace("。", "").Replace("；", " ").Replace("：", " ")
         While Result.Contains("  ")
@@ -368,20 +365,16 @@ Public Class FormMain
         Return Result.Trim()
     End Function
 
-    
-    
-    
-    
     Private IsShowAnimationStarted As Boolean = False
     Private Sub FormMain_ContentRendered(sender As Object, e As EventArgs)
         RemoveHandler ContentRendered, AddressOf FormMain_ContentRendered
-        
+
         Dispatcher.BeginInvoke(New Action(AddressOf ShowWindowAnimation), Windows.Threading.DispatcherPriority.Background)
     End Sub
     Private Sub ShowWindowAnimation()
         If IsShowAnimationStarted Then Return
         IsShowAnimationStarted = True
-        
+
         If Not Settings.Get(Of Boolean)("UiStartAnimation") Then
             Dim TargetOpacity As Double = Settings.Get(Of Integer)("UiLauncherTransparent") / 1000 + 0.4
             TransformPos.Y = 0
@@ -389,6 +382,7 @@ Public Class FormMain
             Opacity = TargetOpacity
             PanBack.RenderTransform = Nothing
             FinishWindowLoad()
+            AniControlEnabled -= 1
             Logger.Info($"已关闭启动动画，DPI：{DPI}，窗口 {Math.Round(ActualWidth)}x{Math.Round(ActualHeight)} DIP")
             Return
         End If
@@ -413,7 +407,7 @@ Public Class FormMain
                 Logger.Info($"启动动画用时：{GetTimeMs() - StartTick} ms（设计 700 ms）")
             End Sub, , True)
         }, "Form Show")
-        
+
         RunInNewThread(
         Sub()
             Thread.Sleep(1500)
@@ -429,38 +423,34 @@ Public Class FormMain
         End Sub, "启动动画监视")
     End Sub
 
-    
     Private IsWindowLoadFinished As Boolean = False
-    
-    
-    
-    
+
     Private Sub FinishWindowLoad()
         If IsWindowLoadFinished Then Return
         IsWindowLoadFinished = True
         ModGlass.GlassReady = True
         ModGlass.GlassInvalidate()
-        
+
         ModGlass.GlassWatchWallpaper(Sub() RefreshUiStyle(True))
         RefreshUiStyle()
         ScheduleBackgroundBlurCache()
     End Sub
     Public Sub New()
         ApplicationStartTick = GetTimeMs()
-        
+
         FrmMain = Me
         FrmLaunchLeft = New PageLaunchLeft
         FrmLaunchRight = New PageLaunchRight
-        
+
         Dim LastVersion As Integer = Settings.Get(Of Integer)("SystemLastVersionReg")
         If LastVersion < VersionCode Then
-            
+
             UpgradeSub(LastVersion)
         ElseIf LastVersion > VersionCode Then
-            
+
             DowngradeSub(LastVersion)
         End If
-        
+
         If Not Settings.HasSaved("LaunchArgumentIndieV2") Then
             If Settings.HasSaved("LaunchArgumentIndie") Then
                 Logger.Info("从老 PCL 迁移版本隔离")
@@ -473,25 +463,25 @@ Public Class FormMain
                 Settings.Set("LaunchArgumentIndieV2", Settings.GetDefault("LaunchArgumentIndieV2"))
             End If
         End If
-        
+
         ThemeCheckAll(False)
         ThemeRefresh(Settings.Get(Of Integer)("UiLauncherTheme"))
-        
+
         [AddHandler](DragDrop.DragEnterEvent, New DragEventHandler(AddressOf HandleDrag), handledEventsToo:=True)
         [AddHandler](DragDrop.DragOverEvent, New DragEventHandler(AddressOf HandleDrag), handledEventsToo:=True)
-        
+
         InitializeComponent()
         Opacity = 0
-        
+
         Try
             Height = Settings.Get(Of Integer)("WindowHeight")
             Width = Settings.Get(Of Integer)("WindowWidth")
-        Catch ex As Exception 
+        Catch ex As Exception
             Logger.Error(ex, "读取窗口默认大小失败", LogBehavior.Toast)
             Height = MinHeight + 100
             Width = MinWidth + 100
         End Try
-        
+
         If WindowsUtils.HasAdminRole() Then
             Static Helper As New DragHelper
             AddHandler SourceInitialized,
@@ -503,7 +493,7 @@ Public Class FormMain
             AddHandler Closing, Sub() Helper.RemoveDragHook()
             AddHandler Helper.DragDrop, Sub() FileDrag(Helper.DropFilePaths)
         End If
-        
+
         If Not IsNothing(FrmLaunchLeft.Parent) Then FrmLaunchLeft.SetValue(ContentPresenter.ContentProperty, Nothing)
         If Not IsNothing(FrmLaunchRight.Parent) Then FrmLaunchRight.SetValue(ContentPresenter.ContentProperty, Nothing)
         PanMainLeft.Child = FrmLaunchLeft
@@ -511,33 +501,36 @@ Public Class FormMain
         PanMainRight.Child = FrmLaunchRight
         PageRight = FrmLaunchRight
         FrmLaunchRight.PageState = MyPageRight.PageStates.ContentStay
-        
+
         If BuildType = BuildTypes.Debug Then Hint("[开发者模式] PCL 正以开发者模式运行，这可能会造成严重的性能下降，请务必立即向开发者反馈此问题！", HintType.Red)
         If ModeDebug Then Hint("[调试模式] PCL 正以调试模式运行，这可能会导致性能下降，若无必要请不要开启！")
-        
-        McFolderListLoader.Start(0) 
+
+        McFolderListLoader.Start(0)
 
         Logger.Info($"第二阶段加载用时：{GetTimeMs() - ApplicationStartTick} ms")
     End Sub
     Private Sub FormMain_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
         ApplicationStartTick = GetTimeMs()
         Handle = New WindowInteropHelper(Me).Handle
-        
+
         UpdateBackgroundAndTitleBar()
-        
+        FontFamilyRefresh()
+        FontColorRefresh()
+        FontSizeRefresh()
+
         If Settings.Get(Of Integer)("UiUiStyle") = 1 Then ModGlass.GlassRefreshFill(RectLeftBackground)
         PageSetupUI.HiddenRefresh()
         PageSetupUI.BackgroundRefresh(False, True)
         MusicRefreshPlay(False, True)
-        
+
         VideoBackgroundUpdate()
-        
+
         BtnExtraDownload.ShowCheck = AddressOf BtnExtraDownload_ShowCheck
         BtnExtraBack.ShowCheck = AddressOf BtnExtraBack_ShowCheck
         BtnExtraApril.ShowCheck = AddressOf BtnExtraApril_ShowCheck
         BtnExtraShutdown.ShowCheck = AddressOf BtnExtraShutdown_ShowCheck
         BtnExtraApril.ShowRefresh()
-        
+
         Dim Resizer As New MyResizer(Me)
         Resizer.addResizerDown(ResizerB)
         Resizer.addResizerLeft(ResizerL)
@@ -547,18 +540,17 @@ Public Class FormMain
         Resizer.addResizerRightDown(ResizerRB)
         Resizer.addResizerRightUp(ResizerRT)
         Resizer.addResizerUp(ResizerT)
-        
+
         If RandomInteger(1, 1000) = 233 Then
             ShapeTitleLogo.Data = New GeometryConverter().ConvertFromString("M26,29 v-25 h6 a7,7 180 0 1 0,14 h-6 M83,6.5 a10,11.5 180 1 0 0,18 M48,2.5 v24.5 h13.5")
         End If
-        
+
         ThemeRefreshMain()
         WindowOpacityRefresh(Nothing)
         TitleBarHeightRefresh(Nothing)
-        
-        
+
         Topmost = Settings.Get(Of Boolean)("UiWindowTopmost")
-        
+
         Dim WorkArea As Rect = SystemParameters.WorkArea
         Top = Math.Max(WorkArea.Top, Math.Min(WorkArea.Top + (WorkArea.Height - Height) / 2, WorkArea.Bottom - Height))
         Left = Math.Max(WorkArea.Left, Math.Min(WorkArea.Left + (WorkArea.Width - Width) / 2, WorkArea.Right - Width))
@@ -566,9 +558,9 @@ Public Class FormMain
         ShowWindowToTop()
         Dim HwndSource As Interop.HwndSource = PresentationSource.FromVisual(Me)
         HwndSource.AddHook(New Interop.HwndSourceHook(AddressOf WndProc))
-        
+
         AddHandler ContentRendered, AddressOf FormMain_ContentRendered
-        
+
         RunInNewThread(
         Sub()
             Thread.Sleep(1200)
@@ -578,20 +570,20 @@ Public Class FormMain
                 ShowWindowAnimation()
             End Sub)
         End Sub, "启动动画兜底")
-        
+
         AniStart()
         TimerMainStart()
-        
+
         If Not IsVisible Then Visibility = Visibility.Visible
         If WindowState = WindowState.Minimized Then WindowState = WindowState.Normal
-        
+
         RunInNewThread(
         Sub()
             Thread.Sleep(600)
             RunInUi(
             Sub()
                 Try
-                    
+
                     If Opacity <= 0.05 Then
                         Opacity = Settings.Get(Of Integer)("UiLauncherTransparent") / 1000 + 0.4
                         PanBack.RenderTransform = Nothing
@@ -609,7 +601,7 @@ Public Class FormMain
                 End Try
             End Sub)
         End Sub, "强制显示窗口")
-        
+
         RunInNewThread(
         Sub()
             Thread.Sleep(1200)
@@ -630,14 +622,13 @@ Public Class FormMain
                 End Try
             End Sub)
         End Sub, "界面风格引导")
-        
+
         CheckUpdateAtStartup()
-        
+
         ModOfficialSaveSync.StartAutoCheck()
-        
+
         ModFirewall.CheckAtStartup()
-        
-        
+
         If Not String.IsNullOrEmpty(Environment.GetEnvironmentVariable("PCL_DEBUG_PAGE")) Then Settings.Set("SystemEulaVersion", 2)
         Select Case Environment.GetEnvironmentVariable("PCL_DEBUG_PAGE")
             Case "test"
@@ -691,36 +682,35 @@ Public Class FormMain
                                    RunInUi(Sub() PageChange(PageType.Other, PageSubType.OtherFeedback))
                                End Sub, "调试跳页")
         End Select
-        
+
         RunInNewThread(
         Sub()
-            
-            
+
             Settings.Set("SystemEulaVersion", 2)
-            
+
             Try
-                JavaInit() 
+                JavaInit()
                 Thread.Sleep(100)
-                DlClientListMojangLoader.Start(1) 
+                DlClientListMojangLoader.Start(1)
                 RunCountSub()
                 ServerLoader.Start()
                 RunInNewThread(AddressOf TryClearTaskTemp, "TryClearTaskTemp", ThreadPriority.BelowNormal)
             Catch ex As Exception
                 Logger.Error(ex, "初始化加载池运行失败")
             End Try
-            
+
             Try
                 FileUtils.Delete(Paths.Base & "PCL\Plain Craft Launcher Pro.exe")
             Catch ex As Exception
                 Logger.Warn(ex, "清理自动更新文件失败")
             End Try
-            
+
             Telemetry("启动")
         End Sub, "初始化", ThreadPriority.Lowest)
 
         Logger.Info($"第三阶段加载用时：{GetTimeMs() - ApplicationStartTick} ms")
     End Sub
-    
+
     Private Sub RunCountSub()
         Settings.Set("SystemCount", Settings.Get(Of Integer)("SystemCount") + 1)
         If BuildType = BuildTypes.Snapshot Then
@@ -738,11 +728,11 @@ Public Class FormMain
             End If
         End If
     End Sub
-    
+
     Private Sub UpgradeSub(LastVersionCode As Integer)
         Logger.Info($"版本号从 {LastVersionCode} 升高到 {VersionCode}")
         Settings.Set("SystemLastVersionReg", VersionCode)
-        
+
         Dim HighestVersionCode As Integer
         Const SettingKey = If(BuildType = BuildTypes.Snapshot, "SystemHighestAlphaVersionReg", "SystemHighestBetaVersionReg")
         HighestVersionCode = Settings.Get(Of Integer)(SettingKey)
@@ -750,16 +740,16 @@ Public Class FormMain
             Settings.Set(SettingKey, VersionCode)
             Logger.Info($"最高版本号从 {HighestVersionCode} 升高到 {VersionCode}")
         End If
-        
+
         If Settings.Get(Of Integer)("LaunchArgumentWindowType") = 5 Then Settings.Set("LaunchArgumentWindowType", 1)
-        
+
         If HighestVersionCode <= 207 Then
             Dim UnlockedTheme As New List(Of String) From {"2"}
             UnlockedTheme.AddRange(New List(Of String)(Settings.Get(Of String)("UiLauncherThemeHide").ToString.Split("|")))
             UnlockedTheme.AddRange(New List(Of String)(Settings.Get(Of String)("UiLauncherThemeHide2").ToString.Split("|")))
             Settings.Set("UiLauncherThemeHide2", UnlockedTheme.Distinct.ToList.Join("|"c))
         End If
-        
+
         If LastVersionCode <= 115 AndAlso Settings.Get(Of String)("UiLauncherThemeHide2").ToString.Split("|").Contains("13") Then
             Dim UnlockedTheme As New List(Of String)(Settings.Get(Of String)("UiLauncherThemeHide2").ToString.Split("|"))
             UnlockedTheme.Remove("13")
@@ -767,7 +757,7 @@ Public Class FormMain
             MyMsgBox("由于新版 PCL 修改了欧皇彩的解锁方式，你需要重新解锁欧皇彩。" & vbCrLf &
                      "多谢各位的理解啦！", "重新解锁提醒")
         End If
-        
+
         If LastVersionCode <= 152 AndAlso Settings.Get(Of String)("UiLauncherThemeHide2").ToString.Split("|").Contains("12") Then
             Dim UnlockedTheme As New List(Of String)(Settings.Get(Of String)("UiLauncherThemeHide2").ToString.Split("|"))
             UnlockedTheme.Remove("12")
@@ -775,7 +765,7 @@ Public Class FormMain
             MyMsgBox("由于新版 PCL 修改了滑稽彩的解锁方式，你需要重新解锁滑稽彩。" & vbCrLf &
                      "多谢各位的理解啦！", "重新解锁提醒")
         End If
-        
+
         If LastVersionCode <= 161 AndAlso FileUtils.Exists(Paths.Base & "PCL\CustomSkin.png") AndAlso Not FileUtils.Exists(Paths.AppDataThenName & "CustomSkin.png") Then
             FileUtils.Copy(Paths.Base & "PCL\CustomSkin.png", Paths.AppDataThenName & "CustomSkin.png")
             Logger.Info("已移动离线自定义皮肤 (162)")
@@ -784,12 +774,12 @@ Public Class FormMain
             FileUtils.Copy(PathTemp & "CustomSkin.png", Paths.AppDataThenName & "CustomSkin.png")
             Logger.Info("已移动离线自定义皮肤 (264)")
         End If
-        
+
         If LastVersionCode <= 205 Then
             Settings.Set("UiHiddenOtherHelp", False)
             Logger.Info("已解除帮助页面的隐藏")
         End If
-        
+
         If Not Settings.Get(Of Boolean)("CacheMsV2Migrated") Then
             Settings.Set("CacheMsV2Migrated", True)
             Settings.Set("CacheMsV2OAuthRefresh", Settings.Get(Of String)("CacheMsOAuthRefresh"))
@@ -799,18 +789,18 @@ Public Class FormMain
             Settings.Set("CacheMsV2Name", Settings.Get(Of String)("CacheMsName"))
             Logger.Info("已从老版本迁移微软登录结果")
         End If
-        
+
         If Settings.HasSaved("ToolDownloadTranslate") AndAlso Not Settings.HasSaved("ToolDownloadTranslateV2") Then
             Settings.Set("ToolDownloadTranslateV2", Settings.Get(Of Integer)("ToolDownloadTranslate") + 1)
             Logger.Info("已从老版本迁移 Mod 命名设置")
         End If
-        
+
         If LastVersionCode <= 381 AndAlso Settings.HasSaved("LaunchAdvanceJvm") AndAlso
            Settings.Get(Of String)("LaunchAdvanceJvm").ToString.Replace("-XX:+UseG1GC ", "").Replace("-XX:-UseAdaptiveSizePolicy ", "").Trim = Settings.GetDefault("LaunchAdvanceJvm") Then
             Settings.Reset("LaunchAdvanceJvm")
             Logger.Info("已重置 JVM 参数设置")
         End If
-        
+
         If LastVersionCode <= 0 Then Return
         If HighestVersionCode >= VersionCode Then Return
         ShowUpdateLog(HighestVersionCode)
@@ -824,17 +814,13 @@ Public Class FormMain
 
 #Region "自定义窗口"
 
-    
     Private Sub FormMain_Closing(sender As Object, e As CancelEventArgs) Handles Me.Closing
         EndProgram(True)
         e.Cancel = True
     End Sub
-    
-    
-    
-    
+
     Public Sub EndProgram(SendWarning As Boolean)
-        
+
         If HasDownloadingTask() Then
             If SendWarning AndAlso MyMsgBox("还有下载任务尚未完成，是否确定退出？", "提示", "确定", "取消") = 2 Then Return
             RunInNewThread(
@@ -845,9 +831,9 @@ Public Class FormMain
                 Next
             End Sub, "强行停止下载任务")
         End If
-        
+
         If FrmLinkMain?.TryExit(Not SendWarning, True) Then Return
-        
+
         RunInUiWait(
         Sub()
             IsHitTestVisible = False
@@ -892,7 +878,7 @@ Public Class FormMain
                 IsLogShown = True
                 StartProcess(Paths.Base & "PCL\Log1.txt")
             End If
-            Thread.Sleep(500) 
+            Thread.Sleep(500)
         End If
         Logger.Info($"程序已退出，返回值：{ReturnCode}")
         ConfigUtils.SaveAll()
@@ -904,16 +890,11 @@ Public Class FormMain
         EndProgram(True)
     End Sub
 
-    
     Private Sub FormDragMove(sender As Object, e As MouseButtonEventArgs) Handles PanTitle.MouseLeftButtonDown, PanMsg.MouseLeftButtonDown
         On Error Resume Next
         If sender.IsMouseDirectlyOver Then DragMove()
     End Sub
 
-    
-    
-    
-    
     Public IsSizeSaveable As Boolean = False
     Private Sub FormMain_SizeChanged() Handles Me.SizeChanged, Me.Loaded
         If IsSizeSaveable Then
@@ -921,7 +902,7 @@ Public Class FormMain
             Settings.Set("WindowWidth", Width)
         End If
         RectForm.Rect = New Rect(0, 0, BorderForm.ActualWidth, BorderForm.ActualHeight)
-        
+
         Dim Radius As Double = Settings.Get(Of Integer)("UiWindowRadius")
         If RectForm.RadiusX <> Radius Then
             RectForm.RadiusX = Radius
@@ -931,15 +912,13 @@ Public Class FormMain
         PanForm.Height = BorderForm.ActualHeight + 0.001
         PanMain.Width = PanForm.Width
         PanMain.Height = Math.Max(0, PanForm.Height - PanTitle.ActualHeight)
-        
+
         ScheduleBackgroundBlurCache()
         ScheduleGlassRealign()
         VideoBackFitLayout()
-        If WindowState = WindowState.Maximized Then WindowState = WindowState.Normal 
+        If WindowState = WindowState.Maximized Then WindowState = WindowState.Normal
     End Sub
-    
-    
-    
+
     Public Shared Sub WindowRadiusRefresh(Value As Object)
         If FrmMain Is Nothing OrElse Not FrmMain.IsLoaded Then Return
         Dim Radius As Double = Settings.Get(Of Integer)("UiWindowRadius")
@@ -947,24 +926,18 @@ Public Class FormMain
         FrmMain.RectForm.RadiusY = Radius
         FrmMain.RectForm.Rect = New Rect(0, 0, FrmMain.BorderForm.ActualWidth, FrmMain.BorderForm.ActualHeight)
     End Sub
-    
-    
-    
+
     Public Shared Sub WindowTopmostRefresh(Value As Object)
         If FrmMain Is Nothing Then Return
         FrmMain.Topmost = CBool(Value)
     End Sub
-    
-    
-    
+
     Public Shared Sub WindowOpacityRefresh(Value As Object)
         If FrmMain Is Nothing Then Return
         Dim OpacityValue As Integer = Settings.Get(Of Integer)("UiWindowOpacity")
         FrmMain.PanBack.Opacity = If(OpacityValue <= 0 OrElse OpacityValue >= 100, 1, OpacityValue / 100)
     End Sub
-    
-    
-    
+
     Public Shared Sub TitleBarHeightRefresh(Value As Object)
         If FrmMain Is Nothing Then Return
         Dim HeightValue As Integer = Settings.Get(Of Integer)("UiTitleBarHeight")
@@ -972,14 +945,10 @@ Public Class FormMain
         If FrmMain.IsLoaded Then FrmMain.FormMain_SizeChanged()
     End Sub
 
-
-    
     Private Sub BtnTitleMin_Click() Handles BtnTitleMin.Click
         WindowState = WindowState.Minimized
     End Sub
 
-    
-    
     Private _bgSource As ImageSource
     Private _bgCached As ImageSource
     Private _bgBlurRadius As Double = 33
@@ -987,14 +956,11 @@ Public Class FormMain
     Private _bgCacheTimer As System.Windows.Threading.DispatcherTimer
     Private _bgCaching As Boolean
 
-    
     Private Sub ApplyBackgroundSuit(Brush As ImageBrush)
         If _bgSource Is Nothing Then Return
         Dim BackgroundType As Integer = Settings.Get(Of Integer)("UiBackgroundSuit")
         If BackgroundType = 0 Then
-            
-            
-            
+
             BackgroundType = 2
         End If
         Brush.Stretch = Stretch.UniformToFill
@@ -1004,50 +970,44 @@ Public Class FormMain
         Brush.AlignmentX = AlignmentX.Center
         Brush.AlignmentY = AlignmentY.Center
         Select Case BackgroundType
-            Case 1 
+            Case 1
                 Brush.Stretch = Stretch.None
-            Case 3 
+            Case 3
                 Brush.Stretch = Stretch.Fill
-            Case 4 
+            Case 4
                 Brush.Stretch = Stretch.None
                 Brush.TileMode = TileMode.Tile
                 Brush.Viewport = New Rect(0, 0, _bgSource.Width, _bgSource.Height)
                 Brush.ViewportUnits = BrushMappingMode.Absolute
 
-            Case 2 
-            Case 5 
+            Case 2
+            Case 5
                 Brush.AlignmentX = AlignmentX.Left
                 Brush.AlignmentY = AlignmentY.Top
-            Case 6 
+            Case 6
                 Brush.AlignmentX = AlignmentX.Right
                 Brush.AlignmentY = AlignmentY.Top
-            Case 7 
+            Case 7
                 Brush.AlignmentX = AlignmentX.Left
                 Brush.AlignmentY = AlignmentY.Bottom
-            Case 8 
+            Case 8
                 Brush.AlignmentX = AlignmentX.Right
                 Brush.AlignmentY = AlignmentY.Bottom
-            Case 9 
+            Case 9
                 Brush.AlignmentX = AlignmentX.Left
                 Brush.AlignmentY = AlignmentY.Center
-            Case 10 
+            Case 10
                 Brush.AlignmentX = AlignmentX.Right
                 Brush.AlignmentY = AlignmentY.Center
-            Case 11 
+            Case 11
                 Brush.AlignmentX = AlignmentX.Center
                 Brush.AlignmentY = AlignmentY.Top
-            Case 12 
+            Case 12
                 Brush.AlignmentX = AlignmentX.Center
                 Brush.AlignmentY = AlignmentY.Bottom
         End Select
     End Sub
 
-    
-    
-    
-    
-    
-    
     Private Sub ApplyBackgroundEffect(BlurRadius As Double)
         ImgBack.Margin = New Thickness(0)
         If BlurRadius <= 1 Then
@@ -1057,12 +1017,11 @@ Public Class FormMain
         End If
     End Sub
 
-    
     Private Sub ScheduleBackgroundBlurCache()
         If _bgSource Is Nothing OrElse ImgBack.Visibility <> Visibility.Visible Then Return
         If _bgBlurRadius <= 1 Then Return
         If IsWindowLoadFinished AndAlso _bgCached Is Nothing Then
-            
+
             BuildBackgroundBlurCache()
             Return
         End If
@@ -1074,19 +1033,16 @@ Public Class FormMain
                     BuildBackgroundBlurCache()
                 End Sub
         End If
-        
+
         _bgCacheTimer.Interval = TimeSpan.FromMilliseconds(If(IsWindowLoadFinished, 160, 1000))
         _bgCacheTimer.Stop()
         _bgCacheTimer.Start()
     End Sub
 
     Private _glassRealignTimer As Windows.Threading.DispatcherTimer = Nothing
-    
-    
-    
-    
+
     Private Sub ScheduleGlassRealign()
-        If Not IsWindowLoadFinished Then Return 
+        If Not IsWindowLoadFinished Then Return
         If _glassRealignTimer Is Nothing Then
             _glassRealignTimer = New Windows.Threading.DispatcherTimer With {.Interval = TimeSpan.FromMilliseconds(180)}
             AddHandler _glassRealignTimer.Tick,
@@ -1105,10 +1061,7 @@ Public Class FormMain
     End Sub
 
     Private _opacityTimer As Windows.Threading.DispatcherTimer = Nothing
-    
-    
-    
-    
+
     Private Sub ScheduleGlassOpacityRefresh()
         If Not IsWindowLoadFinished Then Return
         If _opacityTimer Is Nothing Then
@@ -1128,16 +1081,12 @@ Public Class FormMain
         _opacityTimer.Start()
     End Sub
 
-    
-    
-    
-    
     Private Sub BuildBackgroundBlurCache()
         If _bgCaching OrElse _bgSource Is Nothing Then Return
         If ImgBack.Visibility <> Visibility.Visible Then Return
         If ImgBack.ActualWidth < 64 OrElse ImgBack.ActualHeight < 64 Then Return
         If Not IsWindowLoadFinished Then
-            
+
             If _bgCacheTimer IsNot Nothing Then
                 _bgCacheTimer.Stop()
                 _bgCacheTimer.Interval = TimeSpan.FromMilliseconds(250)
@@ -1147,20 +1096,19 @@ Public Class FormMain
         End If
         _bgCaching = True
         Try
-            
+
             Dim Brush As ImageBrush = TryCast(ImgBack.Background, ImageBrush)
             If Brush Is Nothing Then Return
-            
+
             Brush.ImageSource = _bgSource
             ApplyBackgroundSuit(Brush)
-            
-            
+
             ImgBack.Effect = Nothing
             ImgBack.Margin = New Thickness(0)
             Dim Width As Double = ImgBack.ActualWidth
             Dim Height As Double = ImgBack.ActualHeight
             Dim DpiScale As Double = (DPI / 96) * Math.Min(1.0, 1024.0 / Math.Max(1.0, Width * DPI / 96))
-            
+
             Dim Pad As Double = If(_bgBlurRadius > 1, _bgBlurRadius * 1.8, 0)
             Dim CanvasWidth As Integer = Math.Max(1, CInt(Math.Round((Width + Pad * 2) * DpiScale)))
             Dim CanvasHeight As Integer = Math.Max(1, CInt(Math.Round((Height + Pad * 2) * DpiScale)))
@@ -1168,17 +1116,15 @@ Public Class FormMain
             If _bgBlurRadius > 1 Then
                 Visual.Effect = New Effects.BlurEffect With {.Radius = _bgBlurRadius * DpiScale, .KernelType = Effects.KernelType.Gaussian, .RenderingBias = RenderingBias.Performance}
             End If
-            
-            
-            
+
             Visual.Transform = New TranslateTransform(Pad, Pad)
-            
+
             Using DC As DrawingContext = Visual.RenderOpen()
                 DC.DrawRectangle(Brush, Nothing, New Rect(0, 0, Width, Height))
             End Using
             Dim Bitmap As New RenderTargetBitmap(CanvasWidth, CanvasHeight, 96 * DpiScale, 96 * DpiScale, PixelFormats.Pbgra32)
             Bitmap.Render(Visual)
-            
+
             Dim OffsetX As Integer = Math.Max(0, CInt(Math.Round(Pad * DpiScale)))
             Dim OffsetY As Integer = OffsetX
             Dim CropWidth As Integer = Math.Min(CanvasWidth - OffsetX, Math.Max(1, CInt(Math.Round(Width * DpiScale))))
@@ -1194,7 +1140,7 @@ Public Class FormMain
             Brush.AlignmentX = AlignmentX.Center
             Brush.AlignmentY = AlignmentY.Center
             Logger.Info($"背景模糊已预烘焙：{CanvasWidth}x{CanvasHeight} 像素，裁切 {CropWidth}x{CropHeight}")
-            
+
             ModGlass.GlassInvalidate()
             RefreshUiStyle()
         Catch ex As Exception
@@ -1206,11 +1152,6 @@ Public Class FormMain
         End Try
     End Sub
 
-    
-    
-    
-    
-    
     Public Sub ClearBackgroundCaches()
         Try
             If _bgCacheTimer IsNot Nothing Then _bgCacheTimer.Stop()
@@ -1226,22 +1167,20 @@ Public Class FormMain
         End Try
     End Sub
 
-    
-    Public Shared Sub UpdateBackgroundAndTitleBar(Value) 
+    Public Shared Sub UpdateBackgroundAndTitleBar(Value)
         If FrmMain Is Nothing OrElse Not FrmMain.IsLoaded Then Return
         FrmMain.UpdateBackgroundAndTitleBar()
     End Sub
     Public Sub UpdateBackgroundAndTitleBar()
         Logger.Info("从设置更新背景图片与标题栏样式")
-        
+
         Dim NewOpacity As Double = Settings.Get(Of Integer)("UiBackgroundOpacity") / 1000
         Dim OpacityChanged As Boolean = Math.Abs(ImgBack.Opacity - NewOpacity) > 0.001
         ImgBack.Opacity = NewOpacity
-        
+
         Dim BlurRadius As Double = Settings.Get(Of Integer)("UiBackgroundBlur") + 1
         Dim BackgroundType As Integer = Settings.Get(Of Integer)("UiBackgroundSuit")
-        
-        
+
         Dim ImageChanged As Boolean = False
         Dim BackgroundBrush As ImageBrush = TryCast(ImgBack.Background, ImageBrush)
         If BackgroundBrush IsNot Nothing Then
@@ -1250,7 +1189,7 @@ Public Class FormMain
                 ImageChanged = Source IsNot _bgSource
                 If ImageChanged Then
                     _bgSource = Source
-                    _bgCached = Nothing 
+                    _bgCached = Nothing
                 End If
             End If
         End If
@@ -1259,44 +1198,42 @@ Public Class FormMain
         _bgBlurRadius = BlurRadius
         _bgSuit = BackgroundType
         If NeedRebuild Then
-            
-            
+
             _bgCached = Nothing
-            
+
             If BackgroundBrush IsNot Nothing Then
-                
+
                 If _bgSource IsNot Nothing Then BackgroundBrush.ImageSource = _bgSource
                 ApplyBackgroundSuit(BackgroundBrush)
             End If
-            
+
             ApplyBackgroundEffect(_bgBlurRadius)
-            
+
             ModGlass.GlassInvalidate()
             If _bgBlurRadius <= 1 Then
-                
+
                 RefreshUiStyle(True)
             Else
-                
-                
+
                 ScheduleBackgroundBlurCache()
             End If
         ElseIf OpacityChanged Then
-            
+
             ScheduleGlassOpacityRefresh()
         End If
-        
+
         Dim LogoType As Integer = Settings.Get(Of Integer)("UiLogoType")
         If LogoType = 2 Then LogoType = 1
         Select Case LogoType
-            Case 0 
+            Case 0
                 ShapeTitleLogo.Visibility = Visibility.Collapsed
                 LabTitleLogo.Visibility = Visibility.Collapsed
                 ImageTitleLogo.Visibility = Visibility.Collapsed
-                If Not IsNothing(FrmSetupUI) Then 
+                If Not IsNothing(FrmSetupUI) Then
                     FrmSetupUI.CheckLogoLeft.Visibility = Visibility.Visible
                     FrmSetupUI.PanLogoChange.Visibility = Visibility.Collapsed
                 End If
-            Case 1 
+            Case 1
                 ShapeTitleLogo.Visibility = Visibility.Collapsed
                 LabTitleLogo.Visibility = Visibility.Visible
                 ImageTitleLogo.Visibility = Visibility.Collapsed
@@ -1304,7 +1241,7 @@ Public Class FormMain
                     FrmSetupUI.CheckLogoLeft.Visibility = Visibility.Collapsed
                     FrmSetupUI.PanLogoChange.Visibility = Visibility.Collapsed
                 End If
-            Case 3 
+            Case 3
                 ShapeTitleLogo.Visibility = Visibility.Collapsed
                 LabTitleLogo.Visibility = Visibility.Collapsed
                 ImageTitleLogo.Visibility = Visibility.Visible
@@ -1320,9 +1257,9 @@ Public Class FormMain
                 End Try
         End Select
         FrmSetupUI?.CardLogo.TriggerForceResize()
-        
+
         LabTitleLogo.Text = "PCL  FE"
-        
+
         PanTitleMain.ColumnDefinitions(0).Width = New GridLength(If(Settings.Get(Of Boolean)("UiLogoLeft") AndAlso Settings.Get(Of Integer)("UiLogoType") = 0, 0, 1), GridUnitType.Star)
     End Sub
 
@@ -1330,12 +1267,11 @@ Public Class FormMain
 
 #Region "窗体事件"
 
-    
     Private Sub FormMain_KeyDown(sender As Object, e As KeyEventArgs) Handles Me.KeyDown
         If e.IsRepeat Then Return
-        
+
         If e.SystemKey = Key.LeftAlt OrElse e.SystemKey = Key.RightAlt Then e.Handled = True
-        
+
         If PanMsg.Children.Any Then
             If e.Key = Key.Enter Then
                 CType(PanMsg.Children(0), Object).Btn1_Click()
@@ -1352,11 +1288,6 @@ Public Class FormMain
             Return
         End If
 
-        
-        
-        
-
-        
         If e.Key = Key.Escape Then
             If PageCurrent = FormMain.PageType.Launch AndAlso McLaunchLoader.State = LoadState.Loading Then
                 FrmLaunchLeft.BtnCancel_Click()
@@ -1364,13 +1295,13 @@ Public Class FormMain
             End If
             TriggerPageBack()
         End If
-        
+
         If e.Key = Key.F11 AndAlso PageCurrent = FormMain.PageType.InstanceSelect Then
             FrmSelectRight.ShowHidden = Not FrmSelectRight.ShowHidden
             LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
             Return
         End If
-        
+
         If e.Key = Key.F12 Then
             PageSetupUI.HiddenForceShow = Not PageSetupUI.HiddenForceShow
             If PageSetupUI.HiddenForceShow Then
@@ -1381,13 +1312,13 @@ Public Class FormMain
             PageSetupUI.HiddenRefresh()
             Return
         End If
-        
+
         If e.Key = Key.F5 Then
             If TypeOf PageLeft Is IRefreshable Then CType(PageLeft, IRefreshable).Refresh()
             If TypeOf PageRight Is IRefreshable Then CType(PageRight, IRefreshable).Refresh()
             Return
         End If
-        
+
         If e.Key = Key.Enter AndAlso PageCurrent = FormMain.PageType.Launch Then
             If IsAprilEnabled AndAlso Not IsAprilGiveup Then
                 Hint("木大！")
@@ -1397,8 +1328,8 @@ Public Class FormMain
         End If
     End Sub
     Private Sub FormMain_MouseDown(sender As Object, e As MouseButtonEventArgs) Handles Me.MouseDown
-        
-        If FrmMain.PanMsg.Children.Count > 0 OrElse WaitingMyMsgBox.Any Then Return 
+
+        If FrmMain.PanMsg.Children.Count > 0 OrElse WaitingMyMsgBox.Any Then Return
         If e.ChangedButton = MouseButton.XButton1 OrElse e.ChangedButton = MouseButton.XButton2 Then TriggerPageBack()
     End Sub
 
@@ -1410,33 +1341,32 @@ Public Class FormMain
         End If
     End Sub
 
-    
     Private Sub FormMain_Activated() Handles Me.Activated
-        
+
         Try
             If PageCurrent = PageType.InstanceSetup AndAlso PageCurrentSub = PageSubType.InstanceMod Then
-                
+
                 FrmInstanceMod.ReloadModList()
             ElseIf PageCurrent = PageType.InstanceSetup AndAlso (PageCurrentSub = PageSubType.InstanceSetup OrElse PageCurrentSub = PageSubType.InstanceExport) Then
-                
+
                 PageInstanceLeft.ReloadCurrentJava()
             ElseIf PageCurrent = PageType.InstanceSelect Then
-                
+
                 LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.RunOnUpdated, MaxDepth:=1, ExtraPath:="versions\")
             End If
         Catch ex As Exception
             Logger.Error(ex, "切回窗口时出错")
         End Try
-        
-        If PageLinkMain.LinkState <> PageLinkMain.LinkStates.Waiting Then Return 
-        If PageCurrent = PageType.Link Then Return 
-        Dim Code = ClipboardGetText() : If Code Is Nothing Then Return 
+
+        If PageLinkMain.LinkState <> PageLinkMain.LinkStates.Waiting Then Return
+        If PageCurrent = PageType.Link Then Return
+        Dim Code = ClipboardGetText() : If Code Is Nothing Then Return
         If Settings.Get(Of String)("LinkLastAutoJoinInviteCode") = Code Then Return
-        If PageLinkMain.ValidateCodeFormat(Code) IsNot Nothing Then Return 
+        If PageLinkMain.ValidateCodeFormat(Code) IsNot Nothing Then Return
         Settings.Set("LinkLastAutoJoinInviteCode", Code)
         RunInThread(
         Sub()
-            If MyMsgBox("嘿，是否使用复制的邀请码加入房间？", "加入联机房间", "加入", "取消") = 2 Then Return 
+            If MyMsgBox("嘿，是否使用复制的邀请码加入房间？", "加入联机房间", "加入", "取消") = 2 Then Return
             RunInUi(
             Sub()
                 PageLinkMain.Join(Code)
@@ -1445,18 +1375,17 @@ Public Class FormMain
         End Sub)
     End Sub
 
-    
     Private Sub HandleDrag(sender As Object, e As DragEventArgs)
         Try
             If e.Handled AndAlso (e.Effects <> DragDropEffects.None) Then Return
             e.Handled = True
-            
+
             Static PrevData As IDataObject, PrevEffects As DragDropEffects
             If e.Data Is PrevData Then
                 e.Effects = PrevEffects
                 Return
             End If
-            
+
             e.Effects = DragDropEffects.None
             If e.Data.GetDataPresent(DataFormats.Text) Then
                 Dim Str As String = e.Data.GetData(DataFormats.Text)
@@ -1482,12 +1411,12 @@ Public Class FormMain
         Try
             ShowWindowToTop()
             If e.Data.GetDataPresent(DataFormats.Text) Then
-                
+
                 Try
                     Dim Str As String = e.Data.GetData(DataFormats.Text)
                     Logger.Info($"接受文本拖拽：{Str}")
                     If Str.StartsWithF("authlib-injector:yggdrasil-server:") Then
-                        
+
                         e.Handled = True
                         e.Effects = DragDropEffects.Copy
                         Dim AuthlibServer As String = StringUtils.FormUrlUnescape(Str.Substring("authlib-injector:yggdrasil-server:".Length))
@@ -1502,7 +1431,7 @@ Public Class FormMain
                             Return
                         End If
                         If AuthlibServer = "https://littleskin.cn/api/yggdrasil" Then
-                            
+
                             If MyMsgBox($"是否要在版本 {Target.Name} 中开启 LittleSkin 登录？" & vbCrLf &
                                         "你可以在 版本设置 → 设置 → 服务器选项 中修改登录方式。", "第三方登录开启确认", "确定", "取消") = 2 Then
                                 Return
@@ -1512,7 +1441,7 @@ Public Class FormMain
                             Settings.Set("VersionServerAuthRegister", "https://littleskin.cn/auth/register", Instance:=Target)
                             Settings.Set("VersionServerAuthName", "LittleSkin 登录", Instance:=Target)
                         Else
-                            
+
                             If MyMsgBox($"是否要在版本 {Target.Name} 中开启第三方登录？" & vbCrLf &
                                         $"登录服务器：{AuthlibServer}" & vbCrLf & vbCrLf &
                                         "你可以在 版本设置 → 设置 → 服务器选项 中修改登录方式。", "第三方登录开启确认", "确定", "取消") = 2 Then
@@ -1524,14 +1453,14 @@ Public Class FormMain
                             Settings.Set("VersionServerAuthName", "", Instance:=Target)
                         End If
                         If PageCurrent = PageType.InstanceSetup AndAlso PageCurrentSub = PageSubType.InstanceSetup Then
-                            
+
                             FrmInstanceSetup.Reload()
                         ElseIf PageCurrent = PageType.Launch Then
-                            
+
                             FrmLaunchLeft.RefreshPage(True, False)
                         End If
                     ElseIf Str.StartsWithF("file:///") Then
-                        
+
                         Dim FilePath = Net.WebUtility.UrlDecode(Str).Substring("file:///".Length).Replace("/", "\")
                         e.Handled = True
                         e.Effects = DragDropEffects.Copy
@@ -1542,9 +1471,9 @@ Public Class FormMain
                     Return
                 End Try
             ElseIf e.Data.GetDataPresent(DataFormats.FileDrop) Then
-                
+
                 Dim FilePathRaw = e.Data.GetData(DataFormats.FileDrop)
-                If FilePathRaw Is Nothing Then 
+                If FilePathRaw Is Nothing Then
                     Hint("请将文件解压后再拖入！", HintType.Red)
                     Return
                 End If
@@ -1561,7 +1490,7 @@ Public Class FormMain
         Sub()
             Dim FilePath As String = FilePathList.First
             Logger.Warn($"接受文件拖拽：{FilePath}{If(FilePathList.Any, $" 等 {FilePathList.Count} 个文件", "")}")
-            
+
             If DirectoryUtils.Exists(FilePathList.First) AndAlso Not FileUtils.Exists(FilePathList.First) Then
                 Hint("请拖入一个文件，而非文件夹！", HintType.Red)
                 Return
@@ -1569,10 +1498,10 @@ Public Class FormMain
                 Hint("拖入的文件不存在：" & FilePathList.First, HintType.Red)
                 Return
             End If
-            
+
             Dim PathList As List(Of String) = FilePathList.ToList()
             If FilePathList.Count > 1 Then
-                
+
                 For Each File In PathList
                     If Not {"jar", "litemod", "disabled", "old"}.Contains(PathUtils.GetExtension(File)) Then
                         Hint("一次请只拖入一个文件！", HintType.Red)
@@ -1580,7 +1509,7 @@ Public Class FormMain
                     End If
                 Next
             End If
-            
+
             Dim Extension As String = PathUtils.GetExtension(FilePath)
             If Extension = "xaml" Then
                 Logger.Info("文件后缀为 XAML，作为主页加载")
@@ -1598,10 +1527,10 @@ Public Class FormMain
                 End Sub)
                 Return
             End If
-            
+
             If PageInstanceMod.InstallMods(PathList) Then Return
-            
-            If {"zip", "rar", "mrpack"}.Any(Function(t) t = Extension) Then 
+
+            If {"zip", "rar", "mrpack"}.Any(Function(t) t = Extension) Then
                 Hint("正在读取压缩包……")
                 Try
                     Logger.Info("文件为压缩包，尝试作为整合包安装")
@@ -1614,15 +1543,15 @@ Public Class FormMain
                         Return
                     End If
                     If ex.IsCanceled Then Return
-                    
+
                 End Try
             End If
-            
+
             If Extension = "rar" Then
                 Hint("PCL 无法处理 rar 格式的压缩包，请在解压后重新压缩为 zip 格式再试！", HintType.Red)
                 Return
             End If
-            
+
             Try
                 Logger.Info("尝试进行错误报告分析")
                 Dim Analyzer As New CrashAnalyzer
@@ -1634,12 +1563,11 @@ Public Class FormMain
             Catch ex As Exception
                 Logger.Error(ex, "自主错误报告分析失败")
             End Try
-            
+
             Hint("PCL 无法确定适合的操作……", HintType.Red)
         End Sub, "文件拖拽")
     End Sub
 
-    
     Public IsSystemTimeChanged As Boolean = False
     Private Function WndProc(hwnd As IntPtr, msg As Integer, wParam As IntPtr, lParam As IntPtr, ByRef handled As Boolean) As IntPtr
         If msg = 30 Then
@@ -1663,7 +1591,6 @@ Public Class FormMain
         Return IntPtr.Zero
     End Function
 
-    
     Private _Hidden As Boolean = False
     Public Property Hidden As Boolean
         Get
@@ -1673,30 +1600,28 @@ Public Class FormMain
             If _Hidden = value Then Return
             _Hidden = value
             If value Then
-                
+
                 Left -= 10000
                 ShowInTaskbar = False
                 Visibility = Visibility.Hidden
                 Logger.Info($"窗口已隐藏，位置：({Left},{Top})")
             Else
-                
+
                 If Left < -2000 Then Left += 10000
                 ShowWindowToTop()
             End If
         End Set
     End Property
-    
-    
-    
+
     Public Sub ShowWindowToTop()
         RunInUi(
         Sub()
-            
+
             Visibility = Visibility.Visible
             ShowInTaskbar = True
             WindowState = WindowState.Normal
             Hidden = False
-            Topmost = True 
+            Topmost = True
             Topmost = Settings.Get(Of Boolean)("UiWindowTopmost")
             SetForegroundWindow(Handle)
             Focus()
@@ -1708,57 +1633,29 @@ Public Class FormMain
 
 #Region "切换页面"
 
-    
-    
-    
-    
-    
     Public Enum PageType
-        
-        
-        
+
         Launch = 0
-        
-        
-        
+
         Download = 1
-        
-        
-        
+
         Link = 2
-        
-        
-        
+
         Setup = 3
-        
-        
-        
+
         Other = 4
-        
-        
-        
+
         InstanceSelect = 5
-        
-        
-        
+
         TaskManager = 6
-        
-        
-        
+
         InstanceSetup = 7
-        
-        
-        
+
         ResourceDetail = 8
-        
-        
-        
+
         HelpDetail = 9
     End Enum
-    
-    
-    
-    
+
     Public Enum PageSubType
         [Default] = 0
         DownloadInstall = 0
@@ -1784,9 +1681,7 @@ Public Class FormMain
         InstanceModDisabled = 4
         InstanceExport = 5
     End Enum
-    
-    
-    
+
     Private Function PageNameGet(Stack As PageStackData) As String
         Select Case Stack.Page
             Case PageType.InstanceSelect
@@ -1801,31 +1696,19 @@ Public Class FormMain
                 Return ""
         End Select
     End Function
-    
-    
-    
+
     Public Sub PageNameRefresh(Type As PageStackData)
         LabTitleInner.Text = PageNameGet(Type)
     End Sub
-    
-    
-    
+
     Public Sub PageNameRefresh()
         PageNameRefresh(PageCurrent)
     End Sub
 
-    
-    
-    
-    
     Public PageCurrent As PageStackData = PageType.Launch
-    
-    
-    
+
     Public PageLast As PageStackData = PageType.Launch
-    
-    
-    
+
     Public ReadOnly Property PageCurrentSub As PageSubType
         Get
             Select Case PageCurrent
@@ -1842,13 +1725,11 @@ Public Class FormMain
                     If FrmInstanceLeft Is Nothing Then FrmInstanceLeft = New PageInstanceLeft
                     Return FrmInstanceLeft.PageID
                 Case Else
-                    Return 0 
+                    Return 0
             End Select
         End Get
     End Property
-    
-    
-    
+
     Public PageStack As New List(Of PageStackData)
     Public Class PageStackData
 
@@ -1887,16 +1768,13 @@ Public Class FormMain
     End Class
     Public PageLeft As MyPageLeft, PageRight As MyPageRight
 
-    
     Private IsChangingPage As Boolean = False
-    
-    
-    
+
     Public Sub PageChange(Stack As PageStackData, Optional SubType As PageSubType = PageSubType.Default)
         If PageNameGet(Stack) = "" Then
-            
+
             PageChangeExit()
-            IsChangingPage = True 
+            IsChangingPage = True
             CType(PanTitleSelect.Children(Stack), MyRadioButton).SetChecked(True, True, PageNameGet(PageCurrent) = "")
             IsChangingPage = False
             Select Case Stack.Page
@@ -1908,7 +1786,7 @@ Public Class FormMain
                     CType(FrmSetupLeft.PanItem.Children(SubType), MyListItem).SetChecked(True, True, Stack = PageCurrent)
                 Case PageType.Other
                     If FrmOtherLeft Is Nothing Then FrmOtherLeft = New PageOtherLeft
-                    
+
                     For Each Child As FrameworkElement In FrmOtherLeft.PanItem.Children
                         If Val(Child.Tag) = SubType Then
                             CType(Child, MyListItem).SetChecked(True, True, Stack = PageCurrent)
@@ -1918,7 +1796,7 @@ Public Class FormMain
             End Select
             PageChangeActual(Stack, SubType)
         Else
-            
+
             Select Case Stack.Page
                 Case PageType.InstanceSetup
                     If FrmInstanceLeft Is Nothing Then FrmInstanceLeft = New PageInstanceLeft
@@ -1927,16 +1805,12 @@ Public Class FormMain
             PageChangeActual(Stack, SubType)
         End If
     End Sub
-    
-    
-    
+
     Private Sub BtnTitleSelect_Click(sender As MyRadioButton, raiseByMouse As Boolean) Handles BtnTitleSelect0.Check, BtnTitleSelect1.Check, BtnTitleSelect2.Check, BtnTitleSelect3.Check, BtnTitleSelect4.Check
         If IsChangingPage Then Return
         PageChangeActual(Val(sender.Tag))
     End Sub
-    
-    
-    
+
     Public Sub PageBack() Handles BtnTitleInner.Click
         If PageStack.Any() Then
             PageChangeActual(PageStack(0))
@@ -1945,10 +1819,6 @@ Public Class FormMain
         End If
     End Sub
 
-    
-    
-    
-    
     Private Sub PageChangeActual(Stack As PageStackData, Optional SubType As PageSubType = -1)
         If PageCurrent = Stack AndAlso (PageCurrentSub = SubType OrElse SubType = -1) Then Return
         If Stack.Page = PageType.InstanceSetup AndAlso PageInstanceLeft.Instance IsNot Nothing AndAlso McInstanceLock.IsLocked(PageInstanceLeft.Instance) Then
@@ -1961,28 +1831,28 @@ Public Class FormMain
 #Region "子页面处理"
             Dim PageName As String = PageNameGet(Stack)
             If PageName = "" Then
-                
+
                 PageChangeExit()
             Else
-                
+
                 If PageStack.Any Then
-                    
+
                     AniStart({
                         AaOpacity(LabTitleInner, -LabTitleInner.Opacity, 130),
                         AaCode(Sub() LabTitleInner.Text = PageName,, True),
                         AaOpacity(LabTitleInner, 1, 150, 30)
                     }, "FrmMain Titlebar SubLayer")
                     If PageStack.Contains(Stack) Then
-                        
+
                         Do While PageStack.Contains(Stack)
                             PageStack.RemoveAt(0)
                         Loop
                     Else
-                        
+
                         PageStack.Insert(0, PageCurrent)
                     End If
                 Else
-                    
+
                     PanTitleInner.Visibility = Visibility.Visible
                     PanTitleMain.IsHitTestVisible = False
                     PanTitleInner.IsHitTestVisible = True
@@ -2003,36 +1873,36 @@ Public Class FormMain
             PageLast = PageCurrent
             PageCurrent = Stack
             Select Case Stack.Page
-                Case PageType.Launch 
+                Case PageType.Launch
                     PageChangeAnim(FrmLaunchLeft, FrmLaunchRight)
-                Case PageType.Download 
+                Case PageType.Download
                     If FrmDownloadLeft Is Nothing Then FrmDownloadLeft = New PageDownloadLeft
-                    
+
                     PageChangeAnim(FrmDownloadLeft, FrmDownloadLeft.PageGet(SubType))
-                Case PageType.Link 
+                Case PageType.Link
                     If FrmLinkMain Is Nothing Then FrmLinkMain = New PageLinkMain
                     PageChangeAnim(New MyPageLeft, FrmLinkMain)
-                Case PageType.Setup 
+                Case PageType.Setup
                     If FrmSetupLeft Is Nothing Then FrmSetupLeft = New PageSetupLeft
                     PageChangeAnim(FrmSetupLeft, FrmSetupLeft.PageGet(SubType))
-                Case PageType.Other 
+                Case PageType.Other
                     If FrmOtherLeft Is Nothing Then FrmOtherLeft = New PageOtherLeft
                     PageChangeAnim(FrmOtherLeft, FrmOtherLeft.PageGet(SubType))
-                Case PageType.InstanceSelect 
+                Case PageType.InstanceSelect
                     If FrmSelectLeft Is Nothing Then FrmSelectLeft = New PageSelectLeft
                     If FrmSelectRight Is Nothing Then FrmSelectRight = New PageSelectRight
                     PageChangeAnim(FrmSelectLeft, FrmSelectRight)
-                Case PageType.TaskManager 
+                Case PageType.TaskManager
                     If FrmSpeedLeft Is Nothing Then FrmSpeedLeft = New PageSpeedLeft
                     If FrmSpeedRight Is Nothing Then FrmSpeedRight = New PageSpeedRight
                     PageChangeAnim(FrmSpeedLeft, FrmSpeedRight)
-                Case PageType.InstanceSetup 
+                Case PageType.InstanceSetup
                     If FrmInstanceLeft Is Nothing Then FrmInstanceLeft = New PageInstanceLeft
                     PageChangeAnim(FrmInstanceLeft, FrmInstanceLeft.PageGet(SubType))
-                Case PageType.ResourceDetail 
+                Case PageType.ResourceDetail
                     If FrmDownloadResourceDetail Is Nothing Then FrmDownloadResourceDetail = New PageDownloadResourceDetail
                     PageChangeAnim(New MyPageLeft, FrmDownloadResourceDetail)
-                Case PageType.HelpDetail 
+                Case PageType.HelpDetail
                     PageChangeAnim(New MyPageLeft, Stack.Additional(1))
             End Select
 #End Region
@@ -2049,13 +1919,9 @@ Public Class FormMain
             AniControlEnabled -= 1
         End Try
     End Sub
-    
+
     Private _GlassPaused As Boolean = False
-    
-    
-    
-    
-    
+
     Private Sub PauseGlassForAnimation()
         If _GlassPaused Then Return
         _GlassPaused = True
@@ -2084,23 +1950,23 @@ Public Class FormMain
     Private Sub PageChangeAnim(TargetLeft As FrameworkElement, TargetRight As FrameworkElement)
         PauseGlassForAnimation()
         AniStop("FrmMain LeftChange")
-        AniStop("PageLeft PageChange") 
+        AniStop("PageLeft PageChange")
         AniControlEnabled += 1
-        
+
         If TargetLeft.Parent IsNot Nothing Then TargetLeft.SetValue(ContentPresenter.ContentProperty, Nothing)
         If TargetRight IsNot Nothing AndAlso TargetRight.Parent IsNot Nothing Then TargetRight.SetValue(ContentPresenter.ContentProperty, Nothing)
         PageLeft = TargetLeft
         PageRight = TargetRight
-        
+
         CType(PanMainLeft.Child, MyPageLeft).TriggerHideAnimation()
         CType(PanMainRight.Child, MyPageRight).PageOnExit()
         AniControlEnabled -= 1
-        
+
         AniStart({
             AaCode(
             Sub()
                 AniControlEnabled += 1
-                
+
                 PanMainLeft.Child = PageLeft
                 PageLeft.Opacity = 0
                 PanMainLeft.Background = Nothing
@@ -2109,7 +1975,7 @@ Public Class FormMain
             End Sub, 110),
             AaCode(
             Sub()
-                
+
                 PageLeft.Opacity = 1
                 PageLeft.TriggerShowAnimation()
             End Sub, 30, True)
@@ -2119,7 +1985,7 @@ Public Class FormMain
             Sub()
                 AniControlEnabled += 1
                 CType(PanMainRight.Child, MyPageRight).PageOnForceExit()
-                
+
                 PanMainRight.Child = PageRight
                 PageRight.Opacity = 0
                 PanMainRight.Background = Nothing
@@ -2128,18 +1994,16 @@ Public Class FormMain
             End Sub, 110),
             AaCode(
             Sub()
-                
+
                 PageRight.Opacity = 1
                 PageRight.PageOnEnter()
             End Sub, 30, True)
         }, "FrmMain PageChangeRight")
     End Sub
-    
-    
-    
+
     Private Sub PageChangeExit()
         If PageStack.Any Then
-            
+
             PanTitleMain.Visibility = Visibility.Visible
             PanTitleMain.IsHitTestVisible = True
             PanTitleInner.IsHitTestVisible = False
@@ -2152,11 +2016,10 @@ Public Class FormMain
             }, "FrmMain Titlebar FirstLayer")
             PageStack.Clear()
         Else
-            
+
         End If
     End Sub
 
-    
     Private Sub PanMainLeft_SizeChanged(sender As Object, e As SizeChangedEventArgs) Handles PanMainLeft.SizeChanged
         If Not e.WidthChanged Then Return
         PanMainLeft_Resize(e.NewSize.Width)
@@ -2164,17 +2027,17 @@ Public Class FormMain
     Private Sub PanMainLeft_Resize(NewWidth As Double)
         Dim Delta As Double = NewWidth - RectLeftBackground.Width
         If Math.Abs(Delta) > 0.1 AndAlso AniControlEnabled = 0 Then
-            If PanMain.Opacity < 0.1 Then PanMainLeft.IsHitTestVisible = False 
+            If PanMain.Opacity < 0.1 Then PanMainLeft.IsHitTestVisible = False
             PauseGlassForAnimation()
             If NewWidth > 0 Then
-                
+
                 AniStart({
                     AaWidth(RectLeftBackground, NewWidth - RectLeftBackground.Width, 180,, New AniEaseOutFluent(AniEasePower.ExtraStrong)),
                     AaOpacity(RectLeftShadow, 1 - RectLeftShadow.Opacity, 180),
                     AaCode(Sub() PanMainLeft.IsHitTestVisible = True, 150)
                 }, "FrmMain LeftChange", True)
             Else
-                
+
                 AniStart({
                     AaWidth(RectLeftBackground, -RectLeftBackground.Width, 180,, New AniEaseOutFluent),
                     AaOpacity(RectLeftShadow, -RectLeftShadow.Opacity, 180),
@@ -2192,14 +2055,13 @@ Public Class FormMain
 
 #Region "控件拖动"
 
-    
     Public Sub DragTick()
         If DragControl Is Nothing Then Return
         If Not Mouse.LeftButton = MouseButtonState.Pressed Then
             DragStop()
         End If
     End Sub
-    
+
     Public Sub DragDoing() Handles PanBack.MouseMove
         If DragControl Is Nothing Then Return
         If Mouse.LeftButton = MouseButtonState.Pressed Then
@@ -2209,12 +2071,12 @@ Public Class FormMain
         End If
     End Sub
     Public Sub DragStop()
-        
+
         RunInUi(Sub()
                     If DragControl Is Nothing Then Return
                     Dim Control = DragControl
                     DragControl = Nothing
-                    Control.DragStop() 
+                    Control.DragStop()
                 End Sub)
     End Sub
 
@@ -2222,7 +2084,6 @@ Public Class FormMain
 
 #Region "附加按钮"
 
-    
     Private Sub BtnExtraMusic_Click(sender As Object, e As EventArgs) Handles BtnExtraMusic.Click
         MusicControlPause()
     End Sub
@@ -2230,7 +2091,6 @@ Public Class FormMain
         MusicControlNext()
     End Sub
 
-    
     Private Sub BtnExtraDownload_Click(sender As Object, e As EventArgs) Handles BtnExtraDownload.Click
         PageChange(PageType.TaskManager)
     End Sub
@@ -2238,7 +2098,6 @@ Public Class FormMain
         Return HasDownloadingTask() AndAlso Not PageCurrent = PageType.TaskManager
     End Function
 
-    
     Public Sub AprilGiveup() Handles BtnExtraApril.Click
         If IsAprilEnabled AndAlso Not IsAprilGiveup Then
             Hint("=D", HintType.Green)
@@ -2252,7 +2111,6 @@ Public Class FormMain
         Return IsAprilEnabled AndAlso Not IsAprilGiveup AndAlso PageCurrent = PageType.Launch
     End Function
 
-    
     Public Sub BtnExtraShutdown_Click() Handles BtnExtraShutdown.Click
         Try
             If McLaunchLoaderReal IsNot Nothing Then McLaunchLoaderReal.Cancel()
@@ -2268,9 +2126,6 @@ Public Class FormMain
         Return HasRunningMinecraft
     End Function
 
-    
-    
-    
     Public Sub BackToTop() Handles BtnExtraBack.Click
         Dim RealScroll As MyScrollViewer = BtnExtraBack_GetRealChild()
         If RealScroll IsNot Nothing Then
@@ -2291,7 +2146,6 @@ Public Class FormMain
 
 #End Region
 
-    
     Public lastMouseArg As MouseEventArgs = Nothing
     Private Sub FormMain_MouseMove(sender As Object, e As MouseEventArgs) Handles Me.MouseMove
         lastMouseArg = e
@@ -2299,7 +2153,6 @@ Public Class FormMain
 
 #Region "视频背景"
 
-    
     Public ReadOnly Property VideoBackgroundFolder As String
         Get
             Return Paths.Base & "PCL\VideoBackground\"
@@ -2311,11 +2164,8 @@ Public Class FormMain
     Private _videoPaused As Boolean = False
     Private _videoFitRatio As Double = 1
     Private _videoImgHideTimer As System.Windows.Threading.DispatcherTimer
+    Private _videoConvertTried As Boolean = False
 
-    
-    
-    
-    
     Public ReadOnly Property IsVideoBackgroundActive As Boolean
         Get
             Try
@@ -2327,13 +2177,11 @@ Public Class FormMain
         End Get
     End Property
 
-    
     Public Shared Sub VideoBackgroundRefresh(Value As Object)
         If FrmMain Is Nothing OrElse Not FrmMain.IsLoaded Then Return
         RunInUi(Sub() FrmMain.VideoBackgroundUpdate())
     End Sub
 
-    
     Public Shared Function VideoBackgroundApply(SourcePath As String) As Boolean
         Try
             If String.IsNullOrEmpty(SourcePath) OrElse Not File.Exists(SourcePath) Then Return False
@@ -2344,6 +2192,7 @@ Public Class FormMain
                 FileUtils.Copy(SourcePath, Target)
             End If
             Settings.Set("UiVideoBackground", Target)
+            FrmMain._videoConvertTried = False
             Return True
         Catch ex As Exception
             Logger.Error(ex, "应用视频背景失败")
@@ -2352,17 +2201,19 @@ Public Class FormMain
         End Try
     End Function
 
-    
     Public Shared Sub VideoBackgroundReset()
         Settings.Set("UiVideoBackground", "")
     End Sub
 
-    
     Public Sub VideoBackgroundUpdate()
         Try
             Dim Path As String = Settings.Get(Of String)("UiVideoBackground")
             If Not String.IsNullOrEmpty(Path) AndAlso File.Exists(Path) Then
-                VideoBackgroundPlay(Path)
+                If ModMedia.IsDirectVideo(Path) Then
+                    VideoBackgroundPlay(Path)
+                Else
+                    VideoBackgroundPrepare(Path, False)
+                End If
             Else
                 VideoBackgroundClear()
             End If
@@ -2372,12 +2223,32 @@ Public Class FormMain
         End Try
     End Sub
 
+    Private Sub VideoBackgroundPrepare(SourcePath As String, ForceConvert As Boolean)
+        Logger.Info($"视频背景格式不受直接支持，准备转换：{SourcePath}")
+        RunInNewThread(
+            Sub()
+                Try
+                    Dim Ready As String = ModMedia.PrepareVideoForPlayback(SourcePath, ForceConvert)
+                    RunInUi(Sub()
+                                If Ready Is Nothing Then
+                                    Hint("该视频无法播放，转换也没有成功。可换用 mp4（H.264）格式的视频，或在设置中重新选择以再次尝试。", HintType.Red)
+                                Else
+                                    VideoBackgroundPlay(Ready)
+                                End If
+                            End Sub)
+                Catch ex As Exception
+                    Logger.Error(ex, "视频背景转换失败")
+                    RunInUi(Sub() Hint("视频背景转换失败，详情请查看日志。", HintType.Red))
+                End Try
+            End Sub, "VideoBackgroundConvert")
+    End Sub
+
     Private Sub VideoBackgroundPlay(Path As String)
         Try
             If _videoSrcPath = Path AndAlso _videoReady Then
                 _videoPaused = False
                 VideoBack.Play()
-                
+
                 VideoBack.Visibility = Visibility.Visible
                 VideoBack.Opacity = 1
                 VideoHideImgBackLater()
@@ -2413,12 +2284,12 @@ Public Class FormMain
             VideoBack.Position = TimeSpan.Zero
             VideoBack.Opacity = 0
             VideoBack.Visibility = Visibility.Collapsed
-            
+
             VideoBack.ClearValue(FrameworkElement.WidthProperty)
             VideoBack.ClearValue(FrameworkElement.HeightProperty)
             VideoBack.RenderTransform = Nothing
             If ImgBack.Background IsNot Nothing Then ImgBack.Visibility = Visibility.Visible
-            
+
             ModGlass.GlassInvalidate()
             RefreshUiStyle()
             Logger.Info("视频背景已关闭，恢复静态背景")
@@ -2427,11 +2298,6 @@ Public Class FormMain
         End Try
     End Sub
 
-    
-    
-    
-    
-    
     Private Sub VideoBackFitLayout()
         If VideoBack Is Nothing OrElse _videoSrcPath = "" Then Return
         Dim Host As Grid = TryCast(VideoBack.Parent, Grid)
@@ -2463,7 +2329,6 @@ Public Class FormMain
         End Try
     End Sub
 
-    
     Private Sub VideoHideImgBackLater()
         If _videoImgHideTimer Is Nothing Then
             _videoImgHideTimer = New System.Windows.Threading.DispatcherTimer With {.Interval = TimeSpan.FromMilliseconds(220)}
@@ -2472,7 +2337,7 @@ Public Class FormMain
                     _videoImgHideTimer.Stop()
                     If _videoReady AndAlso VideoBack.Opacity > 0.99 Then
                         ImgBack.Visibility = Visibility.Collapsed
-                        
+
                         ModGlass.GlassInvalidate()
                         RefreshUiStyle()
                     End If
@@ -2494,12 +2359,18 @@ Public Class FormMain
 
     Private Sub VideoBack_MediaFailed(sender As Object, e As ExceptionRoutedEventArgs) Handles VideoBack.MediaFailed
         Logger.Warn("视频背景播放失败：" & If(e Is Nothing OrElse e.ErrorException Is Nothing, "未知错误", e.ErrorException.Message))
+        Dim SourcePath As String = Settings.Get(Of String)("UiVideoBackground")
+        If Not _videoConvertTried AndAlso Not String.IsNullOrEmpty(SourcePath) AndAlso File.Exists(SourcePath) Then
+            _videoConvertTried = True
+            VideoBackgroundClear()
+            VideoBackgroundPrepare(SourcePath, True)
+            Return
+        End If
         VideoBackgroundClear()
         Settings.Set("UiVideoBackground", "")
         Hint("该视频无法播放，已切回静态壁纸。请换用 mp4（H.264）格式的视频。", HintType.Red)
     End Sub
 
-    
     Private Sub FormMain_StateChanged(sender As Object, e As EventArgs) Handles Me.StateChanged
         Try
             If WindowState = WindowState.Minimized Then
@@ -2515,30 +2386,94 @@ Public Class FormMain
 
 #End Region
 
-    
-    
-    
     Public Shared Sub UiStyleRefresh(Optional NewValue As Object = Nothing)
         If FrmMain Is Nothing Then Return
         FrmMain.RefreshUiStyle()
-        
+
         If FrmSetupUI IsNot Nothing Then FrmSetupUI.RefreshGlassSettings()
     End Sub
-    
-    
-    
+
     Public Shared Sub GlassStyleRefresh(Optional NewValue As Object = Nothing)
         If FrmMain Is Nothing Then Return
         FrmMain.RefreshUiStyle()
     End Sub
+
+    Private Shared _FontApplied As String = ""
+    Private Shared _FontDefault As System.Windows.Media.FontFamily = Nothing
+
+    Public Shared Sub FontFamilyRefresh(Optional NewValue As Object = Nothing)
+        Try
+            If Application.Current Is Nothing Then Return
+            If _FontDefault Is Nothing Then _FontDefault = TryCast(Application.Current.Resources("UiFontFamily"), System.Windows.Media.FontFamily)
+            If _FontDefault Is Nothing Then Return
+            Dim Name As String = If(Settings.Get(Of String)("UiFontFamily"), "").Trim
+            If Name = _FontApplied Then Return
+
+            Dim Value As System.Windows.Media.FontFamily
+            If Name = "" Then
+                Value = _FontDefault
+            ElseIf Name.StartsWith("file:", StringComparison.OrdinalIgnoreCase) Then
+
+                Dim SplitIndex As Integer = Name.IndexOf("#"c)
+                Dim LocalPath As String = ""
+                Try
+                    LocalPath = New Uri(If(SplitIndex >= 0, Name.Substring(0, SplitIndex), Name)).LocalPath
+                Catch ex As Exception
+                End Try
+                If LocalPath = "" OrElse Not File.Exists(LocalPath) Then
+                    Logger.Warn($"导入的字体文件不存在，已恢复默认字体：{LocalPath}")
+                    Settings.Set("UiFontFamily", "")
+                    Return
+                End If
+                Value = New System.Windows.Media.FontFamily(Name)
+            ElseIf _FontDefault.BaseUri IsNot Nothing Then
+                Value = New System.Windows.Media.FontFamily(_FontDefault.BaseUri, $"Resources/#PCL English, {Name}, Microsoft YaHei UI")
+            Else
+                Value = New System.Windows.Media.FontFamily($"{Name}, Microsoft YaHei UI")
+            End If
+            Application.Current.Resources("UiFontFamily") = Value
+            _FontApplied = Name
+            Logger.Info($"界面字体已切换：{If(Name = "", "默认", Name)}")
+        Catch ex As Exception
+            Logger.Warn(ex, "切换界面字体失败")
+        End Try
+    End Sub
     Private _uiStyleKey As String = ""
-    
-    
-    
-    
-    
+    Public Const FontSizeMin As Integer = 10
+    Public Const FontSizeMax As Integer = 18
+
+    Public Shared Function GetFontSizeValue() As Integer
+        Dim Size As Integer = 13
+        Try
+            Size = Settings.Get(Of Integer)("UiFontSize")
+        Catch
+        End Try
+        Return Math.Max(FontSizeMin, Math.Min(FontSizeMax, Size))
+    End Function
+
+    Public Shared Sub FontColorRefresh(Optional NewValue As Object = Nothing)
+        Try
+            If Application.Current Is Nothing Then Return
+            Dim Value As String = If(Settings.Get(Of String)("UiFontColor"), "").Trim
+            Dim TextColor As MyColor = ModSecret.Color1
+            If Value <> "" Then TextColor = New MyColor(Value)
+            Application.Current.Resources("ColorBrush1") = New SolidColorBrush(CType(TextColor, Color))
+        Catch ex As Exception
+            Logger.Warn(ex, "应用自定义字体颜色失败")
+        End Try
+    End Sub
+
+    Public Shared Sub FontSizeRefresh(Optional NewValue As Object = Nothing)
+        Try
+            If Application.Current Is Nothing Then Return
+            Application.Current.Resources("UiFontSize") = CDbl(GetFontSizeValue())
+        Catch ex As Exception
+            Logger.Warn(ex, "应用自定义字体大小失败")
+        End Try
+    End Sub
+
     Public Sub RefreshUiStyle(Optional Force As Boolean = False)
-        
+
         Dim WallKey As String = "0"
         Try
             Dim WallBrush As ImageBrush = TryCast(ImgBack.Background, ImageBrush)
@@ -2548,23 +2483,15 @@ Public Class FormMain
         Dim Key As String = $"{Settings.Get(Of Integer)("UiUiStyle")}|{ModGlass.GlassCornerRadius}|{ModGlass.GlassCardOpacity}|{ModGlass.GlassUiBlur}|{ModGlass.IsVideoBackdrop}|{ModGlass.SurfaceRevision}|{WallKey}"
         If Not Force AndAlso Key = _uiStyleKey Then Return
         _uiStyleKey = Key
-        
+
         If Settings.Get(Of Integer)("UiUiStyle") = 1 Then
             ModGlass.GlassRefreshFill(RectLeftBackground)
         Else
             RectLeftBackground.SetResourceReference(Shapes.Rectangle.FillProperty, "ColorBrushBackgroundTransparentSidebar")
         End If
-        
-        Dim Stack As New Stack(Of DependencyObject)
-        Stack.Push(Me)
-        Do While Stack.Count > 0
-            Dim Current As DependencyObject = Stack.Pop()
-            Dim Card As MyCard = TryCast(Current, MyCard)
-            If Card IsNot Nothing Then Card.ApplyStyle()
-            For i As Integer = 0 To VisualTreeHelper.GetChildrenCount(Current) - 1
-                Stack.Push(VisualTreeHelper.GetChild(Current, i))
-            Next
-        Loop
+
+        MyCard.ApplyAllStyles()
+        ModGlass.GlassRefreshDialogs()
     End Sub
 
 End Class

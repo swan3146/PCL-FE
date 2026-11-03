@@ -2,59 +2,31 @@ Public Class ResourceSearcher
     Private Const RESULT_PAGE_SIZE = 40
     Private Const MSG_NO_CHINESE_RESULT As String = "无搜索结果，请尝试搜索其英文名称"
 
-    
     Public Class SearchRequest
 
-        
-
-        
-        
-        
-        
         Public Storage As SearchResult
-        
-        
-        
+
         Public TargetResultCount As Integer
-        
-        
-        
+
         Public ReadOnly Property CanContinue As Boolean
             Get
                 If Tag.StartsWithF("/") OrElse Not Sources.HasFlagF(ResourcePlatforms.CurseForge) Then Storage.CurseForgeTotal = 0
-                If Tag.EndsWithF("/") OrElse Not Sources.HasFlagF(ResourcePlatforms.Modrinth) OrElse Type = ResourceTypes.Map Then Storage.ModrinthTotal = 0 
+                If Tag.EndsWithF("/") OrElse Not Sources.HasFlagF(ResourcePlatforms.Modrinth) OrElse Type = ResourceTypes.Map Then Storage.ModrinthTotal = 0
                 If Storage.CurseForgeTotal = -1 OrElse Storage.ModrinthTotal = -1 Then Return True
                 Return Storage.CurseForgeOffset < Storage.CurseForgeTotal OrElse Storage.ModrinthOffset < Storage.ModrinthTotal
             End Get
         End Property
 
-        
-
-        
-        
-        
         Public Type As ResourceTypes
-        
-        
-        
+
         Public Tag As String = ""
-        
-        
-        
-        
-        
+
         Public ModLoaders As ModLoaders = ModLoaders.None
-        
-        
-        
+
         Public GameVersion As String = Nothing
-        
-        
-        
+
         Public SearchText As String = Nothing
-        
-        
-        
+
         Public Sources As ResourcePlatforms = ResourcePlatforms.Any
         Public Sub New(Type As ResourceTypes, Storage As SearchResult, TargetResultCount As Integer)
             Me.Type = Type
@@ -62,14 +34,9 @@ Public Class ResourceSearcher
             Me.TargetResultCount = TargetResultCount
         End Sub
 
-        
-
-        
-        
-        
         Public Function GetCurseForgeAddress(SearchText As String, IgnoreModLoaderFilter As Boolean) As String
             If Tag.StartsWithF("/") Then Storage.CurseForgeTotal = 0
-            
+
             Dim Address As String = $"https://api.curseforge.com/v1/mods/search?gameId=432&sortField=2&sortOrder=desc&pageSize={RESULT_PAGE_SIZE}"
             Select Case Type
                 Case ResourceTypes.Mod
@@ -92,16 +59,14 @@ Public Class ResourceSearcher
             If Storage.CurseForgeOffset > 0 Then Address += "&index=" & Storage.CurseForgeOffset
             Return Address
         End Function
-        
-        
-        
+
         Public Function GetModrinthAddress(SearchText As String, IgnoreModLoaderFilter As Boolean) As String
             If Tag.EndsWithF("/") Then Storage.ModrinthTotal = 0
-            
+
             Dim Address As String = $"https://api.modrinth.com/v2/search?limit={RESULT_PAGE_SIZE}&index=relevance"
             If Not String.IsNullOrEmpty(SearchText) Then Address += "&query=" & StringUtils.UrlEscape(SearchText)
             If Storage.ModrinthOffset > 0 Then Address += "&offset=" & Storage.ModrinthOffset
-            
+
             Dim Facets As New List(Of String)
             Facets.Add($"[""project_type:{Type.ToString.Lower}""]")
             If Not String.IsNullOrEmpty(Tag) Then Facets.Add($"[""categories:'{Tag.AfterLast("/")}'""]")
@@ -113,7 +78,6 @@ Public Class ResourceSearcher
             Return Address
         End Function
 
-        
         Public Overrides Function Equals(obj As Object) As Boolean
             Dim request = TryCast(obj, SearchRequest)
             Return request IsNot Nothing AndAlso
@@ -133,10 +97,7 @@ Public Class ResourceSearcher
 
     End Class
 
-    
     Public Class SearchResult
-
-        
 
         Public CurseForgeOffset As Integer = 0
         Public CurseForgeTotal As Integer = -1
@@ -144,29 +105,19 @@ Public Class ResourceSearcher
         Public ModrinthOffset As Integer = 0
         Public ModrinthTotal As Integer = -1
 
-        
-
-        
-        
-        
         Public Results As New List(Of ResourceProject)
-        
-        
-        
+
         Public ErrorMessage As String = Nothing
 
     End Class
 
-    
-    
-    
     Public Shared Function GetLoader(InputDelegate As Func(Of SearchRequest)) As LoaderTask(Of SearchRequest, Integer)
         Return New LoaderTask(Of SearchRequest, Integer)("社区资源获取", AddressOf Run, InputDelegate) With {.ReloadTimeout = 60 * 1000}
     End Function
     Private Shared Sub Run(Task As LoaderTask(Of SearchRequest, Integer))
         Dim Request As SearchRequest = Task.Input
-        Dim Storage = Request.Storage 
-        
+        Dim Storage = Request.Storage
+
         If Request.Type = ResourceTypes.Map Then Request.Sources = CType(CInt(Request.Sources) And CInt(ResourcePlatforms.CurseForge), ResourcePlatforms)
 
 #Region "前置检查"
@@ -190,17 +141,17 @@ Public Class ResourceSearcher
         Dim RawSearchText As String = If(Request.SearchText, "").Trim
         RawSearchText = RawSearchText.Lower
         Logger.Info($"工程列表搜索原始文本：{RawSearchText}")
-        RawSearchText = StrConv(RawSearchText, VbStrConv.SimplifiedChinese) 
+        RawSearchText = StrConv(RawSearchText, VbStrConv.SimplifiedChinese)
 
         Dim IsChineseSearch As Boolean =
             RawSearchText.RegexCheck("[\u4e00-\u9fbb]") AndAlso Not String.IsNullOrEmpty(RawSearchText) AndAlso
-            (Request.Type = ResourceTypes.Mod OrElse Request.Type = ResourceTypes.DataPack) 
-        Dim CurseForgeAltSearchText As String = Nothing, ModrinthAltSearchText As String = Nothing, ModrinthSlugs As New List(Of String) 
+            (Request.Type = ResourceTypes.Mod OrElse Request.Type = ResourceTypes.DataPack)
+        Dim CurseForgeAltSearchText As String = Nothing, ModrinthAltSearchText As String = Nothing, ModrinthSlugs As New List(Of String)
         If IsChineseSearch Then
-            
+
             Dim ExtractWords =
             Function(Result As SearchEntry(Of WikiEntry), Source As ResourcePlatforms) As IEnumerable(Of String)
-                
+
                 Dim Candidates As New List(Of String)
                 If Result.Item.Slugs.ContainsKey(Source) Then
                     Candidates.Add(Result.Item.Slugs(Source).
@@ -210,19 +161,19 @@ Public Class ResourceSearcher
                     Candidates.Add(Result.Item.ChineseName.
                                    AfterLast(" (").TrimEnd(") ").BeforeFirst(" - ").Replace("-", " ").Replace("/", " ").Replace(":", " ").Replace("(", " ").Replace(")", ""))
                 End If
-                
+
                 Candidates = Candidates.
                     SelectMany(Function(c) c.Split(" ")).
                     Select(Function(w) w.TrimStart("{[(").TrimEnd("}])").Lower).
                     Where(
                     Function(w)
-                        If w.Length <= 1 Then Return False 
-                        If {"the", "of", "mod", "and", "forge", "fabric", "for", "quilt", "neoforge"}.Contains(w) Then Return False 
-                        If Val(w) > 0 Then Return False 
-                        If Not w.IsAsciiOnly Then Return False 
+                        If w.Length <= 1 Then Return False
+                        If {"the", "of", "mod", "and", "forge", "fabric", "for", "quilt", "neoforge"}.Contains(w) Then Return False
+                        If Val(w) > 0 Then Return False
+                        If Not w.IsAsciiOnly Then Return False
                         Return True
                     End Function).Distinct.ToList
-                
+
                 Dim CanForm As Func(Of String, Boolean) = Nothing
                 CanForm = Function(s) Candidates.Contains(s) OrElse Candidates.Any(Function(c) s.StartsWith(c) AndAlso CanForm(s.Substring(c.Length)))
                 Candidates = Candidates.Where(Function(w) Not Candidates.Any(Function(c) c.Length < w.Length AndAlso w.StartsWith(c) AndAlso CanForm(w.Substring(c.Length)))).ToList()
@@ -234,7 +185,7 @@ Public Class ResourceSearcher
                     If Not Entry.Slugs.ContainsKey(Source) Then Continue For
                     If Entry.ChineseName IsNot Nothing Then
                         Yield New SearchEntry(Of WikiEntry) With {.Item = Entry, .SearchSource = New List(Of SearchSource) From {
-                            New SearchSource(StrConv(Entry.ChineseName.BeforeFirst(" ("), VbStrConv.SimplifiedChinese).Split("/"c, True), 1), 
+                            New SearchSource(StrConv(Entry.ChineseName.BeforeFirst(" ("), VbStrConv.SimplifiedChinese).Split("/"c, True), 1),
                             New SearchSource(StrConv(Entry.ChineseName.AfterFirst(" ("), VbStrConv.SimplifiedChinese) & Entry.Slugs(Source), 0.5)
                         }}
                     Else
@@ -244,45 +195,45 @@ Public Class ResourceSearcher
                     End If
                 Next
             End Function
-            
+
             If Request.Sources.HasFlagF(ResourcePlatforms.CurseForge) Then
-                
+
                 Static CurseForgeSearchEntries As List(Of SearchEntry(Of WikiEntry)) = GetSearchEntries(ResourcePlatforms.CurseForge).ToList()
                 Dim CurseForgeSearchResults = Search(CurseForgeSearchEntries, RawSearchText, 100, 0.25)
                 If CurseForgeSearchResults.Any Then
-                    
+
                     Dim CurseForgeTarget =
                         If(CurseForgeSearchResults.First.AbsoluteRight,
-                            CurseForgeSearchResults.Where(Function(s) s.AbsoluteRight).ToList, 
-                            CurseForgeSearchResults.MaxByAll(Function(s) s.Similarity)). 
-                        MaxBy(Function(s) s.Item.Popularity) 
-                    
+                            CurseForgeSearchResults.Where(Function(s) s.AbsoluteRight).ToList,
+                            CurseForgeSearchResults.MaxByAll(Function(s) s.Similarity)).
+                        MaxBy(Function(s) s.Item.Popularity)
+
                     CurseForgeAltSearchText = ExtractWords(CurseForgeTarget, ResourcePlatforms.CurseForge).Join(" ")
                     Logger.Warn($"中文搜索关键词（CurseForge）：{CurseForgeAltSearchText}")
                 End If
             End If
-            
+
             If Request.Sources.HasFlagF(ResourcePlatforms.Modrinth) Then
-                
+
                 Static ModrinthSearchEntries As List(Of SearchEntry(Of WikiEntry)) = GetSearchEntries(ResourcePlatforms.Modrinth).ToList()
                 Dim ModrinthSearchResults = Search(ModrinthSearchEntries, RawSearchText, 100, 0.25)
                 If ModrinthSearchResults.Any Then
-                    
-                    Dim WordWeights As New Dictionary(Of String, Double) 
+
+                    Dim WordWeights As New Dictionary(Of String, Double)
                     For Each Result In ModrinthSearchResults
                         For Each Word In ExtractWords(Result, ResourcePlatforms.Modrinth)
                             If Not WordWeights.ContainsKey(Word) Then WordWeights.Add(Word, 0)
-                            Dim Similarity = If(Result.SearchSource.Any(Function(s) s.Aliases.Contains(RawSearchText)), 1000, Result.Similarity) 
-                            WordWeights(Word) += Similarity * Result.Item.Popularity 
+                            Dim Similarity = If(Result.SearchSource.Any(Function(s) s.Aliases.Contains(RawSearchText)), 1000, Result.Similarity)
+                            WordWeights(Word) += Similarity * Result.Item.Popularity
                         Next
                     Next
                     ModrinthAltSearchText = WordWeights.MaxBy(Function(w) w.Value).Key
                     Logger.Warn($"中文搜索关键词（Modrinth）：{ModrinthAltSearchText}")
-                    
+
                     ModrinthSlugs = ModrinthSearchResults.Take(100).Select(Function(r) r.Item.Slugs(ResourcePlatforms.Modrinth)).ToList
                 End If
             End If
-            
+
             If String.IsNullOrEmpty(CurseForgeAltSearchText) AndAlso String.IsNullOrEmpty(ModrinthAltSearchText) AndAlso Not ModrinthSlugs.Any Then
                 Throw New Exception(MSG_NO_CHINESE_RESULT)
             End If
@@ -300,31 +251,28 @@ NextPage:
         Dim WorkThreads As New List(Of Thread)
         Dim Errors As New ConcurrentBag(Of (Ex As Exception, Source As ResourcePlatforms))
 
-        
-        
         Dim IgnoreModLoaderFilter = Request.ModLoaders = ModLoaders.Forge AndAlso McVersion.VersionToDrop(Request.GameVersion) < 140
         Dim SearchResults As New ConcurrentBag(Of ResourceProject)
         Try
 
-            
             If Request.Sources.HasFlagF(ResourcePlatforms.CurseForge) AndAlso
-               Not (Storage.CurseForgeTotal > -1 AndAlso Storage.CurseForgeTotal <= Storage.CurseForgeOffset) AndAlso 
-               (Not IsChineseSearch OrElse (IsChineseSearch AndAlso Not String.IsNullOrEmpty(CurseForgeAltSearchText))) Then 
+               Not (Storage.CurseForgeTotal > -1 AndAlso Storage.CurseForgeTotal <= Storage.CurseForgeOffset) AndAlso
+               (Not IsChineseSearch OrElse (IsChineseSearch AndAlso Not String.IsNullOrEmpty(CurseForgeAltSearchText))) Then
                 WorkThreads.Add(RunInNewThread(
                 Sub()
                     Try
-                        
+
                         Dim CurseForgeUrl As String = Request.GetCurseForgeAddress(If(CurseForgeAltSearchText, RawSearchText), IgnoreModLoaderFilter)
                         Logger.Info($"开始 CurseForge 搜索：{CurseForgeUrl}")
                         Dim RequestResult As JObject = DlModRequest(CurseForgeUrl)
                         Dim ProjectList As New List(Of ResourceProject)
                         For Each JsonEntry As JObject In RequestResult("data")
                             Dim Project As New ResourceProject(JsonEntry)
-                            If Request.Type = ResourceTypes.ResourcePack AndAlso Project.Tags.Contains("数据包") Then Continue For 
-                            If Request.Type <> ResourceTypes.Any AndAlso Not Project.Types.HasFlagF(Request.Type) Then Continue For 
+                            If Request.Type = ResourceTypes.ResourcePack AndAlso Project.Tags.Contains("数据包") Then Continue For
+                            If Request.Type <> ResourceTypes.Any AndAlso Not Project.Types.HasFlagF(Request.Type) Then Continue For
                             ProjectList.Add(Project)
                         Next
-                        
+
                         ProjectList.ForEach(Sub(p) SearchResults.Add(p))
                         Storage.CurseForgeOffset += RequestResult("data").Count
                         Storage.CurseForgeTotal = RequestResult("pagination")("totalCount").ToObject(Of Integer)
@@ -334,14 +282,13 @@ NextPage:
                         Storage.CurseForgeTotal = -1
                         Errors.Add((ex, ResourcePlatforms.CurseForge))
                     End Try
-                    If Task.Progress < 0.75 Then Task.Progress += 0.25 
+                    If Task.Progress < 0.75 Then Task.Progress += 0.25
                 End Sub, "CurseForge Search"))
             End If
 
-            
             If Request.Sources.HasFlagF(ResourcePlatforms.Modrinth) AndAlso
-               Not (Storage.ModrinthTotal > -1 AndAlso Storage.ModrinthTotal <= Storage.ModrinthOffset) AndAlso 
-               (Not IsChineseSearch OrElse (IsChineseSearch AndAlso Not String.IsNullOrEmpty(ModrinthAltSearchText))) Then 
+               Not (Storage.ModrinthTotal > -1 AndAlso Storage.ModrinthTotal <= Storage.ModrinthOffset) AndAlso
+               (Not IsChineseSearch OrElse (IsChineseSearch AndAlso Not String.IsNullOrEmpty(ModrinthAltSearchText))) Then
                 WorkThreads.Add(RunInNewThread(
                 Sub()
                     Try
@@ -352,7 +299,7 @@ NextPage:
                         For Each JsonEntry As JObject In RequestResult("hits")
                             ProjectList.Add(New ResourceProject(JsonEntry))
                         Next
-                        
+
                         ProjectList.ForEach(Sub(p) SearchResults.Add(p))
                         Storage.ModrinthOffset += RequestResult("hits").Count
                         Storage.ModrinthTotal = RequestResult("total_hits").ToObject(Of Integer)
@@ -362,14 +309,13 @@ NextPage:
                         Storage.ModrinthTotal = -1
                         Errors.Add((ex, ResourcePlatforms.Modrinth))
                     End Try
-                    If Task.Progress < 0.75 Then Task.Progress += 0.25 
+                    If Task.Progress < 0.75 Then Task.Progress += 0.25
                 End Sub, "Modrinth Search"))
             End If
 
-            
             If Request.Sources.HasFlagF(ResourcePlatforms.Modrinth) AndAlso
-               Not (Storage.ModrinthTotal > -1 AndAlso Storage.ModrinthTotal <= Storage.ModrinthOffset) AndAlso 
-               ModrinthSlugs.Any Then 
+               Not (Storage.ModrinthTotal > -1 AndAlso Storage.ModrinthTotal <= Storage.ModrinthOffset) AndAlso
+               ModrinthSlugs.Any Then
                 WorkThreads.Add(RunInNewThread(
                 Sub()
                     Try
@@ -378,10 +324,10 @@ NextPage:
                         Dim ProjectList As New List(Of ResourceProject)
                         For Each JsonEntry As JObject In DlModRequest(ModrinthUrl)
                             Dim Project As New ResourceProject(JsonEntry)
-                            
+
                             If Request.Type <> ResourceTypes.Any AndAlso Not Project.Types.HasFlagF(Request.Type) Then Continue For
                             If Not String.IsNullOrEmpty(Request.Tag) AndAlso
-                                Not JsonEntry("categories").Any(Function(c) c.ToString = Request.Tag.AfterLast("/")) Then Continue For 
+                                Not JsonEntry("categories").Any(Function(c) c.ToString = Request.Tag.AfterLast("/")) Then Continue For
                             If Request.ModLoaders <> ModLoaders.None AndAlso Not IgnoreModLoaderFilter AndAlso
                                 Not Project.ModLoaders.Flags.Intersect(Request.ModLoaders.Flags).Any() Then Continue For
                             If Not String.IsNullOrEmpty(Request.GameVersion) AndAlso
@@ -397,31 +343,28 @@ NextPage:
                             Dim MatchedIds = DlModRequest(FilterUrl)("hits").Select(Function(h) h("project_id").ToString).ToList
                             ProjectList.KeepIf(Function(p) MatchedIds.Contains(p.Id))
                         End If
-                        
+
                         ProjectList.ForEach(Sub(p) SearchResults.Add(p))
                         Logger.Info($"从 Modrinth 直接获取到了 {ProjectList.Count} 个工程")
-                        ModrinthSlugs.Clear() 
+                        ModrinthSlugs.Clear()
                     Catch ex As Exception
                         Logger.Warn(ex, "Modrinth 直接获取失败")
                         Errors.Add((ex, ResourcePlatforms.Modrinth))
                     End Try
-                    If Task.Progress < 0.75 Then Task.Progress += 0.25 
+                    If Task.Progress < 0.75 Then Task.Progress += 0.25
                 End Sub, "Modrinth Get"))
             End If
 
-            
             For Each Thread In WorkThreads
                 Thread.Join()
-                If Task.IsCanceled Then Return 
+                If Task.IsCanceled Then Return
             Next
             RawResults = New List(Of ResourceProject)(SearchResults)
 
-            
             If IgnoreModLoaderFilter Then
                 RawResults.KeepIf(Function(p) p.ModLoaders = ModLoaders.None OrElse p.ModLoaders.HasFlagF(ModLoaders.Forge))
             End If
 
-            
             Storage.ErrorMessage = Nothing
             If Not RawResults.Any() Then
                 If Errors.Any() Then
@@ -438,7 +381,7 @@ NextPage:
                     End If
                 End If
             ElseIf Errors.Any() Then
-                
+
                 If Errors.Any(Function(e) e.Source = ResourcePlatforms.CurseForge) Then
                     Storage.ErrorMessage = $"无法连接到 CurseForge，所以目前仅显示了来自 Modrinth 的内容，搜索结果可能不全。{vbCrLf}请稍后再试，或使用 VPN 改善网络环境。"
                 Else
@@ -456,14 +399,13 @@ NextPage:
 
 #Region "提取非重复项，存储于 RealResults"
 
-        
         RawResults = RawResults.Where(Function(x) x.Platform = ResourcePlatforms.CurseForge).Concat(RawResults.Where(Function(x) x.Platform <> ResourcePlatforms.CurseForge)).ToList
-        
+
         RawResults = RawResults.Distinct(Function(a, b) a.IsLike(b)).ToList
-        
+
         RawResults = RawResults.Where(Function(r) Not RealResults.Any(Function(b) r.IsLike(b)) AndAlso
                                                   Not Storage.Results.Any(Function(b) r.IsLike(b))).ToList
-        
+
         RealResults.AddRange(RawResults)
         Logger.Info($"去重、筛选后累计新增结果 {RealResults.Count} 个（目前已有结果 {Storage.Results.Count} 个）")
 
@@ -473,7 +415,7 @@ NextPage:
 
         If RealResults.Count + Storage.Results.Count < Request.TargetResultCount Then
             Logger.Info($"总结果数需求最少 {Request.TargetResultCount} 个，仅获得了 {RealResults.Count + Storage.Results.Count} 个")
-            If Request.CanContinue AndAlso Not Errors.Any Then 
+            If Request.CanContinue AndAlso Not Errors.Any Then
                 Logger.Info("将继续尝试加载下一页")
                 GoTo NextPage
             Else
@@ -485,7 +427,7 @@ NextPage:
 
 #Region "将结果排序并添加"
 
-        Dim Scores As New Dictionary(Of ResourceProject, Double) 
+        Dim Scores As New Dictionary(Of ResourceProject, Double)
         Dim GetDownloadCountMult =
         Function(Project As ResourceProject) As Double
             Select Case Request.Type
@@ -500,13 +442,12 @@ NextPage:
             End Select
         End Function
         If String.IsNullOrEmpty(RawSearchText) Then
-            
+
             For Each Result As ResourceProject In RealResults
                 Scores(Result) = Result.DownloadCount * GetDownloadCountMult(Result)
             Next
         Else
-            
-            
+
             Dim SearchEntries As New List(Of SearchEntry(Of ResourceProject))
             For Each Result As ResourceProject In RealResults
                 Scores(Result) = If(Result.WikiId > 0, 0.2, 0) +
@@ -519,11 +460,11 @@ NextPage:
             For Each OneResult In SearchResult
                 Scores(OneResult.Item) +=
                     If(OneResult.AbsoluteRight, 10, OneResult.Similarity) /
-                    If(SearchResult.First.AbsoluteRight, 10, SearchResult.First.Similarity) 
+                    If(SearchResult.First.AbsoluteRight, 10, SearchResult.First.Similarity)
             Next
         End If
-        
-        If Task.IsCanceled Then Throw New OperationCanceledException 
+
+        If Task.IsCanceled Then Throw New OperationCanceledException
         Storage.Results.AddRange(
             Scores.OrderByDescending(Function(s) s.Value).Select(Function(r) r.Key))
 

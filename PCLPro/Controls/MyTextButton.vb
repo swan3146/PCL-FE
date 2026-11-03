@@ -3,15 +3,11 @@ Public Class MyTextButton
 
     Public Event Click(sender As Object, e As EventArgs)
 
-    
-
     Public Uuid As Integer = GetUuid()
     Public Sub New()
         SetResourceReference(ForegroundProperty, "ColorBrush1")
         Background = ColorSemiTransparent
     End Sub
-
-    
 
     Public Property Text As String
         Get
@@ -32,8 +28,6 @@ Public Class MyTextButton
             }, "MyTextButton Text " & sender.Uuid)
         End Sub))
 
-    
-
     Public IsMouseDown As Boolean = False
     Private Sub MyTextButton_MouseLeftButtonDown(sender As Object, e As MouseButtonEventArgs) Handles Me.PreviewMouseLeftButtonDown
         IsMouseDown = True
@@ -51,13 +45,11 @@ Public Class MyTextButton
         e.Handled = True
     End Sub
 
-    
-
     Private Const AnimationTimeIn As Integer = 100
     Private Const AnimationTimeOut As Integer = 200
     Private ColorName As String
     Private Sub RefreshColor() Handles Me.MouseEnter, Me.MouseLeave, Me.IsEnabledChanged, Me.MouseLeftButtonDown, Me.MouseLeftButtonUp
-        
+
         Dim ForeName As String
         Dim Time As Integer
         If IsMouseDown Then
@@ -70,15 +62,15 @@ Public Class MyTextButton
             ForeName = "ColorBrush1"
             Time = AnimationTimeOut
         End If
-        
+
         If ColorName = ForeName Then Return
         ColorName = ForeName
-        
-        If IsLoaded AndAlso AniControlEnabled = 0 Then 
-            
+
+        If IsLoaded AndAlso AniControlEnabled = 0 Then
+
             AniStart(AaColor(Me, ForegroundProperty, ForeName, Time), "MyTextButton Color " & Uuid)
         Else
-            
+
             AniStop("MyTextButton Color " & Uuid)
             SetResourceReference(ForegroundProperty, ForeName)
         End If

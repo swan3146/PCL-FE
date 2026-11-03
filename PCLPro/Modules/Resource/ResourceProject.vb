@@ -1,88 +1,38 @@
-
-
-
 Public Class ResourceProject
 
-    
-
-    
-    
-    
     Public ReadOnly Platform As ResourcePlatforms
-    
-    
-    
-    
+
     Public ReadOnly Types As ResourceTypes
-    
-    
-    
+
     Public ReadOnly Slug As String
-    
-    
-    
+
     Public ReadOnly Id As String
-    
-    
-    
+
     Public ReadOnly CurseForgeFileIds As List(Of Integer)
 
-    
-
-    
-    
-    
     Public ReadOnly RawName As String
-    
-    
-    
-    Public ReadOnly Description As String
-    
-    
-    
-    
-    
-    Public ReadOnly Website As String
-    
-    
-    
-    Public ReadOnly LastUpdate As Date
-    
-    
-    
-    Public ReadOnly DownloadCount As Integer
-    
-    
-    
-    Public ReadOnly ModLoaders As ModLoaders = ModLoaders.None
-    
-    
-    
-    Public ReadOnly Tags As List(Of String)
-    
-    
-    
-    
-    Public LogoUrl As String = Nothing
-    
-    
-    
-    
-    Public ReadOnly Drops As List(Of Integer)
-    
-    
-    
-    
-    
-    Public ReadOnly UnsafeGameVersions As List(Of String)
 
-    
+    Public ReadOnly Description As String
+
+    Public ReadOnly Website As String
+
+    Public ReadOnly LastUpdate As Date
+
+    Public ReadOnly DownloadCount As Integer
+
+    Public ReadOnly ModLoaders As ModLoaders = ModLoaders.None
+
+    Public ReadOnly Tags As List(Of String)
+
+    Public LogoUrl As String = Nothing
+
+    Public ReadOnly Drops As List(Of Integer)
+
+    Public ReadOnly UnsafeGameVersions As List(Of String)
 
     Private LoadedDatabase As Boolean = False
     Private _WikiEntry As WikiEntry = Nothing
-    
-    
-    
+
     Private Property WikiEntry As WikiEntry
         Get
             If Not LoadedDatabase Then
@@ -98,28 +48,19 @@ Public Class ResourceProject
             _WikiEntry = value
         End Set
     End Property
-    
-    
-    
+
     Public ReadOnly Property WikiId As Integer
         Get
             Return If(WikiEntry Is Nothing, 0, WikiEntry.Id)
         End Get
     End Property
-    
-    
-    
+
     Public ReadOnly Property TranslatedName As String
         Get
             Return If(WikiEntry?.ChineseName, RawName)
         End Get
     End Property
 
-    
-
-    
-    
-    
     Public Sub New(Data As JObject)
         If Data.ContainsKey("Tags") Then
 #Region "缓存 JSON"
@@ -146,13 +87,13 @@ Public Class ResourceProject
             Platform = If(Data.ContainsKey("summary"), ResourcePlatforms.CurseForge, ResourcePlatforms.Modrinth)
             If Platform = ResourcePlatforms.CurseForge Then
 #Region "CurseForge"
-                
+
                 Id = Data("id")
                 Slug = Data("slug")
                 RawName = Data("name")
                 Description = Data("summary")
                 Website = Data("links")("websiteUrl").ToString.TrimEnd("/")
-                LastUpdate = Data("dateReleased") 
+                LastUpdate = Data("dateReleased")
                 DownloadCount = Data("downloadCount")
                 If Data("logo").Count > 0 Then
                     If Data("logo")("thumbnailUrl") Is Nothing OrElse Data("logo")("thumbnailUrl") = "" Then
@@ -162,7 +103,7 @@ Public Class ResourceProject
                     End If
                 End If
                 If LogoUrl = "" Then LogoUrl = Nothing
-                
+
                 If Website.Contains("/mc-mods/") OrElse Website.Contains("/mod/") Then
                     Types = ResourceTypes.Mod
                 ElseIf Website.Contains("/modpacks/") Then
@@ -178,9 +119,9 @@ Public Class ResourceProject
                 Else
                     Types = ResourceTypes.DataPack
                 End If
-                
+
                 ModLoaders = ModLoaders.None
-                Dim Files As New List(Of KeyValuePair(Of Integer, List(Of String))) 
+                Dim Files As New List(Of KeyValuePair(Of Integer, List(Of String)))
                 For Each File In If(Data("latestFiles"), New JArray)
                     Dim NewFile = ResourceVersion.FromPlatformJson(File, Types)
                     If Not NewFile.DownloadAvailable Then Continue For
@@ -189,19 +130,19 @@ Public Class ResourceProject
                     If Not GameVersions.Any(Function(v) McVersion.IsStandardFormat(v)) Then Continue For
                     Files.Add(New KeyValuePair(Of Integer, List(Of String))(File("id"), GameVersions))
                 Next
-                For Each File In If(Data("latestFilesIndexes"), New JArray) 
+                For Each File In If(Data("latestFilesIndexes"), New JArray)
                     If Not McVersion.IsStandardFormat(File("gameVersion")) Then Continue For
                     Files.Add(New KeyValuePair(Of Integer, List(Of String))(File("fileId"), {File("gameVersion").ToString}.ToList))
                 Next
                 CurseForgeFileIds = Files.Select(Function(f) f.Key).Distinct.ToList
                 Drops = Files.SelectMany(Function(f) f.Value).
                     Select(Function(v) McVersion.VersionToDrop(v)).Where(Function(v) v <> 209).Distinct.OrderByDescending(Function(v) v).ToList
-                
+
                 Tags = New List(Of String)
-                For Each Category In If(Data("categories"), New JArray). 
+                For Each Category In If(Data("categories"), New JArray).
                     Select(Of Integer)(Function(t) t("id")).Distinct.OrderByDescending(Function(c) c)
                     Select Case Category
-                            
+
                         Case 406 : Tags.Add("世界元素")
                         Case 407 : Tags.Add("生物群系")
                         Case 410 : Tags.Add("维度")
@@ -227,7 +168,7 @@ Public Class ResourceProject
                         Case 435 : Tags.Add("服务器")
                         Case 5191 : Tags.Add("改良")
                         Case 421 : Tags.Add("支持库")
-                            
+
                         Case 4484 : Tags.Add("多人")
                         Case 4479 : Tags.Add("硬核")
                         Case 4483 : Tags.Add("战斗")
@@ -244,7 +185,7 @@ Public Class ResourceProject
                         Case 4480 : Tags.Add("基于地图")
                         Case 4481 : Tags.Add("轻量")
                         Case 4482 : Tags.Add("大型")
-                            
+
                         Case 403 : Tags.Add("原版风")
                         Case 400 : Tags.Add("写实风")
                         Case 401 : Tags.Add("现代风")
@@ -259,12 +200,12 @@ Public Class ResourceProject
                         Case 396 : Tags.Add("128x")
                         Case 397 : Tags.Add("256x")
                         Case 398 : Tags.Add("超高清")
-                        Case 5193 : Tags.Add("数据包") 
-                            
+                        Case 5193 : Tags.Add("数据包")
+
                         Case 6553 : Tags.Add("写实风")
                         Case 6554 : Tags.Add("幻想风")
                         Case 6555 : Tags.Add("原版风")
-                            
+
                         Case 6948 : Tags.Add("冒险")
                         Case 6949 : Tags.Add("幻想")
                         Case 6950 : Tags.Add("支持库")
@@ -277,8 +218,8 @@ Public Class ResourceProject
 #End Region
             Else
 #Region "Modrinth"
-                
-                Id = If(Data("project_id"), Data("id")) 
+
+                Id = If(Data("project_id"), Data("id"))
                 Slug = Data("slug")
                 RawName = Data("title")
                 Description = Data("description")
@@ -287,18 +228,17 @@ Public Class ResourceProject
                 LogoUrl = Data("icon_url")
                 If LogoUrl = "" Then LogoUrl = Nothing
                 Website = $"https://modrinth.com/{Data("project_type")}/{Slug}"
-                
-                
+
                 UnsafeGameVersions = If(CType(If(Data("game_versions"), Data("versions")), JArray), New JArray).Select(Function(v) v.ToString).Distinct.ToList
                 Drops = UnsafeGameVersions.Select(Function(v) McVersion.VersionToDrop(v)).Where(Function(v) v <> 209).Distinct.OrderByDescending(Function(v) v).ToList
-                
+
                 Select Case Data("project_type").ToString
                     Case "modpack" : Types = ResourceTypes.ModPack
                     Case "resourcepack" : Types = ResourceTypes.ResourcePack
                     Case "shader" : Types = ResourceTypes.Shader
-                    Case Else : Types = ResourceTypes.Mod 
+                    Case Else : Types = ResourceTypes.Mod
                 End Select
-                
+
                 Tags = New List(Of String)
                 ModLoaders = ModLoaders.None
                 For Each Category In If(Data("loaders")?.Select(Function(t) t.ToString), {}).Concat(Data("categories").Select(Function(t) t.ToString))
@@ -312,7 +252,7 @@ Public Class ResourceProject
                 For Each Category In Data("categories").Select(Function(t) t.ToString)
                     Select Case Category
                         Case "datapack" : Types = ResourceTypes.DataPack
-                            
+
                         Case "technology" : Tags.Add("科技")
                         Case "magic" : Tags.Add("魔法")
                         Case "adventure" : Tags.Add("冒险")
@@ -320,7 +260,7 @@ Public Class ResourceProject
                         Case "optimization" : Tags.Add("性能优化")
                         Case "vanilla-like" : Tags.Add("原版风")
                         Case "realistic" : Tags.Add("写实风")
-                            
+
                         Case "worldgen" : Tags.Add("世界元素")
                         Case "food" : Tags.Add("食物/烹饪")
                         Case "game-mechanics" : Tags.Add("游戏机制")
@@ -331,14 +271,14 @@ Public Class ResourceProject
                         Case "equipment" : If Types <> ResourceTypes.ResourcePack Then Tags.Add("装备")
                         Case "social" : Tags.Add("服务器")
                         Case "library" : Tags.Add("支持库")
-                            
+
                         Case "multiplayer" : Tags.Add("多人")
                         Case "challenging" : Tags.Add("硬核")
                         Case "combat" : Tags.Add("战斗")
                         Case "quests" : Tags.Add("任务")
                         Case "kitchen-sink" : Tags.Add("水槽包")
                         Case "lightweight" : Tags.Add("轻量")
-                            
+
                         Case "simplistic" : Tags.Add("简洁")
                         Case "combat" : Tags.Add("战斗")
                         Case "tweaks" : Tags.Add("改良")
@@ -359,15 +299,11 @@ Public Class ResourceProject
                         Case "locale" : Tags.Add("含语言")
                         Case "core-shaders" : Tags.Add("核心着色器")
                         Case "modded" : Tags.Add("兼容 Mod")
-                            
+
                         Case "fantasy" : Tags.Add("幻想风")
                         Case "semi-realistic" : Tags.Add("半写实风")
                         Case "cartoon" : Tags.Add("卡通风")
-                            
-                            
-                            
-                            
-                            
+
                         Case "colored-lighting" : Tags.Add("彩色光照")
                         Case "path-tracing" : Tags.Add("路径追踪")
                         Case "pbr" : Tags.Add("PBR")
@@ -384,28 +320,24 @@ Public Class ResourceProject
             If Not Tags.Any() Then Tags.Add("其他")
             Tags.Sort()
         End If
-        
+
         Cache(Id) = Me
     End Sub
-    
-    
-    
+
     Public Shared Function FromProjectId(ProjectId As String, Platform As ResourcePlatforms) As ResourceProject
         If Not Platform.Flags.IsSingle Then Throw New ArgumentException($"必须指定单一平台，当前值为 {Platform}")
-        If Cache.ContainsKey(ProjectId) Then 
+        If Cache.ContainsKey(ProjectId) Then
             Return Cache(ProjectId)
-        ElseIf Platform = ResourcePlatforms.CurseForge Then 
+        ElseIf Platform = ResourcePlatforms.CurseForge Then
             Return New ResourceProject(DlModRequest("https://api.curseforge.com/v1/mods/" & ProjectId)("data"))
-        Else 
+        Else
             Return New ResourceProject(DlModRequest("https://api.modrinth.com/v2/project/" & ProjectId))
         End If
     End Function
-    
-    
-    
+
     Public Shared Iterator Function FromProjectIds(ProjectIds As IEnumerable(Of String), Platform As ResourcePlatforms) As IEnumerable(Of ResourceProject)
         If Not Platform.Flags.IsSingle Then Throw New ArgumentException($"必须指定单一平台，当前值为 {Platform}")
-        
+
         Dim MissingProjectIds As New List(Of String)
         For Each ProjectId In ProjectIds
             If Cache.ContainsKey(ProjectId) Then
@@ -415,7 +347,7 @@ Public Class ResourceProject
             End If
         Next
         If Not MissingProjectIds.Any() Then Return
-        
+
         Dim Projects As JArray
         If Platform.HasFlagF(ResourcePlatforms.CurseForge) Then
             Projects = DlModRequest("https://api.curseforge.com/v1/mods",
@@ -428,9 +360,6 @@ Public Class ResourceProject
         Next
     End Function
 
-    
-    
-    
     Public Function ToJson() As JObject
         Dim Json As New JObject
         Json("Platform") = CInt(Platform)
@@ -447,25 +376,22 @@ Public Class ResourceProject
         Json("Tags") = New JArray(Tags)
         If LogoUrl IsNot Nothing Then Json("LogoUrl") = LogoUrl
         If Drops.Any Then Json("Drops") = New JArray(Drops)
-        Json("CacheTime") = Date.Now 
+        Json("CacheTime") = Date.Now
         Return Json
     End Function
 
-    
-    
-    
     Public Function ToResourceItem(ShowMcVersionDesc As Boolean, ShowLoaderDesc As Boolean) As MyVirtualizingElement(Of MyResourceItem)
-        
+
         Dim GameVersionDescription As String
         If Drops Is Nothing OrElse Not Drops.Any() Then
-            GameVersionDescription = "仅快照版本" 
+            GameVersionDescription = "仅快照版本"
         Else
             Dim Segments As New List(Of String)
             Dim IsOld As Boolean = False
-            For i = 0 To Drops.Count - 1 
-                
+            For i = 0 To Drops.Count - 1
+
                 Dim StartDrop As Integer = Drops(i), EndDrop As Integer = Drops(i)
-                If StartDrop < 120 Then 
+                If StartDrop < 120 Then
                     If Segments.Any() AndAlso Not IsOld Then
                         Exit For
                     Else
@@ -477,7 +403,7 @@ Public Class ResourceProject
                     EndDrop = Drops(ii)
                     i = ii
                 Next
-                
+
                 Dim StartName = McVersion.DropToVersion(StartDrop)
                 Dim EndName = McVersion.DropToVersion(EndDrop)
                 If StartDrop = EndDrop Then
@@ -501,7 +427,7 @@ Public Class ResourceProject
             Next
             GameVersionDescription = Segments.Join(", ")
         End If
-        
+
         Dim ModLoaderDescriptionFull As String, ModLoaderDescriptionPart As String
         Dim ModLoadersForDesc = ModLoaders.Flags().ToList()
         Select Case ModLoadersForDesc.Count
@@ -528,7 +454,7 @@ Public Class ResourceProject
                     ModLoaderDescriptionPart = ModLoadersForDesc.Join(" / ")
                 End If
         End Select
-        
+
         Return New MyVirtualizingElement(Of MyResourceItem)(
         Function()
             Dim NewItem As New MyResourceItem With {.Tag = Me}
@@ -542,22 +468,22 @@ Public Class ResourceProject
             End If
             NewItem.Tags = Tags
             NewItem.Description = Description.ReplaceLineEndings("")
-            
+
             If Not ShowMcVersionDesc AndAlso Not ShowLoaderDesc Then
-                
+
                 CType(NewItem.PathVersion.Parent, Grid).Children.Remove(NewItem.PathVersion)
                 CType(NewItem.LabVersion.Parent, Grid).Children.Remove(NewItem.LabVersion)
                 NewItem.ColumnVersion1.Width = New GridLength(0)
                 NewItem.ColumnVersion2.MaxWidth = 0
                 NewItem.ColumnVersion3.Width = New GridLength(0)
             ElseIf ShowMcVersionDesc AndAlso ShowLoaderDesc Then
-                
+
                 NewItem.LabVersion.Text = If(ModLoaderDescriptionPart = "", "", ModLoaderDescriptionPart & " ") & GameVersionDescription
             ElseIf ShowMcVersionDesc Then
-                
+
                 NewItem.LabVersion.Text = GameVersionDescription
             Else
-                
+
                 NewItem.LabVersion.Text = ModLoaderDescriptionFull
             End If
             NewItem.LabSource.Text = Platform.ToString
@@ -577,74 +503,71 @@ Public Class ResourceProject
         End If
     End Sub
     Public Function GetControlTitle(HasModLoaderDescription As Boolean) As (Title As String, SubTitle As String)
-        
+
         Dim Title As String = RawName
         Dim SubtitleList As List(Of String)
         If TranslatedName = RawName Then
-            
-            
+
             Dim NameLists = TranslatedName.Split({" | ", " - ", "(", ")", "[", "]", "{", "}"}, True).
                 Select(Function(s) s.Trim(" /\".ToCharArray)).Where(Function(w) Not String.IsNullOrEmpty(w))
             If NameLists.IsSingle Then GoTo NoSubtitle
-            
+
             SubtitleList = New List(Of String)
             Dim NormalNameList = New List(Of String)
             For Each Name In NameLists
                 Dim LowerName As String = Name.Lower
                 If Name = Name.Upper AndAlso Name <> "FPS" AndAlso Name <> "HUD" Then
-                    
+
                     SubtitleList.Add(Name)
                 ElseIf {"neoforge", "forge", "fabric", "quilt"}.Any(Function(l) LowerName.Contains(l)) AndAlso
-                    Not LowerName.Replace("neoforge", "").Replace("forge", "").Replace("fabric", "").Replace("quilt", "").RegexCheck("[a-z]+") Then 
-                    
+                    Not LowerName.Replace("neoforge", "").Replace("forge", "").Replace("fabric", "").Replace("quilt", "").RegexCheck("[a-z]+") Then
+
                     SubtitleList.Add(Name)
                 Else
-                    
+
                     NormalNameList.Add(Name)
                 End If
             Next
-            
+
             If Not NormalNameList.Any() OrElse Not SubtitleList.Any() Then GoTo NoSubtitle
-            
+
             Title = NormalNameList.Join(" - ")
         Else
-            
-            
-            
+
             Title = If(TranslatedName.Contains(" ("), TranslatedName.BeforeFirst(" ("), TranslatedName.BeforeLast(" - "))
             Dim Suffix As String = ""
             If TranslatedName.AfterLast(")").Contains(" - ") Then Suffix = TranslatedName.AfterLast(")").AfterLast(" - ")
             Dim EnglishName As String = TranslatedName
             If Suffix <> "" Then EnglishName = EnglishName.Replace(" - " & Suffix, "")
             EnglishName = EnglishName.Replace(Title, "").Trim("("c, ")"c, " "c)
-            
+
             SubtitleList = EnglishName.Split({" | ", " - ", "(", ")", "[", "]", "{", "}"}, True).
                     Select(Function(s) s.Trim(" /".ToCharArray)).Where(Function(w) Not String.IsNullOrEmpty(w)).ToList
             If SubtitleList.Count > 1 AndAlso
-               Not SubtitleList.Any(Function(s) s.Lower.Contains("forge") OrElse s.Lower.Contains("fabric") OrElse s.Lower.Contains("quilt")) AndAlso 
-               Not (SubtitleList.Count = 2 AndAlso SubtitleList.Last.Upper = SubtitleList.Last) Then 
-                SubtitleList = New List(Of String) From {EnglishName} 
+               Not SubtitleList.Any(Function(s) s.Lower.Contains("forge") OrElse s.Lower.Contains("fabric") OrElse s.Lower.Contains("quilt")) AndAlso
+               Not (SubtitleList.Count = 2 AndAlso SubtitleList.Last.Upper = SubtitleList.Last) Then
+                SubtitleList = New List(Of String) From {EnglishName}
             End If
-            
+
             If Suffix <> "" Then SubtitleList.Add(Suffix)
         End If
         SubtitleList = SubtitleList.Distinct.ToList()
-        
+
         Dim Subtitle As String = ""
         If SubtitleList.Any Then
             For Each Ex In SubtitleList
                 Dim IsModLoaderDescription As Boolean =
                     Ex.Lower.Contains("neoforge") OrElse Ex.Lower.Contains("forge") OrElse Ex.Lower.Contains("fabric") OrElse Ex.Lower.Contains("quilt")
-                
+
                 If Not HasModLoaderDescription AndAlso IsModLoaderDescription Then Continue For
-                
+
                 If Ex.Length < 16 AndAlso Ex.Lower.Contains("fabric") AndAlso Ex.Lower.Contains("forge") Then Continue For
-                
+
                 If IsModLoaderDescription AndAlso Not Ex.Contains("版") AndAlso
                     Ex.Lower.Replace("neoforge", "").Replace("forge", "").Replace("fabric", "").Replace("quilt", "").Length <= 3 Then
                     Ex = Ex.Replace("Edition", "").Replace("edition", "").Trim.Capitalize & " 版"
                 End If
-                
+
                 Ex = Ex.Replace("neoforge", "NeoForge").Replace("forge", "Forge").Replace("neo", "Neo").Replace("fabric", "Fabric").Replace("quilt", "Quilt")
                 Subtitle &= "  |  " & Ex.Trim
             Next
@@ -655,17 +578,11 @@ NoSubtitle:
         Return (Title, Subtitle)
     End Function
 
-    
-    
-    
     Protected Friend Shared Cache As New Dictionary(Of String, ResourceProject)
 
-    
-    
-    
     Public Function IsLike(Project As ResourceProject) As Boolean
-        If Id = Project.Id Then Return True 
-        
+        If Id = Project.Id Then Return True
+
         Dim GetRaw =
         Function(Data As String) As String
             Dim Result As New StringBuilder()
@@ -674,20 +591,20 @@ NoSubtitle:
             Next
             Return Result.ToString.Lower
         End Function
-        
+
         If Platform = Project.Platform Then Return False
-        
+
         If ModLoaders <> Project.ModLoaders Then Return False
-        
+
         If Types <> ResourceTypes.Shader AndAlso Drops.Ordered.SequenceEqual(Project.Drops.Ordered) Then Return False
-        
+
         If Math.Abs((LastUpdate - Project.LastUpdate).TotalDays) > 7 Then Return False
-        
+
         If TranslatedName = Project.TranslatedName OrElse
            RawName = Project.RawName OrElse Description = Project.Description OrElse
            GetRaw(Slug) = GetRaw(Project.Slug) Then
             Logger.Info($"将 {RawName} ({Slug}) 与 {Project.RawName} ({Project.Slug}) 认定为相似工程")
-            
+
             If WikiEntry Is Nothing AndAlso Project.WikiEntry IsNot Nothing Then WikiEntry = Project.WikiEntry
             If WikiEntry IsNot Nothing AndAlso Project.WikiEntry Is Nothing Then Project.WikiEntry = WikiEntry
             Return True
@@ -695,7 +612,6 @@ NoSubtitle:
         Return False
     End Function
 
-    
     Public Overrides Function ToString() As String
         Return $"{Id} ({Slug}): {RawName}"
     End Function

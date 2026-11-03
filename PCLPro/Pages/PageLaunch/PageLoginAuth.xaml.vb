@@ -1,23 +1,16 @@
 Public Class PageLoginAuth
     Private IsFirstLoad As Boolean = True
-    
-    
-    
+
     Public ReadOnly AuthServerPresets As New List(Of String) From {
         "https://littleskin.cn/api/yggdrasil",
         "https://mcskin.ml/api/yggdrasil",
         "https://skin.flowing.top/api/yggdrasil"
     }
-    
-    
-    
+
     Private Function NormalizeServer(Input As String) As String
         Return NormalizeServerShared(Input)
     End Function
-    
-    
-    
-    
+
     Public Shared Sub SaveServerSettings(Server As String)
         If AniControlEnabled <> 0 Then Return
         Server = NormalizeServerShared(Server)
@@ -25,11 +18,9 @@ Public Class PageLoginAuth
         Settings.Set("CacheAuthServerServer", Server)
         If McInstanceSelected IsNot Nothing Then Settings.Set("VersionServerAuthServer", Server, Instance:=McInstanceSelected)
     End Sub
-    
-    
-    
+
     Public Sub Reload(KeepInput As Boolean)
-        
+
         Dim SavedServer As String = NormalizeServer(Settings.Get(Of String)("CacheAuthServerServer"))
         If SavedServer = "" AndAlso McInstanceSelected IsNot Nothing Then
             SavedServer = NormalizeServer(Settings.Get(Of String)("VersionServerAuthServer", Instance:=McInstanceSelected))
@@ -40,15 +31,15 @@ Public Class PageLoginAuth
         ServerList.AddRange(AuthServerPresets)
         ComboServer.ItemsSource = ServerList
         ComboServer.Text = If(KeepInput AndAlso ComboServer.Text <> "", ComboServer.Text, SavedServer)
-        
+
         CheckRemember.Checked = Settings.Get(Of Boolean)("LoginRemember")
-        If KeepInput AndAlso Not IsFirstLoad Then 
-            
+        If KeepInput AndAlso Not IsFirstLoad Then
+
             Dim Input As String = ComboName.Text
             ComboName.ItemsSource = If(Settings.Get(Of String)("LoginAuthEmail") = "", Nothing, Settings.Get(Of String)("LoginAuthEmail").Split("¨"))
             ComboName.Text = Input
         Else
-            
+
             If Settings.Get(Of String)("LoginAuthEmail") = "" Then
                 ComboName.ItemsSource = Nothing
             Else
@@ -59,9 +50,7 @@ Public Class PageLoginAuth
         End If
         IsFirstLoad = False
     End Sub
-    
-    
-    
+
     Public Shared Function GetLoginData() As McLoginServer
         Dim Server As String = GetServerAddress() & "/authserver"
         If FrmLoginAuth Is Nothing Then
@@ -70,12 +59,9 @@ Public Class PageLoginAuth
             Return New McLoginServer(McLoginType.Auth) With {.Token = "Auth", .BaseUrl = Server, .UserName = FrmLoginAuth.ComboName.Text.Replace("¨", "").Trim, .Password = FrmLoginAuth.TextPass.Password.Replace("¨", "").Trim, .Description = "Authlib-Injector", .Type = McLoginType.Auth}
         End If
     End Function
-    
-    
-    
+
     Public Shared Function IsVaild(LoginData As McLoginServer) As String
-        
-        
+
         If GetServerAddress() = "" Then Return "请先填写外置登录地址！"
         If LoginData Is Nothing Then Return "请先填写外置登录地址！"
         If LoginData.UserName = "" Then Return "账号不能为空！"
@@ -85,19 +71,16 @@ Public Class PageLoginAuth
     Public Function IsVaild() As String
         Return IsVaild(GetLoginData())
     End Function
-    
-    
-    
-    
+
     Public Shared Function GetServerAddress() As String
         Dim Server As String = ""
-        
+
         If FrmLoginAuth IsNot Nothing AndAlso FrmLoginAuth.Dispatcher.CheckAccess() Then
             Server = NormalizeServerShared(FrmLoginAuth.ComboServer.Text)
         End If
-        
+
         If Server = "" Then Server = NormalizeServerShared(Settings.Get(Of String)("CacheAuthServerServer"))
-        
+
         If Server = "" AndAlso McInstanceSelected IsNot Nothing Then
             Server = NormalizeServerShared(Settings.Get(Of String)("VersionServerAuthServer", Instance:=McInstanceSelected))
         End If
@@ -109,15 +92,14 @@ Public Class PageLoginAuth
         If Server = "" Then Return ""
         If Not Server.Contains("://") Then Server = "https://" & Server
         Server = Server.TrimEnd("/"c)
-        
+
         If Server.EndsWithF("/authserver", True) Then Server = Server.Substring(0, Server.Length - 11).TrimEnd("/"c)
         Return Server
     End Function
 
-    
     Private Sub ComboName_TextChanged(sender As Object, e As TextChangedEventArgs) Handles ComboName.TextChanged
         If sender.Text = "" Then TextPass.Password = ""
-        If AniControlEnabled = 0 Then Settings.Set("CacheAuthAccess", "")  
+        If AniControlEnabled = 0 Then Settings.Set("CacheAuthAccess", "")
     End Sub
     Private Sub TextPass_PasswordChanged(sender As Object, e As RoutedEventArgs) Handles TextPass.PasswordChanged
         If AniControlEnabled = 0 Then Settings.Set("CacheAuthAccess", "")
@@ -133,11 +115,8 @@ Public Class PageLoginAuth
         If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.Checked)
     End Sub
 
-    
     Private _serverDebounce As System.Windows.Threading.DispatcherTimer
-    
-    
-    
+
     Private Sub QueueFetchServerInfo()
         If AniControlEnabled <> 0 OrElse IsFirstLoad Then Return
         If _serverDebounce Is Nothing Then
@@ -153,7 +132,7 @@ Public Class PageLoginAuth
         _serverDebounce.Start()
     End Sub
     Private Sub ComboServer_TextChanged(sender As Object, e As TextChangedEventArgs) Handles ComboServer.TextChanged
-        
+
         Dim Server As String = NormalizeServerShared(ComboServer.Text)
         If Server.Contains(".") Then SaveServerSettings(Server)
         QueueFetchServerInfo()
@@ -161,9 +140,7 @@ Public Class PageLoginAuth
     Private Sub ComboServer_SelectionChanged(sender As MyComboBox, e As SelectionChangedEventArgs) Handles ComboServer.SelectionChanged
         QueueFetchServerInfo()
     End Sub
-    
-    
-    
+
     Private Sub FetchServerInfo(Server As String)
         If Server = "" Then Return
         SaveServerSettings(Server)
@@ -184,12 +161,11 @@ Public Class PageLoginAuth
                                            If RegisterAddress <> "" AndAlso McInstanceSelected IsNot Nothing AndAlso Settings.Get(Of Integer)("VersionServerLogin", Instance:=McInstanceSelected) = 4 Then Settings.Set("VersionServerAuthRegister", RegisterAddress, Instance:=McInstanceSelected)
                                        End Sub)
                            Catch ex As Exception
-                               
+
                            End Try
                        End Sub, "皮肤站元数据")
     End Sub
 
-    
     Private Sub ComboName_TextChanged() Handles ComboName.TextChanged
         BtnLink.Content = If(ComboName.Text = "", "注册账号", "找回密码")
     End Sub
@@ -201,7 +177,7 @@ Public Class PageLoginAuth
             OpenWebsite(Website.Replace("/auth/register", "/auth/forgot"))
         End If
     End Sub
-    
+
     Private Sub ReloadRegisterButton() Handles Me.Loaded
         Dim Address As String = If(McInstanceSelected IsNot Nothing, Settings.Get(Of String)("VersionServerAuthRegister", Instance:=McInstanceSelected), Settings.Get(Of String)("CacheAuthServerRegister"))
         BtnLink.Visibility = If(String.IsNullOrEmpty(New ValidateHttp().Validate(Address)), Visibility.Visible, Visibility.Collapsed)

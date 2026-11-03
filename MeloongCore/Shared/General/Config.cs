@@ -15,18 +15,17 @@ public class JsonConfigProvider : IConfigProvider {
     public static readonly ConcurrentBag<WeakReference<JsonConfigProvider>> allProviders = [];
     private readonly string filePath;
 
-#pragma warning disable CS8618 
+#pragma warning disable CS8618
     public JsonConfigProvider(string filePath) {
-#pragma warning restore CS8618 
+#pragma warning restore CS8618
         this.filePath = filePath;
         allProviders.Add(new(this));
         saveWorker = new(Save, 500, RateLimitMode.WaitUnillNoNewInvoke);
         InitJson();
     }
 
-    
     private Lazy<JObject> json;
-    
+
     private readonly ConcurrentDictionary<string, object?> cache = new();
     private void InitJson() {
         json = new(() => {
@@ -39,22 +38,19 @@ public class JsonConfigProvider : IConfigProvider {
         });
     }
 
-    
-
     public void Set<T>(string key, T? value, bool encrypted) {
         cache[key] = value;
         lock (this) {
             if (value is null) {
-                
+
                 json.Value[key] = JValue.CreateNull();
                 Logger.Trace($"配置已修改：{key} = null（{filePath}）");
             } else if (encrypted) {
-                
+
                 throw new NotImplementedException("加密需要改为使用识别码，现在尚未实现。");
-                
-                
+
             } else {
-                
+
                 JToken token = JToken.FromObject(value);
                 json.Value[key] = token;
                 Logger.Trace($"配置已修改：{key} = {token.ToString(Formatting.None)}（{filePath}）");
@@ -63,10 +59,10 @@ public class JsonConfigProvider : IConfigProvider {
         MakeDirty();
     }
     public T? Read<T>(string key, T? defaultValue, bool encrypted) {
-        if (cache.TryGetValue(key, out var cachedValue)) return (T?) cachedValue; 
+        if (cache.TryGetValue(key, out var cachedValue)) return (T?) cachedValue;
         JToken entry;
         lock (this) {
-            if (!json.Value.TryGetValue(key, out entry!)) return defaultValue; 
+            if (!json.Value.TryGetValue(key, out entry!)) return defaultValue;
             entry = entry.DeepClone();
         }
         try {
@@ -101,15 +97,13 @@ public class JsonConfigProvider : IConfigProvider {
         cache.Clear();
     }
 
-    
-
     private readonly RateLimitedWorker saveWorker;
     private bool isDirty = false;
     public void MakeDirty() {
         lock (this) isDirty = true;
         saveWorker.Start();
     }
-    
+
     public void Save() {
         lock (this) {
             if (!isDirty) return;
@@ -127,27 +121,15 @@ public static class ConfigProviders {
 
 #region ConfigEntry | 单个配置项
 
-
-
-
 public class PreviewGetEventArgs<T>(T? value) : EventArgs {
     public T? Value { get; set; } = value;
 }
 
-
-
-
-
 public class ConfigEntry<T>(string key, T? defaultValue, bool encrypted = false, IConfigProvider? provider = null) {
     public IConfigProvider Provider { get; } = provider ?? ConfigProviders.Default;
 
-    
-    
-    
     public event Action<T?>? Changed;
-    
-    
-    
+
     public event Action<PreviewGetEventArgs<T>, IConfigProvider>? PreviewGet;
 
     public void Edit(Func<T?, T?> editFunc) => Set(editFunc(Get()));
@@ -163,7 +145,7 @@ public class ConfigEntry<T>(string key, T? defaultValue, bool encrypted = false,
         Changed?.Invoke(value);
     }
     public void Reset() {
-        if (!Provider.HasValue(key)) return; 
+        if (!Provider.HasValue(key)) return;
         Provider.Remove(key);
         Changed?.Invoke(defaultValue);
     }
@@ -175,19 +157,11 @@ public class ConfigEntry<T>(string key, T? defaultValue, bool encrypted = false,
     public bool HasValue() => Provider.HasValue(key);
 }
 
-
-
-
 public class DynamicConfigEntry<T>(string key, T? defaultValue, bool encrypted = false) {
-    
-    
-    
-    public event Action<T?>? Changed;
-    
-    
-    
-    public event Action<PreviewGetEventArgs<T>, IConfigProvider>? PreviewGet;
 
+    public event Action<T?>? Changed;
+
+    public event Action<PreviewGetEventArgs<T>, IConfigProvider>? PreviewGet;
 
     public void Edit(Func<T?, T?> editFunc, IConfigProvider provider) => Set(editFunc(Get(provider)), provider);
     public void Edit(RefAction editAction, IConfigProvider provider) {
@@ -202,7 +176,7 @@ public class DynamicConfigEntry<T>(string key, T? defaultValue, bool encrypted =
         Changed?.Invoke(value);
     }
     public void Reset(IConfigProvider provider) {
-        if (!provider.HasValue(key)) return; 
+        if (!provider.HasValue(key)) return;
         provider.Remove(key);
         Changed?.Invoke(defaultValue);
     }
@@ -219,7 +193,6 @@ public class DynamicConfigEntry<T>(string key, T? defaultValue, bool encrypted =
 
 public static class ConfigUtils {
 
-    
     public static void SaveAll() {
         foreach (var weakRef in JsonConfigProvider.allProviders) {
             if (weakRef.TryGetTarget(out var provider)) provider.Save();
@@ -231,12 +204,11 @@ public static class ConfigUtils {
         try {
             return FileUtils.Exists(filePath) ? JObject.Parse(FileUtils.ReadAsString(filePath)) : [];
         } catch {
-            
+
             throw new InvalidDataException($"读取密钥文件失败（{filePath}），请检查文件内容与加密格式。");
         }
     });
 
-    
     public static string GetSecret(string key) {
         string value = secret.Value.Value<string>(key) ?? throw new KeyNotFoundException($"未找到密钥：{key}");
         try {

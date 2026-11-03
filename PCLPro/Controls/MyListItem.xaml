@@ -19,9 +19,7 @@
         <RowDefinition Height="Auto" />
         <RowDefinition Height="1*" />
     </Grid.RowDefinitions>
-    
-    
+
     <TextBlock Grid.Row="1" SnapsToDevicePixels="False" UseLayoutRounding="False" HorizontalAlignment="Left" x:Name="LabTitle" IsHitTestVisible="False" Grid.Column="3" Text="{Binding Title, ElementName=PanBack}" TextTrimming="CharacterEllipsis" FontSize="{Binding FontSize, ElementName=PanBack}" Foreground="{Binding Foreground, ElementName=PanBack}" Margin="4,0,0,0" />
-    
-    
+
 </Grid>

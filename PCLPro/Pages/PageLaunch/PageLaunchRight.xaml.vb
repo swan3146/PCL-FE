@@ -6,7 +6,7 @@ Public Class PageLaunchRight
     Private Sub Init() Handles Me.Loaded
         PanBack.ScrollToHome()
         PanLog.Visibility = ModeDebug.ToVisibility
-        
+
         PanHint.Visibility =
             (BuildType <> BuildTypes.Release AndAlso VersionBranchMain = "Official" AndAlso
              CurrentRank < DonationRank.Rank23 AndAlso Not Settings.Get(Of Boolean)("HintSnapshot")).ToVisibility
@@ -14,9 +14,6 @@ Public Class PageLaunchRight
 
 #Region "主页"
 
-    
-    
-    
     Private Sub Refresh() Handles Me.Loaded
         RunInThread(
         Sub()
@@ -33,21 +30,21 @@ Public Class PageLaunchRight
         Dim Content As String = Nothing, Url As String = Nothing
         Select Case Settings.Get(Of Integer)("UiCustomType")
             Case 1
-                
+
                 Logger.Info("主页自定义数据来源：本地文件")
                 Content = FileUtils.TryReadAsString(Paths.Base & "PCL\Custom.xaml")
             Case 2
-                
+
                 Url = Settings.Get(Of String)("UiCustomNet")
             Case 3
-                
+
                 Select Case Settings.Get(Of Integer)("UiCustomPreset")
                     Case 0
                         Logger.Info("主页预设：你知道吗")
                         Content = "
                             <local:MyCard Title=""你知道吗？"" Margin=""0,0,0,15"">
                                 <TextBlock Margin=""25,38,23,15"" FontSize=""13.5"" IsHitTestVisible=""False"" Text=""{hint}"" TextWrapping=""Wrap"" Foreground=""{DynamicResource ColorBrush1}"" />
-                                <local:MyIconButton Height=""22"" Width=""22"" Margin=""9"" VerticalAlignment=""Top"" HorizontalAlignment=""Right"" 
+                                <local:MyIconButton Height=""22"" Width=""22"" Margin=""9"" VerticalAlignment=""Top"" HorizontalAlignment=""Right""
                                     EventType=""刷新主页"" EventData=""/""
                                     Logo=""M512.0 838.3c-80.2 0-153.4-29.3-210.2-77.4l75.5-75.5c11.5-11.5 25.8-22.0 25.8-37.0a27.2 27.2 0 0 0-27.1-27.1H104.0c-27.1 0-27.1 23.9-27.1 27.1v271.9a27.1 27.1 0 0 0 27.1 27.1c15.0 0 27.8-16.6 42.5-31.2l77.9-77.9c76.6 67.7 177.1 108.9 287.4 108.9 221.7 0 404.5-166.0 431.2-380.6h-109.8c-25.9 154.2-159.7 271.9-321.3 271.9zM919.9 76.6c-15.0 0-27.8 16.6-42.5 31.3L799.5 185.8c-76.5-67.7-177.1-108.9-287.4-108.9-221.8 0-404.5 166.1-431.3 380.6H190.6c25.9-154.2 159.7-271.9 321.4-271.9 80.2 0 153.4 29.3 210.1 77.4l-75.5 75.5c-11.6 11.5-25.8 22.0-25.8 37.1a27.2 27.2 0 0 0 27.1 27.1h271.9c27.1 0 27.1-23.9 27.1-27.1V103.8a27.1 27.1 0 0 0-27.1-27.1z"" />
                             </local:MyCard>"
@@ -56,7 +53,7 @@ Public Class PageLaunchRight
                         Content = "
                             <local:MyCard Title=""回声洞"" Margin=""0,0,0,15"">
                                 <TextBlock Margin=""25,38,23,15"" FontSize=""13.5"" IsHitTestVisible=""False"" Text=""{cave}"" TextWrapping=""Wrap"" Foreground=""{DynamicResource ColorBrush1}"" />
-                                <local:MyIconButton Height=""22"" Width=""22"" Margin=""9"" VerticalAlignment=""Top"" HorizontalAlignment=""Right"" 
+                                <local:MyIconButton Height=""22"" Width=""22"" Margin=""9"" VerticalAlignment=""Top"" HorizontalAlignment=""Right""
                                     EventType=""刷新主页"" EventData=""/""
                                     Logo=""M512.0 838.3c-80.2 0-153.4-29.3-210.2-77.4l75.5-75.5c11.5-11.5 25.8-22.0 25.8-37.0a27.2 27.2 0 0 0-27.1-27.1H104.0c-27.1 0-27.1 23.9-27.1 27.1v271.9a27.1 27.1 0 0 0 27.1 27.1c15.0 0 27.8-16.6 42.5-31.2l77.9-77.9c76.6 67.7 177.1 108.9 287.4 108.9 221.7 0 404.5-166.0 431.2-380.6h-109.8c-25.9 154.2-159.7 271.9-321.3 271.9zM919.9 76.6c-15.0 0-27.8 16.6-42.5 31.3L799.5 185.8c-76.5-67.7-177.1-108.9-287.4-108.9-221.8 0-404.5 166.1-431.3 380.6H190.6c25.9-154.2 159.7-271.9 321.4-271.9 80.2 0 153.4 29.3 210.1 77.4l-75.5 75.5c-11.6 11.5-25.8 22.0-25.8 37.1a27.2 27.2 0 0 0 27.1 27.1h271.9c27.1 0 27.1-23.9 27.1-27.1V103.8a27.1 27.1 0 0 0-27.1-27.1z"" />
                             </local:MyCard>"
@@ -131,38 +128,37 @@ Public Class PageLaunchRight
                         Url = "https://end.g-fish.dpdns.org/Custom.xaml"
                 End Select
         End Select
-        
+
         If Not String.IsNullOrWhiteSpace(Url) Then
-            
+
             Url = ArgumentReplace(Url, AddressOf WebUtility.HtmlEncode)
             If Url = Settings.Get(Of String)("CacheSavedPageUrl") AndAlso FileUtils.Exists(PathTemp & "Cache\Custom.xaml") Then
-                
+
                 Logger.Info("主页自定义数据来源：联网缓存文件")
                 Content = FileUtils.TryReadAsString(PathTemp & "Cache\Custom.xaml")
-                
+
                 OnlineLoader.Start((Url, False))
             Else
-                
+
                 Logger.Info("主页自定义数据来源：联网全新下载")
                 Hint("正在加载主页……")
-                RunInUiWait(Sub() LoadContent(Nothing)) 
+                RunInUiWait(Sub() LoadContent(Nothing))
                 Settings.Set("CacheSavedPageVersion", "")
-                OnlineLoader.Start((Url, True)) 
+                OnlineLoader.Start((Url, True))
                 Return
             End If
         End If
-        
+
         RunInUi(Sub() LoadContent(Content))
     End Sub
     Private RefreshLock As New Object
 
-    
     Private OnlineLoader As New LoaderTask(Of (Address As String, ShouldRefresh As Boolean), Integer)("下载主页", AddressOf OnlineLoaderSub) With {.ReloadTimeout = 10 * 60 * 1000}
     Private Sub OnlineLoaderSub(Task As LoaderTask(Of (Address As String, ShouldRefresh As Boolean), Integer))
-        Dim Address As String = Task.Input.Address 
+        Dim Address As String = Task.Input.Address
         Dim ShouldRefresh As Boolean = Task.Input.ShouldRefresh
         Try
-            
+
             Dim VersionAddress As String
             If Address.Contains(".xaml") Then
                 VersionAddress = Address.Replace(".xaml", ".xaml.ini")
@@ -172,7 +168,7 @@ Public Class PageLaunchRight
                 VersionAddress += "version"
                 If Address.Contains("?") Then VersionAddress += "?" & Address.AfterFirst("?")
             End If
-            
+
             Dim Version As String = ""
             Try
                 Version = NetRequestByClientRetry(VersionAddress)
@@ -187,27 +183,23 @@ Public Class PageLaunchRight
                 Logger.Warn(exx, $"联网获取主页版本失败")
                 Logger.Info($"无法检查联网主页版本，将直接下载，检查源：{VersionAddress}")
             End Try
-            
+
             Dim FileContent As String = NetRequestByClientRetry(Address)
             Logger.Info($"已联网下载主页，内容长度：{FileContent.Length}，来源：{Address}")
             Settings.Set("CacheSavedPageUrl", Address)
             Settings.Set("CacheSavedPageVersion", Version)
             FileUtils.Write(PathTemp & "Cache\Custom.xaml", FileContent)
-            
+
             If LoadedContentHash <> FileContent.GetStableHashCode() AndAlso ShouldRefresh Then Refresh()
         Catch ex As Exception
             Logger.Error(ex, $"下载主页失败（{Address}）", If(ModeDebug, LogBehavior.Alert, LogBehavior.Toast))
         End Try
     End Sub
 
-    
-    
-    
-    
     Public Sub ForceRefresh() Implements IRefreshable.Refresh
         Logger.Info("要求强制刷新主页")
         ClearCache()
-        
+
         If FrmMain.PageCurrent.Page = FormMain.PageType.Launch Then
             PanBack.ScrollToHome()
             Refresh()
@@ -216,9 +208,6 @@ Public Class PageLaunchRight
         End If
     End Sub
 
-    
-    
-    
     Private Sub ClearCache()
         LoadedContentHash = Nothing
         OnlineLoader.Input = ("", True)
@@ -227,33 +216,29 @@ Public Class PageLaunchRight
         Logger.Info("已清空主页缓存")
     End Sub
 
-    
-    
-    
-    
     Private Sub LoadContent(Content As String)
         Try
             SyncLock LoadContentLock
-                
+
                 Dim Hash = If(Content, "").GetStableHashCode()
                 If Hash = LoadedContentHash Then Return
                 LoadedContentHash = Hash
-                
+
                 PanCustom.Children.Clear()
                 If String.IsNullOrWhiteSpace(Content) Then
                     Logger.Info($"实例化：清空主页 UI，来源为空")
                     Return
                 End If
                 Dim LoadStartTime As Date = Date.Now
-                
+
                 Content = ArgumentReplace(Content, AddressOf StringUtils.XmlEscape)
                 Do While Content.Contains("xmlns")
-                    Content = Content.RegexReplace("xmlns[^""']*(""|')[^""']*(""|')", "").Replace("xmlns", "") 
+                    Content = Content.RegexReplace("xmlns[^""']*(""|')[^""']*(""|')", "").Replace("xmlns", "")
                 Loop
                 Content = "<StackPanel xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"" xmlns:sys=""clr-namespace:System;assembly=mscorlib"" xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"" xmlns:local=""clr-namespace:PCL;assembly=Plain Craft Launcher Fork Enhanced"" xmlns:core=""clr-namespace:MeloongCore;assembly=MeloongCore"" xmlns:corewpf=""clr-namespace:MeloongCore.Wpf;assembly=MeloongCore.Wpf"">" & Content & "</StackPanel>"
                 Logger.Info($"实例化：加载主页 UI 开始，最终内容长度：{Content.Count}")
                 PanCustom.Children.Add(GetObjectFromXML(Content))
-                
+
                 Dim LoadCostTime = (Date.Now - LoadStartTime).Milliseconds
                 Logger.Info($"实例化：加载主页 UI 完成，耗时 {LoadCostTime}ms")
                 If LoadCostTime > 3000 Then Hint($"主页加载过于缓慢（花费了 {Math.Round(LoadCostTime / 1000, 1)} 秒），请向主页作者反馈此问题，或暂时停止使用该主页")
@@ -263,9 +248,7 @@ Public Class PageLaunchRight
             OnLoadContentFailed(ex)
         End Try
     End Sub
-    
-    
-    
+
     Private Sub OnLoadContentFailed(ex As Exception)
         If ModeDebug OrElse Settings.Get(Of Integer)("UiCustomType") = 1 Then
             Logger.Warn(ex, "加载主页失败")
@@ -275,9 +258,7 @@ Public Class PageLaunchRight
             Logger.Error(ex, "加载主页失败", LogBehavior.Toast)
         End If
     End Sub
-    
-    
-    
+
     Private Sub DispatcherUnhandledException(sender As Object, e As DispatcherUnhandledExceptionEventArgs) Implements IDispatcherUnhandledException.DispatcherUnhandledException
         If TypeOf e.Exception IsNot Markup.XamlParseException Then Return
         e.Handled = True

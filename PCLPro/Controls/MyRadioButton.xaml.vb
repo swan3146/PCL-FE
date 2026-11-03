@@ -3,12 +3,8 @@ Imports System.Windows.Markup
 <ContentProperty("Inlines")>
 Public Class MyRadioButton
 
-    
-
     Public Uuid As Integer = GetUuid()
     Public Event Check(sender As Object, raiseByMouse As Boolean)
-
-    
 
     Public Property Logo As String
         Get
@@ -29,7 +25,7 @@ Public Class MyRadioButton
         End Set
     End Property
 
-    Private _Checked As Boolean = False 
+    Private _Checked As Boolean = False
     Public Property Checked As Boolean
         Get
             Return _Checked
@@ -38,16 +34,9 @@ Public Class MyRadioButton
             SetChecked(value, False, True)
         End Set
     End Property
-    
-    
-    
-    
-    
-    
+
     Public Sub SetChecked(value As Boolean, raiseByMouse As Boolean, anime As Boolean)
         Try
-
-            
 
             Dim IsChanged As Boolean = False
             If _Checked <> value Then
@@ -55,37 +44,35 @@ Public Class MyRadioButton
                 IsChanged = True
             End If
 
-            
-
             If Parent Is Nothing Then Return
             Dim RadioboxList As New List(Of MyRadioButton)
             Dim CheckedCount As Integer = 0
-            
+
             For Each Control In CType(Parent, Object).Children
                 If TypeOf Control Is MyRadioButton Then
                     RadioboxList.Add(Control)
                     If Control.Checked Then CheckedCount += 1
                 End If
             Next
-            
+
             Select Case CheckedCount
                 Case 0
-                    
+
                     RadioboxList(0).Checked = True
                 Case Is > 1
-                    
+
                     If Me.Checked Then
-                        
+
                         For Each Control As MyRadioButton In RadioboxList
                             If Control.Checked AndAlso Not Control.Equals(Me) Then Control.Checked = False
                         Next
                     Else
-                        
+
                         Dim FirstChecked = False
                         For Each Control As MyRadioButton In RadioboxList
                             If Control.Checked Then
                                 If FirstChecked Then
-                                    Control.Checked = False 
+                                    Control.Checked = False
                                 Else
                                     FirstChecked = True
                                 End If
@@ -94,12 +81,9 @@ Public Class MyRadioButton
                     End If
             End Select
 
-            
-
             If Not IsChanged Then Return
             RefreshColor(Nothing, anime)
 
-            
             If Checked Then RaiseEvent Check(Me, raiseByMouse)
             RaiseCustomEvent()
 
@@ -120,7 +104,7 @@ Public Class MyRadioButton
         Set(value As String)
             SetValue(TextProperty, value)
         End Set
-    End Property 
+    End Property
     Public Shared ReadOnly TextProperty As DependencyProperty = DependencyProperty.Register("Text", GetType(String), GetType(MyRadioButton), New PropertyMetadata(New PropertyChangedCallback(
     Sub(sender, e) If sender IsNot Nothing Then CType(sender, MyRadioButton).LabText.Text = e.NewValue)))
     Public Enum ColorState
@@ -136,9 +120,7 @@ Public Class MyRadioButton
             _ColorType = value
             RefreshColor()
         End Set
-    End Property 
-
-    
+    End Property
 
     Public Event PreviewClick(sender As Object, e As RouteEventArgs)
     Private IsMouseDown As Boolean = False
@@ -161,36 +143,34 @@ Public Class MyRadioButton
         IsMouseDown = False
     End Sub
 
-    
-
-    Private Const AnimationTimeOfMouseIn As Integer = 90 
-    Private Const AnimationTimeOfMouseOut As Integer = 150 
-    Private Const AnimationTimeOfCheck As Integer = 120 
+    Private Const AnimationTimeOfMouseIn As Integer = 90
+    Private Const AnimationTimeOfMouseOut As Integer = 150
+    Private Const AnimationTimeOfCheck As Integer = 120
     Private Sub RefreshColor(Optional obj = Nothing, Optional e = Nothing) Handles Me.MouseEnter, Me.MouseLeave, Me.Loaded
         Try
-            If IsLoaded AndAlso AniControlEnabled = 0 AndAlso Not False.Equals(e) Then 
+            If IsLoaded AndAlso AniControlEnabled = 0 AndAlso Not False.Equals(e) Then
 
                 Select Case ColorType
                     Case ColorState.White
                         If Checked Then
-                            
+
                             AniStart({
                                          AaColor(ShapeLogo, Shapes.Path.FillProperty, "ColorBrush3", AnimationTimeOfCheck),
                                          AaColor(LabText, TextBlock.ForegroundProperty, "ColorBrush3", AnimationTimeOfCheck)
                                     }, "MyRadioButton Checked " & Uuid)
                             AniStart(AaColor(Me, BackgroundProperty, New MyColor(255, 255, 255) - Background, AnimationTimeOfCheck), "MyRadioButton Color " & Uuid)
                         ElseIf IsMouseDown Then
-                            
+
                             AniStart(AaColor(Me, BackgroundProperty, New MyColor(120, Color8) - Background, 60), "MyRadioButton Color " & Uuid)
                         ElseIf IsMouseOver Then
-                            
+
                             AniStart({
                                  AaColor(ShapeLogo, Shapes.Path.FillProperty, New MyColor(255, 255, 255) - ShapeLogo.Fill, AnimationTimeOfMouseIn),
                                  AaColor(LabText, TextBlock.ForegroundProperty, New MyColor(255, 255, 255) - LabText.Foreground, AnimationTimeOfMouseIn)
                             }, "MyRadioButton Checked " & Uuid)
                             AniStart(AaColor(Me, BackgroundProperty, New MyColor(50, Color8) - Background, AnimationTimeOfMouseIn), "MyRadioButton Color " & Uuid)
                         Else
-                            
+
                             AniStart({
                                  AaColor(ShapeLogo, Shapes.Path.FillProperty, New MyColor(255, 255, 255) - ShapeLogo.Fill, AnimationTimeOfMouseOut),
                                  AaColor(LabText, TextBlock.ForegroundProperty, New MyColor(255, 255, 255) - LabText.Foreground, AnimationTimeOfMouseOut)
@@ -199,24 +179,24 @@ Public Class MyRadioButton
                         End If
                     Case ColorState.Highlight
                         If Checked Then
-                            
+
                             AniStart({
                                          AaColor(ShapeLogo, Shapes.Path.FillProperty, New MyColor(255, 255, 255) - ShapeLogo.Fill, AnimationTimeOfCheck),
                                          AaColor(LabText, TextBlock.ForegroundProperty, New MyColor(255, 255, 255) - LabText.Foreground, AnimationTimeOfCheck)
                                     }, "MyRadioButton Checked " & Uuid)
                             AniStart(AaColor(Me, BackgroundProperty, "ColorBrush3", AnimationTimeOfCheck), "MyRadioButton Color " & Uuid)
                         ElseIf IsMouseDown Then
-                            
+
                             AniStart(AaColor(Me, BackgroundProperty, "ColorBrush6", AnimationTimeOfMouseIn), "MyRadioButton Color " & Uuid)
                         ElseIf IsMouseOver Then
-                            
+
                             AniStart({
                                          AaColor(ShapeLogo, Shapes.Path.FillProperty, "ColorBrush3", AnimationTimeOfMouseIn),
                                          AaColor(LabText, TextBlock.ForegroundProperty, "ColorBrush3", AnimationTimeOfMouseIn)
                                     }, "MyRadioButton Checked " & Uuid)
                             AniStart(AaColor(Me, BackgroundProperty, "ColorBrush7", AnimationTimeOfMouseIn), "MyRadioButton Color " & Uuid)
                         Else
-                            
+
                             AniStart({
                                          AaColor(ShapeLogo, Shapes.Path.FillProperty, "ColorBrush3", AnimationTimeOfMouseOut),
                                          AaColor(LabText, TextBlock.ForegroundProperty, "ColorBrush3", AnimationTimeOfMouseOut)
@@ -227,7 +207,6 @@ Public Class MyRadioButton
 
             Else
 
-                
                 AniStop("MyRadioButton Checked " & Uuid)
                 AniStop("MyRadioButton Color " & Uuid)
                 Select Case ColorType

@@ -1,7 +1,6 @@
 namespace MeloongCore.Extensions;
 public static class WebExtensions {
 
-    
     public static HttpRequestMessage Clone(this HttpRequestMessage request) {
         var clone = new HttpRequestMessage(request.Method, request.RequestUri) {
             Content = request.Content.Clone(),

@@ -123,7 +123,7 @@ public class ConfigTest : TestWithFolder {
                 firstStarted.Set();
                 provider.Save();
             }, TaskCreationOptions.LongRunning);
-            
+
             firstBlocked = firstStarted.Wait(3000) && SpinWait.SpinUntil(
                 () => (firstThread!.ThreadState & ThreadState.WaitSleepJoin) != 0, 3000);
             secondSave = Task.Factory.StartNew(() => {
@@ -155,7 +155,7 @@ public class ConfigTest : TestWithFolder {
             using (var stream = new FileStream(PathUtils.ForApi(configFile), FileMode.Open, FileAccess.Read, FileShare.None)) {
                 Assert.Throws<IOException>(() => provider.Save());
             }
-            
+
             provider.Save();
         }
 

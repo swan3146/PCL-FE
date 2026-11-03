@@ -2,45 +2,25 @@ using System.Diagnostics;
 
 namespace MeloongCore;
 
-
-
-
 public enum LogLevel { Trace, Info, Warn, Error }
 
-
-
-
 public enum LogBehavior {
-    
-    
-    
+
     None,
-    
-    
-    
+
     ToastIfDebug,
-    
-    
-    
+
     Toast,
-    
-    
-    
+
     Alert,
-    
-    
-    
+
     AlertThenFeedback,
-    
-    
-    
+
     AlertThenCrash
 }
 
 public static class Logger {
     public static BaseLogger Instance { get; set; } = new();
-
-    
 
     public static void Trace(string message, LogBehavior behavior = LogBehavior.None, [CallerFilePath] string filePath = "")
         => Log(null, message, LogLevel.Trace, behavior, filePath);
@@ -64,28 +44,18 @@ public static class Logger {
     public static void Log(Exception? ex, string? message = null, LogLevel level = LogLevel.Warn, LogBehavior behavior = LogBehavior.ToastIfDebug, [CallerFilePath] string filePath = "")
         => Instance.Log(ex, message, level, behavior, filePath);
 
-    
-    
-    
     [Conditional("DEBUG")]
     public static void SendToDebug(string message, LogLevel level = LogLevel.Error, [CallerFilePath] string filePath = "")
         => Debug.WriteLine($"{BaseLogger.GetLogPrefix(level, filePath)}{message}");
-    
-    
-    
+
     [Conditional("DEBUG")]
     public static void SendToDebug(Exception ex, string? message = null, LogLevel level = LogLevel.Error, [CallerFilePath] string filePath = "")
         => Debug.WriteLine($"{BaseLogger.GetLogPrefix(level, filePath)}{(message is null ? "" : $"{message}：")}{ex.GetDisplay(true)}");
 
-    
-    
-    
     public static void StackTrace(LogLevel level = LogLevel.Trace, [CallerFilePath] string filePath = "")
         => Instance.Log(null, new StackTrace(skipFrames: 1, fNeedFileInfo: true).ToString(), level, LogBehavior.None, filePath);
 
     #region 内插优化
-
-    
 
     public static void Log(Func<string?> messageFactory, LogLevel level = LogLevel.Info, LogBehavior behavior = LogBehavior.None, [CallerFilePath] string filePath = "") {
         if (Instance.MinLevel > level) return;
@@ -99,8 +69,6 @@ public static class Logger {
         => Log(messageFactory, LogLevel.Warn, behavior, filePath);
     public static void Error(Func<string?> messageFactory, LogBehavior behavior = LogBehavior.AlertThenFeedback, [CallerFilePath] string filePath = "")
         => Log(messageFactory, LogLevel.Error, behavior, filePath);
-
-    
 
     public static void Log(LogLevel level, [InterpolatedStringHandlerArgument("level")] ref LogInterpolatedStringHandler handler, LogBehavior behavior = LogBehavior.None, [CallerFilePath] string filePath = "") {
         if (handler.isEnabled) Instance.Log(null, handler.ToStringAndClear(), level, behavior, filePath);
@@ -177,18 +145,10 @@ public static class Logger {
 
 }
 
-
-
-
-
 public class BaseLogger {
 
-    
-    
-    
     public LogLevel MinLevel { get; set; } = LogLevel.Trace;
 
-    
     public virtual void Log(Exception? ex, string? message, LogLevel level, LogBehavior behavior, string filePath) {
         if (ex?.IsCanceled() == true) {
             Log(null, $"操作已取消（{message}）", LogLevel.Info, LogBehavior.None, filePath);
@@ -196,26 +156,23 @@ public class BaseLogger {
         }
         if (MinLevel > level) return;
         try {
-            
+
             var formattedMessage = ex is null ?
                 (message ?? "") :
                 (message is null ? "" : $"{message}：") + ex.GetDisplay(true);
             formattedMessage = Format(formattedMessage, level, filePath, ex);
-            
-            if (available || queue.Count < 100) { 
+
+            if (available || queue.Count < 100) {
                 queue.Enqueue(new(level, formattedMessage));
                 queuedEvent.Set();
             }
-            
+
             HandleBehavior(message, formattedMessage, behavior, ex);
         } catch (Exception logEx) {
             Logger.SendToDebug(logEx, "打印日志失败");
         }
     }
 
-    
-    
-    
     public virtual string Format(string text, LogLevel level, string filePath, Exception? ex) {
         string prefix = GetLogPrefix(level, filePath);
         if (string.IsNullOrEmpty(text)) return prefix;
@@ -226,19 +183,13 @@ public class BaseLogger {
     }
     public static string GetLogPrefix(LogLevel level, string filePath)
         => $"{DateTime.Now:HH':'mm':'ss'.'fff} {level.ToString().First()} {
-            (Thread.CurrentThread.Name is not null ? $"<{Thread.CurrentThread.ManagedThreadId} · {Thread.CurrentThread.Name}> " : 
+            (Thread.CurrentThread.Name is not null ? $"<{Thread.CurrentThread.ManagedThreadId} · {Thread.CurrentThread.Name}> " :
             (Thread.CurrentThread.IsThreadPoolThread ? "<Async> " : ""))}[{
             PathUtils.GetLastPart(filePath).BeforeFirst(".")}] ";
 
-    
-    
-    
     public virtual void HandleBehavior(string? rawMessage, string formattedMessage, LogBehavior behavior, Exception? ex) {
     }
 
-    
-    
-    
     public virtual void Output(LogEntry entry) {
         Debug.WriteLine(entry.message);
     }
@@ -270,15 +221,11 @@ public class BaseLogger {
         thread.Start();
     }
 
-    
-    
-    
-    
     public void Flush() {
         try {
             if (!available) return;
             lock (flushLock) {
-                while (queue.TryDequeue(out LogEntry entry)) Output(entry); 
+                while (queue.TryDequeue(out LogEntry entry)) Output(entry);
             }
         } catch (Exception logEx) {
             Logger.SendToDebug(logEx, "输出日志失败");
@@ -290,10 +237,6 @@ public class BaseLogger {
 
 }
 
-
-
-
-
 public class FileLogger : BaseLogger, IDisposable {
 
     public string logFolder = Path.Combine(Paths.Base, "logs");
@@ -301,12 +244,8 @@ public class FileLogger : BaseLogger, IDisposable {
     public string fileNameSuffix = ".txt";
     private StreamWriter? writer;
 
-    
-    
-    
-    
     public override void Init() {
-        
+
         Logger.Info("开始轮转日志文件");
         try {
             for (int i = 4; i >= 1; i--) {
@@ -321,16 +260,15 @@ public class FileLogger : BaseLogger, IDisposable {
         } catch (Exception ex) {
             Logger.Warn(ex, "整理日志文件失败");
         }
-        
+
         string logFilePath = PathUtils.ForApi(Path.Combine(logFolder, $"{fileNamePrefix}1{fileNameSuffix}"));
         DirectoryUtils.Create(logFolder);
         writer = new StreamWriter(logFilePath, append: true) { AutoFlush = true };
     }
 
-    
     public override void Output(LogEntry entry) {
         base.Output(entry);
-        writer?.WriteLine(entry.message); 
+        writer?.WriteLine(entry.message);
     }
 
     public void Dispose() {

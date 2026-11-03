@@ -1,17 +1,13 @@
 namespace MeloongCore;
 
 public enum RateLimitMode {
-    
+
     ImmediateThenMerge,
-    
+
     ImmediateThenIgnore,
-    
+
     WaitUnillNoNewInvoke,
 }
-
-
-
-
 
 public class RateLimitedWorker(Action workload, double minimalIntervalMs, RateLimitMode mode) : IDisposable {
 

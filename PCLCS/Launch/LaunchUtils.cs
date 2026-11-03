@@ -2,14 +2,9 @@ namespace PCLCS;
 
 public static class LaunchUtils {
 
-    
-    
-    
-    
-    
     public static string ExtractPatch(string patchFilePath, string outputDirectory) {
         Logger.Info($"选定的资源 {patchFilePath} 输出路径：{outputDirectory}");
-        lock (ExtractPatchLock) { 
+        lock (ExtractPatchLock) {
             try {
                 FileUtils.ExtractResources(patchFilePath, Path.Combine(outputDirectory, PathUtils.GetLastPart(patchFilePath)), typeof(LaunchUtils));
             } catch (Exception ex) {

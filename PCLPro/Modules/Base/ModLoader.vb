@@ -1,34 +1,18 @@
 Public Module ModLoader
 
-    
-    
-    
-    
     Public MustInherit Class LoaderBase
         Implements ILoadingTrigger
 
         Public ReadOnly Property IsLoader As Boolean = True Implements ILoadingTrigger.IsLoader
 
-        
-        
-        
-        
         Public Uuid As Integer = GetUuid()
-        
-        
-        
+
         Public Name As String = "未命名任务 " & Uuid & "#"
-        
-        
-        
+
         Public ReadOnly LockState As New Object
-        
-        
-        
+
         Public Parent As LoaderBase = Nothing
-        
-        
-        
+
         Public ReadOnly Property RealParent As LoaderBase
             Get
                 Try
@@ -47,39 +31,22 @@ Public Module ModLoader
             Me.Parent = Parent
         End Sub
 
-        
-
-        
-        
-        
         Public Event OnStateChangedThread(Loader As LoaderBase, NewState As LoadState, OldState As LoadState)
         Public HasOnStateChangedThread As Boolean = False
 
-        
-        
-        
         Public Event OnStateChangedUi(Loader As LoaderBase, NewState As LoadState, OldState As LoadState)
-        
-        
-        
+
         Public WriteOnly Property OnStateChanged As Action(Of LoaderBase)
             Set(value As Action(Of LoaderBase))
                 AddHandler OnStateChangedUi, Sub(Loader As LoaderBase, NewState As LoadState, OldState As LoadState) value(Loader)
             End Set
         End Property
 
-        
-        
-        
         Public Event PreviewFinish(Loader As LoaderBase)
         Protected Sub RaisePreviewFinish()
             RaiseEvent PreviewFinish(Me)
         End Sub
 
-        
-        
-        
-        
         Public Property State As LoadState
             Get
                 Return _State
@@ -91,7 +58,7 @@ Public Module ModLoader
                 _State = value
                 If value = LoadState.Canceled Then CancellationTokenSource?.Cancel()
                 Logger.Log($"加载器 {[GetType].Name} {Name} 状态改变：{value}", If(value = LoadState.Failed, LogLevel.Error, LogLevel.Info))
-                
+
                 RunInUi(
                 Sub()
                     Select Case value
@@ -121,28 +88,15 @@ Public Module ModLoader
         End Property
         Private _LoadingState As MyLoading.MyLoadingState = MyLoading.MyLoadingState.Stop
         Public Event LoadingStateChanged(NewState As MyLoading.MyLoadingState, OldState As MyLoading.MyLoadingState) Implements ILoadingTrigger.LoadingStateChanged
-        
-        
-        
+
         Public Property [Error] As Exception = Nothing
-        
-        
-        
+
         Public Block As Boolean = True
-        
-        
-        
+
         Public Show As Boolean = True
-        
-        
-        
-        
+
         Public IsForceRestarting As Boolean = False
 
-        
-        
-        
-        
         Public Overridable Property Progress As Double
             Get
                 Select Case State
@@ -163,10 +117,7 @@ Public Module ModLoader
         End Property
         Private _Progress As Double = -1
         Public Event ProgressChanged(NewProgress As Double, OldProgress As Double) Implements ILoadingTrigger.ProgressChanged
-        
-        
-        
-        
+
         Public Function CreateSyncProgressProvider(Optional FromPercentage As Double = 0, Optional ToPercentage As Double = 1) As ProgressProvider
             Dim Provider As New ProgressProvider
             AddHandler Provider.ProgressChanged,
@@ -176,20 +127,14 @@ Public Module ModLoader
             End Sub
             Return Provider
         End Function
-        
-        
-        
+
         Public Property ProgressWeight As Double = 1
 
-        
         Public MustOverride Sub Start(Optional Input As Object = Nothing, Optional IsForceRestart As Boolean = False)
         Public MustOverride Sub Cancel()
         Public MustOverride Sub Failed(Ex As Exception)
         Private CancellationTokenSource As CancellationTokenSource
-        
-        
-        
-        
+
         Public Function CreateCancellationToken() As CancellationToken
             SyncLock LockState
                 If CancellationTokenSource Is Nothing OrElse CancellationTokenSource.IsCancellationRequested Then
@@ -201,12 +146,8 @@ Public Module ModLoader
             End SyncLock
         End Function
 
-        
         Public Const WaitForExitTimeoutMessage As String = "等待加载器执行超时。"
 
-        
-        
-        
         Public Sub WaitForExit(Optional Input As Object = Nothing, Optional LoaderToSyncProgress As LoaderBase = Nothing, Optional IsForceRestart As Boolean = False,
                                Optional c As CancellationToken = Nothing, Optional p As ProgressProvider = Nothing)
             Start(Input, IsForceRestart)
@@ -223,14 +164,10 @@ Public Module ModLoader
             ElseIf IsNothing([Error]) Then
                 Throw New Exception("未知错误！")
             Else
-                Throw New Exception([Error].Message, [Error]) 
+                Throw New Exception([Error].Message, [Error])
             End If
         End Sub
-        
-        
-        
-        
-        
+
         Public Sub WaitForExitTime(Timeout As Integer, Optional Input As Object = Nothing, Optional TimeoutMessage As String = WaitForExitTimeoutMessage, Optional LoaderToSyncProgress As Object = Nothing, Optional IsForceRestart As Boolean = False)
             Start(Input, IsForceRestart)
             Do While State = LoadState.Loading
@@ -250,67 +187,51 @@ Public Module ModLoader
             End If
         End Sub
 
-        
         Public Overrides Function Equals(obj As Object) As Boolean
             Dim base = TryCast(obj, LoaderBase)
             Return base IsNot Nothing AndAlso Uuid = base.Uuid
         End Function
 
     End Class
-    
-    
-    
+
     Public Class LoaderTask(Of TIn, TOut)
         Inherits LoaderBase
 
-        
         Protected Friend ThreadPriority As ThreadPriority
-        
+
         Protected Friend LoadDelegate As Action(Of LoaderTask(Of TIn, TOut))
         Protected Friend InputDelegate As Func(Of Object)
-        
-        
-        
-        
+
         Public ReadOnly Property IsCanceled As Boolean
             Get
                 Return IsCanceledWithThread(Thread.CurrentThread)
             End Get
         End Property
-        
-        
-        
+
         Public Function IsCanceledWithThread(Thread As Thread) As Boolean
             Return LastRunningThread Is Nothing OrElse Not ReferenceEquals(Thread, LastRunningThread) OrElse State = LoadState.Canceled
         End Function
-        
-        
-        
+
         Public ReloadTimeout As Integer = -1
-        
-        
-        
+
         Public LastFinishedTime As Long = 0
-        
-        
-        
+
         Public LastRunningThread As Thread = Nothing
-        
+
         Public Input As TIn = Nothing
         Public Output As TOut = Nothing
 
-        
-        Public Function StartGetInput(Optional Input As TIn = Nothing, Optional InputDelegate As Func(Of TIn) = Nothing) As TIn 
+        Public Function StartGetInput(Optional Input As TIn = Nothing, Optional InputDelegate As Func(Of TIn) = Nothing) As TIn
             If InputDelegate Is Nothing Then InputDelegate = Me.InputDelegate
-            Dim NewInput As TIn = Nothing 
+            Dim NewInput As TIn = Nothing
             If (Input Is Nothing OrElse (NewInput IsNot Nothing AndAlso Input.Equals(NewInput))) AndAlso InputDelegate IsNot Nothing Then
                 RunInUiWait(Sub() Input = InputDelegate())
             End If
             Return Input
         End Function
-        
+
         Public Function ShouldStart(ByRef Input As TIn, Optional IsForceRestart As Boolean = False, Optional IgnoreReloadTimeout As Boolean = False) As Boolean
-            
+
             Try
                 Input = StartGetInput(Input)
             Catch ex As Exception
@@ -320,22 +241,22 @@ Public Module ModLoader
                     State = LoadState.Failed
                 End SyncLock
             End Try
-            
-            If IsForceRestart Then Return True 
-            If ((Input Is Nothing) <> (Me.Input Is Nothing)) OrElse (Input IsNot Nothing AndAlso Not Input.Equals(Me.Input)) Then Return True 
 
-            If (State = LoadState.Loading OrElse State = LoadState.Finished) AndAlso 
+            If IsForceRestart Then Return True
+            If ((Input Is Nothing) <> (Me.Input Is Nothing)) OrElse (Input IsNot Nothing AndAlso Not Input.Equals(Me.Input)) Then Return True
+
+            If (State = LoadState.Loading OrElse State = LoadState.Finished) AndAlso
                (IgnoreReloadTimeout OrElse ReloadTimeout = -1 OrElse
-               LastFinishedTime = 0 OrElse GetTimeMs() - LastFinishedTime < ReloadTimeout) Then 
-                Return False 
+               LastFinishedTime = 0 OrElse GetTimeMs() - LastFinishedTime < ReloadTimeout) Then
+                Return False
             Else
-                Return True 
+                Return True
             End If
         End Function
         Public Overrides Sub Start(Optional Input As Object = Nothing, Optional IsForceRestart As Boolean = False)
-            
+
             If ShouldStart(Input, IsForceRestart) Then
-                
+
                 If State = LoadState.Loading Then TriggerThreadInterrupt()
                 Me.Input = Input
                 SyncLock LockState
@@ -359,11 +280,10 @@ Public Module ModLoader
                     Logger.Trace(Function() $"加载线程 {Name} 已完成")
                     RaisePreviewFinish()
                     State = LoadState.Finished
-                    LastFinishedTime = GetTimeMs() 
+                    LastFinishedTime = GetTimeMs()
                 Catch ex As Exception
                     If ex.IsCanceled Then
-                        
-                        
+
                         Logger.Trace(ex, $"加载线程 {Name} 已取消，当前已完成 {Math.Round(Progress * 100)}%")
                         If Not IsCanceled Then State = LoadState.Canceled
                     Else
@@ -372,8 +292,8 @@ Public Module ModLoader
                 End Try
             End Sub) With {.Name = "L/" & Name, .Priority = ThreadPriority}
             Try
-                LastRunningThread.Start() 
-            Catch ex As ThreadStateException 
+                LastRunningThread.Start()
+            Catch ex As ThreadStateException
                 Thread.Sleep(500)
                 LastRunningThread.Start()
             End Try
@@ -404,7 +324,7 @@ Public Module ModLoader
         End Sub
 
         Public Sub New()
-            
+
         End Sub
         Public Sub New(Name As String, LoadDelegate As Action(Of LoaderTask(Of TIn, TOut)), Optional InputDelegate As Func(Of TIn) = Nothing, Optional Priority As ThreadPriority = ThreadPriority.Normal)
             Me.Name = Name
@@ -415,9 +335,6 @@ Public Module ModLoader
 
     End Class
 
-    
-    
-    
     Public Class LoaderWorker
         Inherits LoaderBase
         Public WithEvents Worker As IWorker
@@ -461,9 +378,6 @@ Public Module ModLoader
         End Sub
     End Class
 
-    
-    
-    
     Public Class LoaderCombo(Of InputType)
         Inherits LoaderBase
 
@@ -511,7 +425,7 @@ Public Module ModLoader
         End Sub
         Public Overrides Sub Start(Optional Input As Object = Nothing, Optional IsForceRestart As Boolean = False)
             IsForceRestarting = IsForceRestart
-            
+
             SyncLock LockState
                 If State = LoadState.Loading Then
                     Return
@@ -519,7 +433,7 @@ Public Module ModLoader
                     State = LoadState.Loading
                 End If
             End SyncLock
-            
+
             Me.Input = Input
             If IsForceRestart Then
                 For Each Loader In Loaders
@@ -529,7 +443,7 @@ Public Module ModLoader
             RunInThread(AddressOf Update)
         End Sub
         Public Overrides Sub Cancel()
-            
+
             SyncLock LockState
                 If State = LoadState.Loading OrElse State = LoadState.Waiting Then
                     State = LoadState.Canceled
@@ -539,14 +453,14 @@ Public Module ModLoader
             End SyncLock
             RunInThread(
             Sub()
-                
+
                 For Each Loader In Loaders
                     Loader.Cancel()
                 Next
             End Sub)
         End Sub
         Public Overrides Sub Failed(Ex As Exception)
-            [Error] = Ex 
+            [Error] = Ex
             SyncLock LockState
                 If State >= LoadState.Finished Then Return
                 State = LoadState.Failed
@@ -557,30 +471,24 @@ Public Module ModLoader
             FrmMain.BtnExtraDownload.ShowRefresh()
         End Sub
 
-        
-        
-        
         Private Sub SubTaskStateChanged(Loader As LoaderBase, NewState As LoadState, OldState As LoadState)
             Select Case NewState
                 Case LoadState.Loading
-                    
+
                 Case LoadState.Waiting
-                    
-                    
+
                 Case LoadState.Finished
-                    
+
                     Update()
                 Case LoadState.Canceled
-                    
+
                     Cancel()
                 Case LoadState.Failed
-                    
+
                     Failed(New Exception(Loader.Name & "失败", Loader.Error))
             End Select
         End Sub
-        
-        
-        
+
         Private Sub Update()
             If State = LoadState.Finished OrElse State = LoadState.Failed OrElse State = LoadState.Canceled Then Return
             Dim IsFinished As Boolean = True
@@ -589,35 +497,35 @@ Public Module ModLoader
             For Each Loader In Loaders
                 Select Case Loader.State
                     Case LoadState.Finished
-                        
+
                         If GeneralUtils.IsGenericInstanceOf(Loader, GetType(LoaderTask(Of ,))) Then
                             If CType(Loader, Object).ShouldStart(If(Input IsNot Nothing AndAlso Loader.GetType.GenericTypeArguments.First Is Input.GetType, Input, Nothing), IgnoreReloadTimeout:=True) Then
                                 Logger.Info($"由于输入条件变更，重启已完成的加载器 {Loader.Name}")
                                 GoTo Restart
                             End If
-                            
+
                             Input = CType(Loader, Object).Output
                         End If
-                        
+
                         If Loader.Block AndAlso Not IsFinished Then Blocked = True
                     Case LoadState.Loading
-                        
+
                         If GeneralUtils.IsGenericInstanceOf(Loader, GetType(LoaderTask(Of ,))) Then
                             If CType(Loader, Object).ShouldStart(If(Input IsNot Nothing AndAlso Loader.GetType.GenericTypeArguments.First Is Input.GetType, Input, Nothing), IgnoreReloadTimeout:=True) Then
                                 Logger.Warn($"由于输入条件变更，重启进行中的加载器 {Loader.Name}")
                                 GoTo Restart
                             End If
                         End If
-                        
+
                         IsFinished = False
                         Blocked = True
                     Case Else
 Restart:
-                        
+
                         IsFinished = False
                         If Blocked Then Continue For
                         If Input IsNot Nothing Then
-                            
+
                             If GeneralUtils.IsGenericInstanceOf(Loader, GetType(LoaderTask(Of ,))) OrElse GeneralUtils.IsGenericInstanceOf(Loader, GetType(LoaderCombo(Of ))) Then
                                 Loader.Start(If(Loader.GetType.GenericTypeArguments.First Is Input.GetType, Input, Nothing), IsForceRestarting)
                             ElseIf TypeOf Loader Is LoaderWorker Then
@@ -630,36 +538,29 @@ Restart:
                         Else
                             Loader.Start(IsForceRestart:=IsForceRestarting)
                         End If
-                        
+
                         If Loader.Block Then Blocked = True
                 End Select
             Next
             If IsFinished Then
-                
+
                 RaisePreviewFinish()
                 State = LoadState.Finished
                 FrmMain.BtnExtraDownload.ShowRefresh()
             End If
         End Sub
 
-        
-        
-        
         Public Shared Sub GetLoaderList(Loader As Object, ByRef List As List(Of LoaderBase), Optional RequireShow As Boolean = True)
             For Each SubLoader In Loader.Loaders
                 If SubLoader.Show OrElse Not RequireShow Then List.Add(SubLoader)
                 If GeneralUtils.IsGenericInstanceOf(SubLoader, GetType(LoaderCombo(Of ))) Then GetLoaderList(SubLoader, List)
             Next
         End Sub
-        
-        
-        
+
         Public Sub GetLoaderList(ByRef List As List(Of LoaderBase), Optional RequireShow As Boolean = True)
             GetLoaderList(Me, List, RequireShow)
         End Sub
-        
-        
-        
+
         Public Function GetLoaderList(Optional RequireShow As Boolean = True) As List(Of LoaderBase)
             Dim List As New List(Of LoaderBase)
             GetLoaderList(List, RequireShow)
@@ -668,9 +569,8 @@ Restart:
 
     End Class
 
-    
     Public LoaderTaskbar As New ConcurrentList(Of LoaderBase)
-    Public LoaderTaskbarProgress As Double = 0 
+    Public LoaderTaskbarProgress As Double = 0
     Private LoaderTaskbarProgressLast As Shell.TaskbarItemProgressState = Shell.TaskbarItemProgressState.None
 
     Public Sub LoaderTaskbarAdd(Of T)(Loader As LoaderCombo(Of T))
@@ -682,7 +582,7 @@ Restart:
         Try
             Dim NewState As Shell.TaskbarItemProgressState
             Dim NewProgress As Double = LoaderTaskbarProgressGet()
-            
+
             For Each Task In LoaderTaskbar
                 If LoaderTaskbar.All(Function(l) l.State <> LoadState.Loading) OrElse
                    (Task.State = LoadState.Waiting OrElse Task.State = LoadState.Canceled) Then
@@ -691,14 +591,14 @@ Restart:
                     Logger.Info($"{Task.Name} 已移出任务列表")
                 End If
             Next
-            
+
             If NewProgress <= 0 OrElse NewProgress >= 1 OrElse LoaderTaskbarProgress > NewProgress Then
                 LoaderTaskbarProgress = NewProgress
             Else
                 LoaderTaskbarProgress = LoaderTaskbarProgress * 0.9 + NewProgress * 0.1
             End If
             RunInUi(Sub() FrmMain.BtnExtraDownload.Progress = LoaderTaskbarProgress)
-            
+
             If Not LoaderTaskbar.Any() OrElse LoaderTaskbarProgress = 1 Then
                 NewState = Shell.TaskbarItemProgressState.None
             ElseIf LoaderTaskbarProgress < 0.015 Then
@@ -726,7 +626,6 @@ Restart:
         End Try
     End Function
 
-    
     Private LoaderFolderDictionary As New Dictionary(Of LoaderBase, LoaderFolderDictionaryEntry)
     Private Structure LoaderFolderDictionaryEntry
         Public LastCheckTime As Date?
@@ -743,18 +642,14 @@ Restart:
         ForceRun
         UpdateOnly
     End Enum
-    
-    
-    
-    
-    
+
     Public Function LoaderFolderRun(Loader As LoaderBase, FolderPath As String, Type As LoaderFolderRunType, Optional MaxDepth As Integer = 0, Optional ExtraPath As String = "", Optional WaitForExit As Boolean = False) As Boolean
         Dim Value As New LoaderFolderDictionaryEntry With {.FolderPath = FolderPath & ExtraPath, .LastCheckTime = Nothing}
         Try
-            
+
             Dim FolderInfo = DirectoryUtils.GetInfo(FolderPath & ExtraPath)
             Value.LastCheckTime = If(FolderInfo.Exists, GetActualLastWriteTimeUtc(FolderInfo, MaxDepth), DirectCast(Nothing, Date?))
-            
+
             If Type = LoaderFolderRunType.RunOnUpdated AndAlso LoaderFolderDictionary.ContainsKey(Loader) Then
                 If FolderInfo.Exists Then
                     If LoaderFolderDictionary(Loader).LastCheckTime IsNot Nothing AndAlso
@@ -766,9 +661,9 @@ Restart:
         Catch ex As Exception
             Logger.Warn(ex, "文件夹加载器启动检测出错")
         End Try
-        
+
         LoaderFolderDictionary(Loader) = Value
-        
+
         If Type = LoaderFolderRunType.UpdateOnly Then Return False
         If WaitForExit Then
             Loader.WaitForExit(FolderPath, IsForceRestart:=True)

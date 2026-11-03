@@ -1,44 +1,24 @@
 namespace PCLCS;
 
-
-
-
-
 public class WikiEntry {
 
-    
-    
-    
     public int Id;
-    
-    
-    
-    
+
     public string? ChineseName;
-    
-    
-    
-    
+
     public Dictionary<ResourcePlatforms, string> Slugs = [];
-    
-    
-    
+
     public int Popularity;
 
-    
-    
-    
     public static readonly Lazy<List<WikiEntry>> All = new(() => {
         var dataLines = FileUtils.ReadAsLines(@"Resource\WikiEntries.txt", type: typeof(WikiEntry)).ToList();
 
-        
         Queue<int> popularities = [];
-        for (int i = 0; i < dataLines[^1].Length; i += 3) { 
+        for (int i = 0; i < dataLines[^1].Length; i += 3) {
             popularities.Enqueue(int.Parse(dataLines[^1].Substring(i, 3).ConvertRadix(86, 10)));
         }
         dataLines.RemoveAt(dataLines.Count - 1);
 
-        
         List<WikiEntry> results = [];
         var lineNumber = 0;
         foreach (var lineData in dataLines) {
@@ -66,8 +46,8 @@ public class WikiEntry {
                 entry.Id = lineNumber;
                 entry.Popularity = popularity;
                 if (parts.Length >= 2) {
-                    entry.ChineseName = parts[^1]; 
-                    if (entry.ChineseName.Contains("*")) { 
+                    entry.ChineseName = parts[^1];
+                    if (entry.ChineseName.Contains("*")) {
                         var englishName = entry.Slugs.Values.First().Replace("-", " ").Capitalize();
                         entry.ChineseName = entry.ChineseName.Replace("*", $" ({englishName})");
                     }

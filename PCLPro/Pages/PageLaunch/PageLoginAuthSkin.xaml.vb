@@ -8,18 +8,13 @@ Public Class PageLoginAuthSkin
         Skin.Loader.Start()
     End Sub
 
-    
-    
-    
     Public Sub Reload(KeepInput As Boolean)
         TextName.Text = Settings.Get(Of String)("CacheAuthName")
         TextEmail.Text = Settings.Get(Of String)("CacheAuthUsername")
         TextEmail.Visibility = If(Settings.Get(Of Boolean)("UiLauncherEmail"), Visibility.Collapsed, Visibility.Visible)
         PageLoginLegacy_Loaded()
     End Sub
-    
-    
-    
+
     Public Shared Function GetLoginData() As McLoginServer
         Dim Server As String = PageLoginAuth.GetServerAddress() & "/authserver"
         Return New McLoginServer(McLoginType.Auth) With {.Token = "Auth", .BaseUrl = Server, .UserName = Settings.Get(Of String)("CacheAuthUsername"), .Password = Settings.Get(Of String)("CacheAuthPass"), .Description = "Authlib-Injector", .Type = McLoginType.Auth}
@@ -55,7 +50,7 @@ Public Class PageLoginAuthSkin
             Return
         End If
         Hint("正在尝试更换，请稍候！")
-        Settings.Set("CacheAuthUuid", "") 
+        Settings.Set("CacheAuthUuid", "")
         Settings.Set("CacheAuthName", "")
         RunInThread(
         Sub()
@@ -73,7 +68,7 @@ Public Class PageLoginAuthSkin
         Settings.Set("CacheAuthAccess", "")
         Settings.Set("CacheAuthUuid", "")
         Settings.Set("CacheAuthName", "")
-        McLoginAuthLoader.Input = Nothing 
+        McLoginAuthLoader.Input = Nothing
         FrmLaunchLeft.RefreshPage(False, True)
     End Sub
 

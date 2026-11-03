@@ -7,21 +7,13 @@ public static class CryptographyUtils {
     #region Hash
 
     public enum HashMethod {
-        
-        
-        
+
         Md5,
-        
-        
-        
+
         Sha1,
-        
-        
-        
+
         Sha256,
-        
-        
-        
+
         Sha512
     }
     private static HashAlgorithm GetHashAlgorithm(HashMethod method) => method switch {
@@ -32,9 +24,6 @@ public static class CryptographyUtils {
         _ => throw new ArgumentOutOfRangeException(nameof(method))
     };
 
-    
-    
-    
     public static string ComputeFileHash(string filePath, HashMethod method = HashMethod.Md5) {
         using HashAlgorithm hashImpl = GetHashAlgorithm(method);
         Logger.Trace($"计算文件 {method}：{filePath}");
@@ -42,18 +31,12 @@ public static class CryptographyUtils {
         return BitConverter.ToString(hashImpl.ComputeHash(file)).Replace("-", "").Lower();
     }
 
-    
-    
-    
     public static string ComputeHash(byte[] input, HashMethod method = HashMethod.Md5) {
         using HashAlgorithm hashImpl = GetHashAlgorithm(method);
         return BitConverter.ToString(hashImpl.ComputeHash(input)).Replace("-", "").Lower();
     }
-    
-    
-    
-    
-    public static string ComputeHash(string input, HashMethod method = HashMethod.Md5) 
+
+    public static string ComputeHash(string input, HashMethod method = HashMethod.Md5)
         => ComputeHash(Encoding.UTF8.GetBytes(input), method);
 
     #endregion
@@ -62,12 +45,8 @@ public static class CryptographyUtils {
 
     private const byte AesDataVersion = 1;
 
-    
-    
-    
-    
     public static string? AesEncrypt(string? sourceString, string key = "EncryptKey") {
-        if (string.IsNullOrEmpty(sourceString)) return sourceString; 
+        if (string.IsNullOrEmpty(sourceString)) return sourceString;
         byte[] iv = new byte[AesIvSize];
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(iv);
@@ -81,7 +60,7 @@ public static class CryptographyUtils {
         using ICryptoTransform encryptor = aes.CreateEncryptor(aesKey, iv);
         byte[] sourceBytes = Encoding.UTF8.GetBytes(sourceString);
         cipherBytes = encryptor.TransformFinalBlock(sourceBytes, 0, sourceBytes.Length);
-        
+
         byte[] encryptedBytes = new byte[1 + iv.Length + cipherBytes.Length + AesCheckSize];
         encryptedBytes[0] = AesDataVersion;
         Array.Copy(iv, 0, encryptedBytes, 1, iv.Length);
@@ -92,13 +71,8 @@ public static class CryptographyUtils {
         return Convert.ToBase64String(encryptedBytes);
     }
 
-    
-    
-    
-    
-    
     public static string? AesDecrypt(string? encryptedString, string key = "EncryptKey") {
-        if (string.IsNullOrEmpty(encryptedString)) return encryptedString; 
+        if (string.IsNullOrEmpty(encryptedString)) return encryptedString;
         byte[] encryptedBytes;
         try {
             encryptedBytes = Convert.FromBase64String(encryptedString);
@@ -136,16 +110,12 @@ public static class CryptographyUtils {
 
     #region ECDSA 非对称加密签名
 
-    
-    
-    
-    
     public static void EcdsaVerify(string sourceString, string sign, string publicKey) {
         using var sha256 = GetHashAlgorithm(HashMethod.Sha256);
         byte[] hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(sourceString));
         IntPtr algorithmHandle = IntPtr.Zero;
         IntPtr keyHandle = IntPtr.Zero;
-        
+
         try {
             int status = BCryptOpenAlgorithmProvider(out algorithmHandle, "ECDSA_P256", null, 0);
             if (status < 0) throw new CryptographicException($"{nameof(BCryptOpenAlgorithmProvider)} 失败，错误码 {status}");
@@ -160,16 +130,13 @@ public static class CryptographyUtils {
         }
     }
 
-    
-    
-    
     public static string EcdsaSign(string sourceString, string privateKey) {
         using var sha256 = GetHashAlgorithm(HashMethod.Sha256);
         byte[] hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(sourceString));
         byte[] privateKeyBytes = Convert.FromBase64String(privateKey);
         IntPtr algorithmHandle = IntPtr.Zero;
         IntPtr keyHandle = IntPtr.Zero;
-        
+
         try {
             int status = BCryptOpenAlgorithmProvider(out algorithmHandle, "ECDSA_P256", null, 0);
             if (status < 0) throw new CryptographicException($"{nameof(BCryptOpenAlgorithmProvider)} 失败，错误码 {status}");

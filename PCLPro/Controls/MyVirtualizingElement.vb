@@ -7,9 +7,6 @@ Public Class MyVirtualizingElement(Of T As FrameworkElement)
         LazyLoadBehavior.OnFirstEnterScrollViewerViewport(Me, AddressOf Init)
     End Sub
 
-    
-    
-    
     Public Function Init() As T
         Dim Element As T = Initializer()
         If Parent IsNot Nothing Then
@@ -27,7 +24,6 @@ Public Class MyVirtualizingElement(Of T As FrameworkElement)
 
 End Class
 
-
 Public Class MyVirtualizingElement
     Inherits FrameworkElement
 
@@ -37,9 +33,6 @@ Public Class MyVirtualizingElement
         LazyLoadBehavior.OnFirstEnterScrollViewerViewport(Me, AddressOf Init)
     End Sub
 
-    
-    
-    
     Public Function Init() As FrameworkElement
         Dim Element As FrameworkElement = Initializer()
         If Parent IsNot Nothing Then
@@ -52,11 +45,6 @@ Public Class MyVirtualizingElement
         Return Element
     End Function
 
-    
-    
-    
-    
-    
     Public Shared Function TryInit(Element As FrameworkElement) As FrameworkElement
         If GeneralUtils.IsGenericInstanceOf(Element, GetType(MyVirtualizingElement(Of ))) Then
             Return CType(Element, Object).Init()
