@@ -1,6 +1,6 @@
-﻿# PCL  FE（Plain Craft Launcher Fork Enhanced）
+﻿# PCL FE（Plain Craft Launcher Fork Enhanced）
 
-PCL  FE 是基于 [PCL2（Plain Craft Launcher 2）](https://github.com/Meloong-Git/PCL) 二次开发的 Minecraft 启动器修改版，作者：paopao340。
+PCL FE 是基于 [PCL2（Plain Craft Launcher 2）](https://github.com/Meloong-Git/PCL) 二次开发的 Minecraft 启动器修改版，作者：paopao340。
 
 > 本项目为第三方修改版，非 PCL 官方仓库。PCL 及其相关知识产权归原作者龙腾猫跃所有，本项目继续沿用上游的[《PCL 存储库合理使用指南》](https://github.com/Meloong-Git/PCL/blob/main/LICENCE)，并以同一份指南作为使用协议。
 
@@ -16,22 +16,9 @@ PCL  FE 是基于 [PCL2（Plain Craft Launcher 2）](https://github.com/Meloong-
 
 | 路径 | 说明 |
 | --- | --- |
-| `PCLPro/` | 启动器主工程（VB.NET + WPF，.NET Framework 4.8） |
 | `PCLCS/` | 伴随 C# 工程 |
 | `MeloongCore/` | 上游核心库（已随仓库以源码形式内置，不依赖子模块） |
-| `PCLPro.sln` | 解决方案文件 |
 
-## 构建
-
-环境要求：Windows 10/11、Visual Studio 2022（含 .NET 桌面开发与 VB 工作负载）、.NET Framework 4.8 目标包。
-
-```powershell
-# 还原并编译 Release
-msbuild PCLPro.sln -t:Restore -p:Configuration=Release
-msbuild PCLPro\PCLPro.vbproj -p:Configuration=Release
-```
-
-输出位于 `PCLPro\bin\Plain Craft Launcher Fork Enhanced.exe`。
 
 ## 分发
 
