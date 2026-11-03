@@ -201,8 +201,7 @@ Public Class PageLinkMain
         End If
         '精确端口：陶瓦本身不提供端口参数，改为用户填写后由启动器广播给陶瓦
         Dim PortInput As String = MyMsgBoxInput("输入游戏端口",
-            "请填写游戏聊天栏「本地游戏已在端口 XXXXX 上开放」里的端口号。" & vbCrLf &
-            "启动器会把这个端口直接告诉陶瓦，不再依赖自动扫描。",
+            "请填写游戏聊天栏「本地游戏已在端口 XXXXX 上开放」里的端口号。",
             DefaultInput:=If(HostPort > 0, HostPort.ToString(), "25565"),
             ValidateRules:=New Collection(Of Validate) From {New ValidateInteger(1, 65535)})
         If PortInput Is Nothing Then Return
