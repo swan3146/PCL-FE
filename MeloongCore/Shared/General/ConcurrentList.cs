@@ -1,30 +1,30 @@
 namespace MeloongCore;
 
-/// <summary>
-/// 使用粗粒度锁的线程安全 <see cref="List{T}"/> 实现。
-/// 通常建议使用 <see cref="ConcurrentBag{T}"/> 或其他线程安全集合，它们具有更好的性能。
-/// </summary>
+
+
+
+
 public class ConcurrentList<T> : IList<T>, IList {
 
     private readonly List<T> _items = [];
 
-    // 构造函数
+    
     public ConcurrentList() { }
     public ConcurrentList(IEnumerable<T> data) => _items = new(data);
     public static implicit operator ConcurrentList<T>(List<T> data) => new(data);
     public static implicit operator List<T>(ConcurrentList<T> data) { lock (data.SyncRoot) { return new(data._items); } }
 
-    // 枚举器
-    /// <summary>
-    /// 返回此列表的副本。
-    /// </summary>
+    
+    
+    
+    
     public IEnumerator<T> GetEnumerator() { lock (SyncRoot) return _items.ToList().GetEnumerator(); }
-    /// <summary>
-    /// 返回此列表的副本。
-    /// </summary>
+    
+    
+    
     IEnumerator IEnumerable.GetEnumerator() { lock (SyncRoot) return _items.ToList().GetEnumerator(); }
 
-    // 成员
+    
     public int Count { get { lock (SyncRoot) { return _items.Count; } } }
     public bool IsReadOnly => false;
     bool IList.IsFixedSize => false;

@@ -3,11 +3,11 @@ Imports System.Windows.Threading
 
 Public Class Application
 
-    ''' <summary>
-    ''' 从旧版本升级上来时 exe 仍叫旧文件名。复制自身为当前程序集名并重启一次，让文件名与本版本一致。
-    ''' 若同目录已有当前程序名的文件，则直接把旧文件名的入口转交给它，保证旧快捷方式打开的也是新版本。
-    ''' 任何失败（如所在目录不可写）都直接忽略，按旧文件名继续正常运行。
-    ''' </summary>
+    
+    
+    
+    
+    
     Private Shared Sub EnsureExecutableName()
         Try
             Dim SelfPath As String = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName
@@ -15,7 +15,7 @@ Public Class Application
             If String.Equals(System.IO.Path.GetFileName(SelfPath), Expected, StringComparison.OrdinalIgnoreCase) Then Return
             Dim Target As String = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(SelfPath), Expected)
             If System.IO.File.Exists(Target) Then
-                '已有当前程序名的文件：只要它不比自身旧，就转交给它启动，避免旧快捷方式点到旧版本
+                
                 Try
                     If Reflection.AssemblyName.GetAssemblyName(Target).Version >= Assembly.GetEntryAssembly().GetName().Version Then
                         SyncExecutableConfig(SelfPath, Target)
@@ -23,7 +23,7 @@ Public Class Application
                         Environment.Exit(ProcessReturnValues.TaskDone)
                     End If
                 Catch
-                    '目标文件不是可识别的程序集时保持原样，继续用旧文件名运行
+                    
                 End Try
                 Return
             End If
@@ -32,13 +32,13 @@ Public Class Application
             System.Diagnostics.Process.Start(Target)
             Environment.Exit(ProcessReturnValues.TaskDone)
         Catch
-            '忽略即可
+            
         End Try
     End Sub
 
-    ''' <summary>
-    ''' 改名时把同名的 .exe.config 一起带过去，否则新文件名下会缺少程序集绑定重定向。
-    ''' </summary>
+    
+    
+    
     Private Shared Sub SyncExecutableConfig(SelfPath As String, TargetPath As String)
         Try
             Dim SourceConfig As String = SelfPath & ".config"
@@ -47,25 +47,25 @@ Public Class Application
                 System.IO.File.Copy(SourceConfig, TargetConfig)
             End If
         Catch
-            '忽略即可
+            
         End Try
     End Sub
 
 
     Private Sub Application_Startup(sender As Object, e As StartupEventArgs) Handles Me.Startup
         Try
-            '核心初始化
+            
             MeloongCore.Main.Init("PCL")
             MeloongCore.Wpf.Main.Init()
-            '兼容旧文件名升级：必须在获取单例锁之前执行，否则新进程会被误判为已有实例
+            
             If e.Args.Length = 0 Then EnsureExecutableName()
-            If Not (e.Args.Contains("--update") OrElse e.Args.Contains("--gpu") OrElse e.Args.Contains("--memory")) Then '若是通过命令行调用，则不检查单例、不轮换日志（#9137）
+            If Not (e.Args.Contains("--update") OrElse e.Args.Contains("--gpu") OrElse e.Args.Contains("--memory")) Then 
                 WaitingMutex(e)
                 Logger.Instance = New PclLogger With {.logFolder = Paths.BaseThenName, .MinLevel = If(ModeDebug, LogLevel.Trace, LogLevel.Info)}
             End If
-            '提升主线程优先级
+            
             Thread.CurrentThread.Priority = ThreadPriority.Highest
-            '执行开发版测试
+            
             If BuildType = BuildTypes.Debug Then
                 Try
                     ModDevelop.Start()
@@ -73,27 +73,27 @@ Public Class Application
                     Logger.Error(ex, "开发者模式测试出错", LogBehavior.Alert)
                 End Try
             End If
-            '检查 .NET Framework 版本
+            
             Try
                 If CInt(RegistryUtils.TryRead("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full", "Release", 999999)) < 528040 Then OldEnvironmentAssert()
             Catch ex As Exception
                 Logger.Warn(ex, "检查 .NET Framework 版本失败")
             End Try
-            '修复 WPF 字体加载（#3467）
+            
             Try
                 Dim _unused As New FormattedText("", Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Fonts.SystemTypefaces.First, 96, New MyColor, DPI)
             Catch ex As UriFormatException
                 Environment.SetEnvironmentVariable("windir", Environment.GetEnvironmentVariable("SystemRoot"), EnvironmentVariableTarget.User)
                 Dim _unused As New FormattedText("", Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Fonts.SystemTypefaces.First, 96, New MyColor, DPI)
             End Try
-            '检查参数调用
+            
             If e.Args.Length > 0 Then
                 If e.Args(0) = "--update" Then
-                    '自动更新：由临时副本进程完成的自我替换
+                    
                     UpdateReplaceFromEnvironment()
                     Environment.Exit(ProcessReturnValues.TaskDone)
                 ElseIf e.Args(0) = "--gpu" Then
-                    '调整显卡设置
+                    
                     Try
                         SetGPUPreference(e.Args(1).Trim(""""))
                         Environment.Exit(ProcessReturnValues.TaskDone)
@@ -101,7 +101,7 @@ Public Class Application
                         Environment.Exit(ProcessReturnValues.Fail)
                     End Try
                 ElseIf e.Args(0) = "--memory" Then
-                    '内存优化
+                    
                     Dim Ram = My.Computer.Info.AvailablePhysicalMemory
                     Try
                         PageOtherTest.MemoryOptimizeInternal(False)
@@ -109,14 +109,14 @@ Public Class Application
                         MsgBox(ex.Message, MsgBoxStyle.Critical, "内存优化失败")
                         Environment.Exit(-1)
                     End Try
-                    If My.Computer.Info.AvailablePhysicalMemory < Ram Then '避免 ULong 相减出现负数
+                    If My.Computer.Info.AvailablePhysicalMemory < Ram Then 
                         Environment.Exit(0)
                     Else
-                        Environment.Exit((My.Computer.Info.AvailablePhysicalMemory - Ram) / 1024) '返回清理的内存量（K）
+                        Environment.Exit((My.Computer.Info.AvailablePhysicalMemory - Ram) / 1024) 
                     End If
                 End If
             End If
-            '初始化文件结构
+            
             Try
                 DirectoryUtils.Create(Paths.Base & "PCL\Pictures\")
                 DirectoryUtils.Create(Paths.Base & "PCL\Musics\")
@@ -144,25 +144,25 @@ RetryCacheCheck:
                 End If
             End Try
             DirectoryUtils.Create(PathTemp & "Cache\")
-            '清理上次自更新留下的替换进程与更新包（替换进程无法删除自身）
+            
             Try
                 Dim UpdateDir As String = PathTemp & "Update\"
                 If Directory.Exists(UpdateDir) Then Directory.Delete(UpdateDir, True)
             Catch
             End Try
             DirectoryUtils.Create(Paths.AppDataThenName)
-            '设置 ToolTipService 默认值
+            
             ToolTipService.InitialShowDelayProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(100))
-            '设置网络配置默认值
+            
             ServicePointManager.Expect100Continue = False
             ServicePointManager.DefaultConnectionLimit = 10000
             ServicePointManager.UseNagleAlgorithm = False
             ServicePointManager.EnableDnsRoundRobin = True
             ServicePointManager.ReusePort = True
-            If Environment.OSVersion.Version < New Version(6, 2) Then 'Windows 7 回退（#8519）
+            If Environment.OSVersion.Version < New Version(6, 2) Then 
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 Or SecurityProtocolType.Tls Or SecurityProtocolType.Tls11 Or SecurityProtocolType.Tls12
             End If
-            '基础信息
+            
             Logger.Info($"程序版本：{VersionDisplay} ({VersionCode}{If(CommitHash = "", "", $"，#{CommitHash}")})")
             If BuildType = BuildTypes.Snapshot Then
                 Logger.Info($"识别码：{Identify}{If(ThemeCheckOne(9), "，已解锁反馈主题", "，未解锁反馈主题")}")
@@ -172,7 +172,7 @@ RetryCacheCheck:
             Logger.Info($"程序路径：{PathExe}")
             Logger.Info($"系统编码：{Encoding.Default.HeaderName} ({Encoding.Default.CodePage}, GBK={IsGBKEncoding})")
             Logger.Info($"管理员权限：{WindowsUtils.HasAdminRole()}")
-            '检测异常环境
+            
             If Paths.Base.Contains(Path.GetTempPath()) OrElse Paths.Base.Contains("AppData\Local\Temp\") Then
                 MyMsgBox("请将 PCL 从压缩包中解压后再使用！" & vbCrLf & "如果不会解压，可以在网上寻找教程。", "需要解压！", "我知道了", IsWarn:=True, ForceWait:=True)
                 FormMain.EndProgramForce(ProcessReturnValues.Cancel)
@@ -181,7 +181,7 @@ RetryCacheCheck:
                 MyMsgBox("PCL 和新版 Minecraft 均不再支持 32 位系统，请重装为 64 位系统后再进行游戏！", "环境警告", "我知道了", IsWarn:=True, ForceWait:=True)
                 FormMain.EndProgramForce(ProcessReturnValues.Cancel)
             End If
-            '计时
+            
             Logger.Info($"第一阶段加载用时：{GetTimeMs() - ApplicationStartTick} ms")
             ApplicationStartTick = GetTimeMs()
             AniControlEnabled += 1
@@ -195,10 +195,10 @@ RetryCacheCheck:
             FormMain.EndProgramForce(ProcessReturnValues.Exception)
         End Try
     End Sub
-    ''' <summary>
-    ''' 要求程序以单例运行。
-    ''' 如果已在运行，则将其窗口拖出来并播放提示音，然后结束当前进程。
-    ''' </summary>
+    
+    
+    
+    
     Private Shared Sub WaitingMutex(e As StartupEventArgs)
         If BuildType = BuildTypes.Debug Then Return
         Try
@@ -206,48 +206,48 @@ RetryCacheCheck:
             PclMutex = New Mutex(True, "PCL_SingletonMutex", MutexCreatedNew)
             If MutexCreatedNew Then Return
             Logger.Warn("已有一个 PCL 实例正在运行")
-            '等待已有的 PCL 退出
+            
             If e.Args.Length > 0 AndAlso e.Args(0) = "--wait" Then
                 Try
-                    If PclMutex.WaitOne(10000) Then Return '等待至多 10 秒
+                    If PclMutex.WaitOne(10000) Then Return 
                 Catch Ignored As AbandonedMutexException
-                    Return '已有实例异常退出，继续启动
+                    Return 
                 End Try
             End If
-            '将已有的 PCL 窗口拖出来
-            '注意：主窗口标题是 "Plain Craft Launcher Fork Enhanced　"，旧版这里误用了 "PCL  FE　"，导致永远找不到窗口，
-            '表现为双击图标没反应（自更新重启后卡死时尤其明显）。
+            
+            
+            
             Dim WindowHwnd As IntPtr = FindWindow(Nothing, "Plain Craft Launcher Fork Enhanced　")
             If WindowHwnd = IntPtr.Zero Then WindowHwnd = FindPclWindowHwnd()
             If WindowHwnd = IntPtr.Zero Then
-                '找不到窗口：多半发生在「自更新重启」的瞬间，旧进程正在退出、新进程已经起来。
-                '以前这里直接退出，表现出来就是「启动器不见了，只剩任务栏条目」。改为等旧进程释放锁后继续启动。
+                
+                
                 Logger.Warn("未找到已有 PCL 实例的窗口，等待旧进程退出后继续启动")
                 Dim Acquired As Boolean = False
                 Try
                     Acquired = PclMutex.WaitOne(8000)
                 Catch Ignored As AbandonedMutexException
-                    Acquired = True '旧进程异常退出，锁被转交给我们
+                    Acquired = True 
                 Catch ex As Exception
                     Logger.Warn(ex, "等待单例锁失败")
                 End Try
                 If Acquired Then Logger.Info("旧实例已退出，本次按正常启动继续")
                 Return
             End If
-            '已有实例的窗口可能是被隐藏创建的，必须先让 Win32 窗口真正显示，再置顶
+            
             ShowWindow(WindowHwnd, SW_SHOW)
             ShowWindowToTop(WindowHwnd)
-            '播放提示音并退出
+            
             Beep()
             Environment.[Exit](ProcessReturnValues.Cancel)
         Catch ex As Exception
             Logger.Warn(ex, "单例检查失败")
         End Try
     End Sub
-    ''' <summary>
-    ''' 查找已有 PCL 实例的主窗口句柄。
-    ''' 先按窗口标题找（exe 被改名成 PCLFE_1.3.5.exe 时进程名对不上），再按进程名兜底。
-    ''' </summary>
+    
+    
+    
+    
     Private Shared Function FindPclWindowHwnd() As IntPtr
         Try
             For Each Proc As Diagnostics.Process In Diagnostics.Process.GetProcesses()
@@ -276,15 +276,15 @@ RetryCacheCheck:
     End Function
     Private Shared PclMutex As Mutex
 
-    '结束
+    
     Private Sub Application_SessionEnding(sender As Object, e As SessionEndingCancelEventArgs) Handles Me.SessionEnding
         FrmMain?.EndProgram(False)
     End Sub
 
-    '异常
+    
     Private Sub Application_DispatcherUnhandledException(sender As Object, e As DispatcherUnhandledExceptionEventArgs) Handles Me.DispatcherUnhandledException
         On Error Resume Next
-        '触发页面的 Dispatcher
+        
         If FrmMain?.PageLeft IsNot Nothing AndAlso TypeOf FrmMain.PageLeft Is IDispatcherUnhandledException Then
             CType(FrmMain.PageLeft, IDispatcherUnhandledException).DispatcherUnhandledException(sender, e)
             If e.Handled Then Return
@@ -293,13 +293,13 @@ RetryCacheCheck:
             CType(FrmMain.PageRight, IDispatcherUnhandledException).DispatcherUnhandledException(sender, e)
             If e.Handled Then Return
         End If
-        '正常处理
+        
         e.Handled = True
         If IsProgramEnding Then Return
         FeedbackInfo()
         Dim Detail As String = e.Exception.GetDisplay(True)
         If Detail.Contains("System.Windows.Threading.Dispatcher.Invoke") OrElse Detail.Contains("MS.Internal.AppModel.ITaskbarList.HrInit") OrElse Detail.Contains("未能加载文件或程序集") OrElse
-           Detail.Contains(".NET Framework") Then ' “自动错误判断” 的结果分析
+           Detail.Contains(".NET Framework") Then 
             OldEnvironmentAssert(e.Exception)
         Else
             Logger.Error(e.Exception, "程序出现未知错误", LogBehavior.AlertThenCrash)
@@ -314,10 +314,10 @@ RetryCacheCheck:
         End If
     End Sub
 
-    '动态 DLL 加载
-    Private Sub New() '这里必须尽早调用，且不能使用任何库，否则加载 MeloongCore 就会导致崩溃
+    
+    Private Sub New() 
         Static Prefixes As String() = {"NAudio", "Newtonsoft.Json", "Ookii.Dialogs.Wpf", "Imazen.WebP", "CacheCow.Common", "CacheCow.Client.FileStore", "CacheCow.Client", "ThrottleDebounce", "System.Net.Http.Formatting", "Microsoft.Win32.Registry", "PCLCS", "MeloongCore.Wpf", "MeloongCore"}
-        Static LoadedAssemblies As New ConcurrentDictionary(Of String, Lazy(Of Assembly))(StringComparer.Ordinal) '缓存
+        Static LoadedAssemblies As New ConcurrentDictionary(Of String, Lazy(Of Assembly))(StringComparer.Ordinal) 
         AddHandler AppDomain.CurrentDomain.AssemblyResolve,
         Function(sender As Object, Args As ResolveEventArgs) As Assembly
             Dim Prefix As String = Prefixes.FirstOrDefault(Function(p) Args.Name.StartsWith(p, StringComparison.Ordinal))
@@ -325,34 +325,34 @@ RetryCacheCheck:
             Dim LazyAssembly = LoadedAssemblies.GetOrAdd(Prefix, Function(p) New Lazy(Of Assembly)(
             Function()
                 Dim LoadedAssembly = Assembly.Load(DirectCast(My.Resources.ResourceManager.GetObject(p), Byte()))
-                If p = "Imazen.WebP" Then ExtractLibwebp() 'WebP 特判
+                If p = "Imazen.WebP" Then ExtractLibwebp() 
                 Return LoadedAssembly
             End Function, LazyThreadSafetyMode.ExecutionAndPublication))
             Return LazyAssembly.Value
         End Function
     End Sub
-    Private Shared Sub ExtractLibwebp() '这个方法会调用 ModBase，进而调用 MeloongCore，所以不能放在 New 里
+    Private Shared Sub ExtractLibwebp() 
         SetDllDirectory(PathUtils.RemoveSlashSuffix(PathPure.Value))
         Try
             ExtractResources(PathPure.Value & "libwebp.dll", "libwebp64")
         Catch ex As Exception
-            Logger.Warn(ex, "写入 libwebp.dll 失败") '防止同时加载多个图片时，同时写入文件导致文件占用，进而导致崩溃
+            Logger.Warn(ex, "写入 libwebp.dll 失败") 
         End Try
     End Sub
     Private Declare Function SetDllDirectory Lib "kernel32" Alias "SetDllDirectoryA" (lpPathName As String) As Boolean
 
-    '控件模板事件
+    
     Private Sub MyIconButton_Click(sender As Object, e As EventArgs)
         Select Case Settings.Get(Of McLoginType)("LoginType")
             Case McLoginType.Ms
-                '微软
+                
                 Dim MsJson As JObject = Settings.Get(Of String)("LoginMsJson").DeserializeJson()
                 MsJson.Remove(sender.Tag)
                 Settings.Set("LoginMsJson", MsJson.ToString(Newtonsoft.Json.Formatting.None))
                 If FrmLoginMs.ComboAccounts.SelectedItem Is sender.Parent Then FrmLoginMs.ComboAccounts.SelectedIndex = 0
                 FrmLoginMs.ComboAccounts.Items.Remove(sender.Parent)
             Case McLoginType.Legacy
-                '离线
+                
                 Dim Names As New List(Of String)
                 Names.AddRange(Settings.Get(Of String)("LoginLegacyName").ToString.Split("¨"))
                 Names.Remove(sender.Tag)
@@ -360,7 +360,7 @@ RetryCacheCheck:
                 FrmLoginLegacy.ComboName.ItemsSource = Names
                 FrmLoginLegacy.ComboName.Text = If(Names.Any, Names(0), "")
             Case Else
-                '第三方
+                
                 Dim Token As String = Settings.Get(Of McLoginType)("LoginType").ToString()
                 Dim Dict As New Dictionary(Of String, String)
                 Dim Names As New List(Of String)

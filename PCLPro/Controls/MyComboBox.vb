@@ -3,7 +3,7 @@ Public Class MyComboBox
     Implements ISettingControl
     Public Event TextChanged(sender As Object, e As TextChangedEventArgs)
 
-    '基础
+    
     Public Uuid As Integer = GetUuid()
     Private TextBox As MyTextBox
     Public Property HintText As String = ""
@@ -14,7 +14,7 @@ Public Class MyComboBox
             TextBox = Template.FindName("PART_EditableTextBox", Me)
             TextBox.AddHandler(LostFocusEvent, New RoutedEventHandler(AddressOf RefreshColor))
             TextBox.ChangedEventList.Add(New RoutedEventHandler(Sub(sender, e) RaiseEvent TextChanged(sender, e)))
-            TextBox.Tag = Tag '有时需要用文本框的 Tag 来写入设置
+            TextBox.Tag = Tag 
             If Text = "" Then
                 TextBox.Text = _Text
             Else
@@ -51,7 +51,7 @@ Public Class MyComboBox
         End Set
     End Property
 
-    '鼠标按下接口
+    
     Private IsMouseDown As Boolean = False
     Private Sub MyComboBox_PreviewMouseLeftButtonDown(sender As Object, e As MouseButtonEventArgs) Handles Me.PreviewMouseLeftButtonDown
         IsMouseDown = True
@@ -60,9 +60,9 @@ Public Class MyComboBox
         IsMouseDown = False
     End Sub
 
-    '指向动画
+    
     Public Sub RefreshColor() Handles Me.IsEnabledChanged, Me.MouseEnter, Me.MouseLeave, Me.PreviewMouseLeftButtonDown, Me.PreviewMouseLeftButtonUp, Me.GotKeyboardFocus
-        '判断当前颜色
+        
         Dim ForeColorName As String
         Dim BackColorName As String
         Dim Time As Integer
@@ -85,26 +85,26 @@ Public Class MyComboBox
             BackColorName = "ColorBrushGray6"
             Time = 200
         End If
-        '触发颜色动画
-        If IsLoaded AndAlso AniControlEnabled = 0 Then '防止默认属性变更触发动画
-            '有动画
+        
+        If IsLoaded AndAlso AniControlEnabled = 0 Then 
+            
             AniStart({
                      AaColor(Me, ForegroundProperty, ForeColorName, Time),
                      AaColor(Me, BackgroundProperty, BackColorName, Time)
                  }, "MyComboBox Color " & Uuid)
         Else
-            '无动画
+            
             AniStop("MyComboBox Color " & Uuid)
             SetResourceReference(ForegroundProperty, ForeColorName)
             SetResourceReference(BackgroundProperty, BackColorName)
         End If
     End Sub
 
-    Private RealWidth As Double '由于下拉框 Popup 宽度与 Width 一致，故不能为 NaN（Auto）
+    Private RealWidth As Double 
     Private Sub MyComboBox_DropDownOpened(sender As Object, e As EventArgs) Handles Me.DropDownOpened
         RealWidth = Width
         Width = ActualWidth
-        '将下拉菜单透明度与主窗口同步
+        
         Try
             CType(Template.FindName("PanPopup", Me), Grid).Opacity = FrmMain.Opacity
         Catch ex As Exception
@@ -115,7 +115,7 @@ Public Class MyComboBox
         Width = RealWidth
     End Sub
 
-    '修复 WPF Bug：下拉框文本修改后，依然误认为还选择着此前的选项，导致再次点击该选项时内容不变
+    
     Private IsTextChanging As Boolean = False
     Private Sub MyComboBox_TextChanged(sender As Object, e As TextChangedEventArgs) Handles Me.TextChanged
         If IsTextChanging OrElse Not IsEditable Then Return

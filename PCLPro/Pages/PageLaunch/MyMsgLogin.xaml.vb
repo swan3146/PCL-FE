@@ -1,8 +1,8 @@
 ﻿Public Class MyMsgLogin
     Private Data As JObject
-    Private UserCode As String '需要用户在网页上输入的设备代码
-    Private DeviceCode As String '用于轮询的设备代码
-    Private Website As String '验证网页的网址
+    Private UserCode As String 
+    Private DeviceCode As String 
+    Private Website As String 
 
 #Region "弹窗"
 
@@ -28,9 +28,9 @@
 
     Private Sub Load(sender As Object, e As EventArgs) Handles MyBase.Loaded
         Try
-            '毛玻璃弹窗
+            
             If Settings.Get(Of Integer)("UiUiStyle") = 1 Then GlassAttachDialog(PanBorder)
-            '动画
+            
             Opacity = 0
             AniStart(AaColor(FrmMain.PanMsg, Grid.BackgroundProperty, If(MyConverter.IsWarn, New MyColor(140, 80, 0, 0), New MyColor(90, 0, 0, 0)) - FrmMain.PanMsg.Background, 280), "PanMsg Background")
             AniStart({
@@ -38,14 +38,14 @@
                 AaDouble(Sub(i) TransformPos.Y += i, -TransformPos.Y, 500, 90, New AniEaseOutBack(AniEasePower.Weak)),
                 AaDouble(Sub(i) TransformRotate.Angle += i, -TransformRotate.Angle, 740, 90, New AniEaseOutBack(AniEasePower.Weak))
             }, "MyMsgBox " & Uuid)
-            '记录日志
+            
             Logger.Info($"登录弹窗：{LabTitle.Text}{vbCrLf}{LabCaption.Text}")
         Catch ex As Exception
             Logger.Error(ex, "登录弹窗加载失败", LogBehavior.Toast)
         End Try
     End Sub
     Private Sub Close()
-        '动画
+        
         AniStart({
             AaCode(
             Sub()
@@ -60,14 +60,14 @@
         }, "MyMsgBox " & Uuid)
     End Sub
 
-    '实现回车和 Esc 的接口（#4857）
+    
     Public Sub Btn1_Click() Handles Btn1.Click
     End Sub
     Public Sub Btn3_Click() Handles Btn3.Click
         Finished(New OperationCanceledException)
     End Sub
 
-    '无痕打开登录网页（兜底：普通窗口登录报 invalid_request 时使用）
+    
     Private Sub Btn4_Click() Handles Btn4.Click
         RunInNewThread(AddressOf OpenWebsiteIncognito, "MyMsgLogin Incognito")
     End Sub
@@ -99,7 +99,7 @@
         OpenWebsite(Url)
     End Sub
 
-    '手动登录（兜底：网页登录被微软风控拦截时，用令牌直接完成登录）
+    
     Private Sub Btn5_Click() Handles Btn5.Click
         RunInNewThread(AddressOf ManualLogin, "MyMsgLogin Manual")
     End Sub
@@ -116,12 +116,12 @@
             If InputToken.StartsWithF("refresh_token=") Then InputToken = InputToken.Substring("refresh_token=".Length)
             If InputToken.StartsWithF("d=") Then InputToken = InputToken.Substring(2)
             If InputToken.StartsWithF("M.C", True) Then
-                'RefreshToken：换取新的 {AccessToken, RefreshToken}
+                
                 Dim Result As String = RefreshTokenByMsa(InputToken)
                 Dim ResultJson As JObject = Result.DeserializeJson()
                 Finished({ResultJson("access_token").ToString, ResultJson("refresh_token").ToString})
             ElseIf InputToken.Length >= 40 Then
-                'AccessToken：仅本次登录有效
+                
                 Hint("已使用 AccessToken 登录，下次启动可能需要重新登录", HintType.Blue)
                 Finished({InputToken, ""})
             Else
@@ -133,7 +133,7 @@
         End Try
     End Sub
 
-    '用 refresh_token 换新令牌：先用 MSA 客户端，失败再回退旧客户端（兼容 1.0.0 及更早版本签发的令牌）
+    
     Private Function RefreshTokenByMsa(Token As String) As String
         Try
             Return NetRequestByClient(
@@ -173,16 +173,16 @@
         UserCode = Data("user_code")
         DeviceCode = Data("device_code")
         Website = Data("verification_uri")
-        '设置 UI
+        
         LabTitle.Text = "登录 Minecraft"
         UpdateUiWithDeviceCode()
-        '启动工作线程
+        
         RunInNewThread(AddressOf WorkThread, "MyMsgLogin")
     End Sub
 
-    ''' <summary>
-    ''' 把当前设备代码同步到弹窗文案与按钮事件中（重新申请设备代码后需要刷新）。
-    ''' </summary>
+    
+    
+    
     Private Sub UpdateUiWithDeviceCode()
         LabCaption.Text =
             $"登录网页将自动开启，请在网页中输入 {UserCode}（已自动复制）。" & vbCrLf & vbCrLf &
@@ -195,9 +195,9 @@
         CustomEventService.SetEventData(Btn2, UserCode)
     End Sub
 
-    ''' <summary>
-    ''' 重新申请一个设备代码。设备代码被消费后（例如上一次轮询其实已成功但响应超时）无法复用，只能换新的。
-    ''' </summary>
+    
+    
+    
     Private Function RefreshDeviceCode() As Boolean
         Try
             Dim NewData As JObject = NetRequestByClientRetry(
@@ -229,13 +229,13 @@
         Integer.TryParse(Data("interval")?.ToString, IntervalSec)
         If IntervalSec < 1 OrElse IntervalSec > 60 Then IntervalSec = 5
         Thread.Sleep((IntervalSec - 1) * 1000)
-        '轮询
+        
         Dim UnknownFailureCount As Integer = 0
         Dim DeviceCodeRefreshCount As Integer = 0
         Do While Not MyConverter.IsExited
             Try
-                '超时不能太短：请求在服务端已经消费掉设备代码、客户端却先超时重试的话，只会拿到
-                'invalid_grant（device_code has already been used），表现就是“偶尔登录失败”
+                
+                
                 Dim Result = NetRequestByClient(
                     "https://login.live.com/oauth20_token.srf", HttpMethod.Post,
                     Content:=
@@ -246,14 +246,14 @@
                     ContentType:="application/x-www-form-urlencoded",
                     Timeout:=20000 + UnknownFailureCount * 10000,
                     MakeLog:=False, RequireJson:=True)
-                '获取结果
+                
                 Dim ResultJson As JObject = Result.DeserializeJson()
                 McLaunchLog($"令牌过期时间：{ResultJson("expires_in")} 秒")
                 Hint("网页登录成功！", HintType.Green)
                 Finished({ResultJson("access_token").ToString, ResultJson("refresh_token").ToString})
                 Return
             Catch ex As Exception
-                '修改错误列表时，同时修改 ModLaunch.MsLoginStep1Refresh 中的对应代码
+                
                 If TypeOf ex Is HttpRequestCodeException Then
                     Dim Response = CType(ex, HttpRequestCodeException).Response
                     If Response.Contains("authorization_declined") Then
@@ -268,13 +268,13 @@
                     ElseIf Response.Contains("service abuse") Then
                         Finished(New Exception("$非常抱歉，该账号已被微软封禁，无法登录。"))
                         Return
-                    ElseIf Response.Contains("AADSTS70000") Then '可能不能判 “invalid_grant”，见 #269
+                    ElseIf Response.Contains("AADSTS70000") Then 
                         Finished(New RestartException)
                         Return
                     ElseIf Response.Contains("already been used") OrElse
                            (Response.Contains("invalid_grant") AndAlso Response.Contains("device_code")) Then
-                        '设备代码已被消费：上一次轮询在服务端其实已经成功，只是响应在客户端超时或被截断；
-                        '同一个代码无法再次换取令牌，这里自动换一个新的设备代码继续，避免直接判定登录失败
+                        
+                        
                         If DeviceCodeRefreshCount < 1 AndAlso RefreshDeviceCode() Then
                             DeviceCodeRefreshCount += 1
                             UnknownFailureCount = 0

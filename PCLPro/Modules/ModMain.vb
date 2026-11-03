@@ -6,10 +6,10 @@ Public Module ModMain
 
 #Region "弹出提示"
 
-    ''' <summary>
-    ''' 提示信息的种类。
-    ''' 该枚举在自定义事件中使用，是公开 API 的一部分。
-    ''' </summary>
+    
+    
+    
+    
     Public Enum HintType
         Blue
         Green
@@ -21,37 +21,37 @@ Public Module ModMain
         Public Log As Boolean
     End Structure
 
-    ''' <summary>
-    ''' 等待弹出的提示列表。以 {String, HintType, Log As Boolean} 形式存储为数组。
-    ''' </summary>
+    
+    
+    
     Private HintWaiting As New ConcurrentQueue(Of HintMessage)
-    ''' <summary>
-    ''' 在窗口左下角弹出提示文本。
-    ''' </summary>
+    
+    
+    
     Public Sub Hint(Text As String, Optional Type As HintType = HintType.Blue, Optional Log As Boolean = True)
         HintWaiting.Enqueue(New HintMessage With {.Text = If(Text, ""), .Type = Type, .Log = Log})
     End Sub
 
     Private Sub HintTick()
         Try
-            'Tag 存储了：{ 是否可以重用, Uuid }
+            
             Dim CurrentHint As HintMessage = Nothing
             Do While HintWaiting.TryDequeue(CurrentHint)
-                ''清除空提示
-                'If IsNothing(HintWaiting(0)) OrElse IsNothing(HintWaiting(0)(0)) Then
-                '    HintWaiting.RemoveAt(0)
-                '    Continue Do
-                'End If
-                '去回车
+                
+                
+                
+                
+                
+                
                 CurrentHint.Text = CurrentHint.Text.ReplaceLineEndings(" ", mergeMultiple:=True)
-                '超量提示直接忽略
+                
                 If FrmMain.PanHint.Children.Count >= 20 Then GoTo EndHint
-                '检查是否有重复提示
+                
                 Dim DoubleStack As Border = Nothing
                 For Each stack As Border In FrmMain.PanHint.Children
                     If stack.Tag(0) AndAlso CType(stack.Child, TextBlock).Text = CurrentHint.Text Then DoubleStack = stack
                 Next
-                '获取渐变颜色
+                
                 Dim TargetColor0, TargetColor1 As MyColor
                 Dim Percent As Double = 0.3
                 Select Case CurrentHint.Type
@@ -61,12 +61,12 @@ Public Module ModMain
                     Case HintType.Green
                         TargetColor0 = New MyColor(215, 33, 177, 33)
                         TargetColor1 = New MyColor(215, 29, 160, 29)
-                    Case Else 'HintType.Red
+                    Case Else 
                         TargetColor0 = New MyColor(215, 255, 53, 11)
                         TargetColor1 = New MyColor(215, 255, 43, 0)
                 End Select
                 If Not IsNothing(DoubleStack) Then
-                    '有重复提示，且该提示的进入动画已播放
+                    
                     If Not AniIsRun("Hint Show " & DoubleStack.Tag(1)) Then
                         AniStop("Hint Hide " & DoubleStack.Tag(1))
                         Dim Delay As Double = (800 + CurrentHint.Text.Length.Clamp(5, 23) * 180) * AniSpeed
@@ -89,24 +89,24 @@ Public Module ModMain
                       }, "Hint Hide " & DoubleStack.Tag(1))
                     End If
                 Else
-                    '准备控件
+                    
                     Dim NewHintControl As New Border With {.Tag = {True, GetUuid()}, .Margin = New Thickness(-70, 0, 20, 0), .Opacity = 0, .Height = 0, .HorizontalAlignment = HorizontalAlignment.Left, .CornerRadius = New CornerRadius(0, 6, 6, 0)}
                     NewHintControl.Background = New LinearGradientBrush(New GradientStopCollection(New List(Of GradientStop) From {
                         New GradientStop(TargetColor0 * Percent + New MyColor(255, 255, 255) * (1 - Percent), 0),
                         New GradientStop(TargetColor1 * Percent + New MyColor(255, 255, 255) * (1 - Percent), 1)}), 90)
                     NewHintControl.Child = New TextBlock With {.TextTrimming = TextTrimming.CharacterEllipsis, .FontSize = 13, .Text = CurrentHint.Text, .Foreground = New MyColor(255, 255, 255), .Margin = New Thickness(33, 5, 8, 5)}
-                    'AddHandler NewHintControl.MouseLeftButtonDown, AddressOf HideAllHint
+                    
                     FrmMain.PanHint.Children.Add(NewHintControl)
-                    '控件动画
+                    
                     Dim Animations As New List(Of AniData)
                     If FrmMain.PanHint.Children.Count > 1 Then
-                        '已有提示
+                        
                         Animations.Add(AaHeight(NewHintControl, 26, 150, , New AniEaseOutFluent))
                     Else
-                        '是唯一提示
+                        
                         NewHintControl.Height = 26
                     End If
-                    '开始动画
+                    
                     Animations.AddRange({
                         AaX(NewHintControl, 30, 400, , New AniEaseOutElastic(AniEasePower.Weak)),
                         AaX(NewHintControl, 20, 220, , New AniEaseOutFluent),
@@ -119,7 +119,7 @@ Public Module ModMain
                                  End Sub, 0.7, 250, 100)
                     })
                     AniStart(Animations, "Hint Show " & NewHintControl.Tag(1))
-                    '结束动画
+                    
                     Dim Delay As Double = (800 + CurrentHint.Text.Length.Clamp(5, 23) * 180) * AniSpeed
                     AniStart({
                         AaX(NewHintControl, -50, 200, Delay, New AniEaseInFluent),
@@ -129,7 +129,7 @@ Public Module ModMain
                         AaCode(Sub() FrmMain.PanHint.Children.Remove(NewHintControl), , True)
                     }, "Hint Hide " & NewHintControl.Tag(1))
                 End If
-                '结束处理
+                
 EndHint:
                 If CurrentHint.Log Then Logger.Info($"弹出提示：{CurrentHint.Text}")
             Loop
@@ -154,58 +154,58 @@ EndHint:
 
 #Region "弹窗"
 
-    ''' <summary>
-    ''' 存储弹窗信息的转换器。
-    ''' </summary>
+    
+    
+    
     Public Class MyMsgBoxConverter
         Public Type As MyMsgBoxType
         Public Title As String
         Public Text As String
-        ''' <summary>
-        ''' 输入模式：文本框的文本。
-        ''' 选择模式：需要放进去的 IEnumberable(Of IMyRadio)。
-        ''' 登录模式：登录步骤 1 中返回的 JSON。
-        ''' </summary>
+        
+        
+        
+        
+        
         Public Content As Object
-        ''' <summary>
-        ''' 输入模式：输入验证规则。
-        ''' </summary>
+        
+        
+        
         Public ValidateRules As Collection(Of Validate)
-        ''' <summary>
-        ''' 输入模式：提示文本。
-        ''' </summary>
+        
+        
+        
         Public HintText As String = ""
-        ''' <summary>
-        ''' 有多个按钮时，是否给第一个按钮加高亮。
-        ''' </summary>
+        
+        
+        
         Public HighLight As Boolean
         Public Button1 As String = "确定"
         Public Button2 As String = ""
         Public Button3 As String = ""
-        ''' <summary>
-        ''' 点击第一个按钮将执行该方法，不关闭弹窗。
-        ''' </summary>
+        
+        
+        
         Public Button1Action As Action = Nothing
-        ''' <summary>
-        ''' 点击第二个按钮将执行该方法，不关闭弹窗。
-        ''' </summary>
+        
+        
+        
         Public Button2Action As Action = Nothing
-        ''' <summary>
-        ''' 点击第三个按钮将执行该方法，不关闭弹窗。
-        ''' </summary>
+        
+        
+        
         Public Button3Action As Action = Nothing
         Public IsWarn As Boolean = False
         Public ForceWait As Boolean = False
         Public WaitFrame As New DispatcherFrame(True)
-        ''' <summary>
-        ''' 弹窗是否已经关闭。
-        ''' </summary>
+        
+        
+        
         Public IsExited As Boolean = False
-        ''' <summary>
-        ''' 输入模式：输入的文本。若点击了 非 第一个按钮，则为 Nothing。
-        ''' 选择模式：点击的按钮编号，从 1 开始。
-        ''' 登录模式：字符串数组 {AccessToken, RefreshToken} 或一个 Exception。
-        ''' </summary>
+        
+        
+        
+        
+        
         Public Result As Object
     End Class
     Public Enum MyMsgBoxType
@@ -215,28 +215,28 @@ EndHint:
         Login
     End Enum
 
-    ''' <summary>
-    ''' 显示弹窗，返回点击按钮的编号（从 1 开始）。
-    ''' </summary>
-    ''' <param name="Title">弹窗的标题。</param>
-    ''' <param name="Caption">弹窗的内容。</param>
-    ''' <param name="Button1">显示的第一个按钮，默认为“确定”。</param>
-    ''' <param name="Button2">显示的第二个按钮，默认为空。</param>
-    ''' <param name="Button3">显示的第三个按钮，默认为空。</param>
-    ''' <param name="Button1Action">点击第一个按钮将执行该方法，不关闭弹窗。</param>
-    ''' <param name="Button2Action">点击第二个按钮将执行该方法，不关闭弹窗。</param>
-    ''' <param name="Button3Action">点击第三个按钮将执行该方法，不关闭弹窗。</param>
-    ''' <param name="IsWarn">是否为警告弹窗，若为 True，弹窗配色和背景会变为红色。</param>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     Public Function MyMsgBox(Caption As String, Optional Title As String = "提示",
                              Optional Button1 As String = "确定", Optional Button2 As String = "", Optional Button3 As String = "",
                              Optional IsWarn As Boolean = False, Optional HighLight As Boolean = True, Optional ForceWait As Boolean = False,
                              Optional Button1Action As Action = Nothing, Optional Button2Action As Action = Nothing, Optional Button3Action As Action = Nothing) As Integer
-        '将弹窗列入队列
+        
         Dim Converter As New MyMsgBoxConverter With {.Type = MyMsgBoxType.Text, .Button1 = Button1, .Button2 = Button2, .Button3 = Button3, .Text = Caption, .IsWarn = IsWarn, .Title = Title, .HighLight = HighLight, .ForceWait = True, .Button1Action = Button1Action, .Button2Action = Button2Action, .Button3Action = Button3Action}
         If Button2.Length > 0 OrElse ForceWait Then
-            '若有多个按钮则开始等待
+            
             If FrmMain Is Nothing OrElse FrmMain.PanMsg Is Nothing AndAlso RunInUi() Then
-                '主窗体尚未加载，用老土的弹窗来替代
+                
                 If Button2.Length > 0 Then
                     Dim RawResult As MsgBoxResult =
                         MsgBox(Caption, If(Button3.Length > 0, MsgBoxStyle.YesNoCancel, MsgBoxStyle.YesNo) + If(IsWarn, MsgBoxStyle.Critical, MsgBoxStyle.Question), Title)
@@ -267,27 +267,27 @@ EndHint:
             Logger.Info($"普通弹框返回：{If(Converter.Result, "null")}")
             Return Converter.Result
         Else
-            '不进行等待，直接返回
+            
             WaitingMyMsgBox.Enqueue(Converter)
             Return 1
         End If
     End Function
-    ''' <summary>
-    ''' 显示输入框并返回输入的文本。若点击第二个按钮，则返回 Nothing。
-    ''' </summary>
-    ''' <param name="Title">弹窗的标题。</param>
-    ''' <param name="ValidateRules">文本框的输入检测。</param>
-    ''' <param name="Text">弹窗的介绍文本。</param>
-    ''' <param name="DefaultInput">文本框的默认内容。</param>
-    ''' <param name="HintText">文本框的提示内容。</param>
-    ''' <param name="Button1">显示的第一个按钮，默认为“确定”。</param>
-    ''' <param name="Button2">显示的第二个按钮，默认为“取消”。</param>
-    ''' <param name="IsWarn">是否为警告弹窗，若为 True，弹窗配色和背景会变为红色。</param>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     Public Function MyMsgBoxInput(Title As String, Optional Text As String = Nothing, Optional DefaultInput As String = Nothing, Optional ValidateRules As Collection(Of Validate) = Nothing, Optional HintText As String = "", Optional Button1 As String = "确定", Optional Button2 As String = "取消", Optional IsWarn As Boolean = False) As String
-        '将弹窗列入队列
+        
         Dim Converter As New MyMsgBoxConverter With {.Text = If(Text, ""), .HintText = If(HintText, ""), .Type = MyMsgBoxType.Input, .ValidateRules = If(ValidateRules, New Collection(Of Validate)), .Button1 = Button1, .Button2 = Button2, .Content = DefaultInput, .IsWarn = IsWarn, .Title = Title}
         WaitingMyMsgBox.Enqueue(Converter)
-        '虽然我也不知道这是啥但是能用就成了 :)
+        
         Try
             If FrmMain IsNot Nothing Then FrmMain.DragStop()
             If RunInUi() Then MyMsgBoxTick()
@@ -299,18 +299,18 @@ EndHint:
         Logger.Info($"输入弹框返回：{If(Converter.Result, "null")}")
         Return Converter.Result
     End Function
-    ''' <summary>
-    ''' 显示选择框并返回选择的第几项（从 0 开始）。若点击第二个按钮，则返回 Nothing。
-    ''' </summary>
-    ''' <param name="Title">弹窗的标题。</param>
-    ''' <param name="Button1">显示的第一个按钮，默认为 “确定”。</param>
-    ''' <param name="Button2">显示的第二个按钮，默认为空。</param>
-    ''' <param name="IsWarn">是否为警告弹窗，若为 True，弹窗配色和背景会变为红色。</param>
+    
+    
+    
+    
+    
+    
+    
     Public Function MyMsgBoxSelect(Selections As IEnumerable(Of IMyRadio), Optional Title As String = "提示", Optional Button1 As String = "确定", Optional Button2 As String = "", Optional IsWarn As Boolean = False) As Integer?
-        '将弹窗列入队列
+        
         Dim Converter As New MyMsgBoxConverter With {.Type = MyMsgBoxType.Select, .Button1 = Button1, .Button2 = Button2, .Content = Selections, .IsWarn = IsWarn, .Title = Title}
         WaitingMyMsgBox.Enqueue(Converter)
-        '虽然我也不知道这是啥但是能用就成了 :)
+        
         Try
             If FrmMain IsNot Nothing Then FrmMain.DragStop()
             If RunInUi() Then MyMsgBoxTick()
@@ -323,19 +323,19 @@ EndHint:
         Return Converter.Result
     End Function
 
-    ''' <summary>
-    ''' 等待显示的弹窗。
-    ''' </summary>
+    
+    
+    
     Public WaitingMyMsgBox As New ConcurrentQueue(Of MyMsgBoxConverter)
     Public Sub MyMsgBoxTick()
         Try
             If FrmMain?.PanMsg Is Nothing OrElse FrmMain.WindowState = WindowState.Minimized Then Return
             Dim TargetMsgBox As MyMsgBoxConverter = Nothing
             If FrmMain.PanMsg.Children.Count > 0 Then
-                '弹窗中
+                
                 FrmMain.PanMsg.Visibility = Visibility.Visible
             ElseIf WaitingMyMsgBox.TryDequeue(TargetMsgBox) Then
-                '没有弹窗，显示一个等待的弹窗
+                
                 FrmMain.PanMsg.Visibility = Visibility.Visible
                 Select Case TargetMsgBox.Type
                     Case MyMsgBoxType.Input
@@ -348,7 +348,7 @@ EndHint:
                         FrmMain.PanMsg.Children.Add(New MyMsgLogin(TargetMsgBox))
                 End Select
             Else
-                '没有弹窗，没有等待的弹窗
+                
                 If FrmMain.PanMsg.Visibility <> Visibility.Collapsed Then FrmMain.PanMsg.Visibility = Visibility.Collapsed
             End If
         Catch ex As Exception
@@ -359,12 +359,12 @@ EndHint:
 #End Region
 
 #Region "页面声明"
-    '在最后进行页面声明，避免颜色尚未加载完毕
+    
 
-    '窗体声明
+    
     Public FrmMain As FormMain
 
-    '页面声明（出于单元测试考虑，初始化页面已转入 FormMain 中）
+    
     Public FrmLaunchLeft As PageLaunchLeft
     Public FrmLaunchRight As PageLaunchRight
     Public FrmSelectLeft As PageSelectLeft
@@ -372,10 +372,10 @@ EndHint:
     Public FrmSpeedLeft As PageSpeedLeft
     Public FrmSpeedRight As PageSpeedRight
 
-    '联机页面声明
+    
     Public FrmLinkMain As PageLinkMain
 
-    '下载页面声明
+    
     Public FrmDownloadLeft As PageDownloadLeft
     Public FrmDownloadInstall As PageDownloadInstall
     Public FrmDownloadMod As PageDownloadMod
@@ -385,20 +385,20 @@ EndHint:
     Public FrmDownloadResourcePack As PageDownloadResourcePack
     Public FrmDownloadMap As PageDownloadMap
 
-    '设置页面声明
+    
     Public FrmSetupLeft As PageSetupLeft
     Public FrmSetupLaunch As PageSetupLaunch
     Public FrmSetupUI As PageSetupUI
     Public FrmSetupSystem As PageSetupSystem
     Public FrmSetupLink As PageSetupLink
 
-    '其他页面声明
+    
     Public FrmOtherLeft As PageOtherLeft
     Public FrmOtherAbout As PageOtherAbout
     Public FrmOtherTest As PageOtherTest
     Public FrmOtherFeedback As PageOtherFeedback
 
-    '登录页面声明
+    
     Public FrmLoginLegacy As PageLoginLegacy
     Public FrmLoginNide As PageLoginNide
     Public FrmLoginNideSkin As PageLoginNideSkin
@@ -407,7 +407,7 @@ EndHint:
     Public FrmLoginMs As PageLoginMs
     Public FrmLoginMsSkin As PageLoginMsSkin
 
-    '版本设置页面声明
+    
     Public FrmInstanceLeft As PageInstanceLeft
     Public FrmInstanceOverall As PageInstanceOverall
     Public FrmInstanceMod As PageInstanceMod
@@ -416,7 +416,7 @@ EndHint:
     Public FrmInstanceExport As PageInstanceExport
     Public FrmDownloadModify As PageDownloadModify
 
-    '资源信息分页声明
+    
     Public FrmDownloadResourceDetail As PageDownloadResourceDetail
 
 #End Region
@@ -428,7 +428,7 @@ EndHint:
             If _IsAprilEnabled Is Nothing Then
                 _IsAprilEnabled =
                     Date.Now.Month = 4 AndAlso Date.Now.Day = 1 AndAlso
-                    Settings.Get(Of Integer)("AprilYear") <> Date.Now.Year '成功后同年内则不再触发
+                    Settings.Get(Of Integer)("AprilYear") <> Date.Now.Year 
             End If
             Return _IsAprilEnabled.Value
         End Get
@@ -440,7 +440,7 @@ EndHint:
             If FrmLaunchLeft Is Nothing OrElse FrmLaunchLeft.AprilPosTrans Is Nothing OrElse FrmMain.lastMouseArg Is Nothing Then Return
             If IsAprilGiveup OrElse FrmMain.PageCurrent <> FormMain.PageType.Launch OrElse AniControlEnabled <> 0 OrElse Not FrmLaunchLeft.BtnLaunch.IsLoaded Then Return
 
-            '计算是否空闲
+            
             Dim MousePos = FrmMain.lastMouseArg.GetPosition(FrmMain)
             Static IdieCount As Integer = 0
             Static MousePosLast As New Point(0, 0)
@@ -450,7 +450,7 @@ EndHint:
                 MousePosLast = MousePos
                 IdieCount = 0
             End If
-            '计算躲避移动
+            
             Dim Direction As Vector
             Dim Distance As Double
             Dim ButtonWidth = FrmLaunchLeft.BtnLaunch.ActualWidth / 2, ButtonHeight = FrmLaunchLeft.BtnLaunch.ActualHeight / 2
@@ -460,10 +460,10 @@ EndHint:
             Direction = -Dir
             Distance = New Vector(Math.Max(0, Math.Abs(Vec.X) - ButtonWidth), Math.Max(0, Math.Abs(Vec.Y) - ButtonHeight)).Length
             Dim BreathScale = Math.Sin(Timer150Count / 37.5 * Math.PI)
-            Dim Difficulty As Double = 1 / (1 + (AprilDifficultiedDistance / 6000) ^ 2) + 0.25 '难度，初始为 1.25x，6000 距离为 0.75x，12000 为 0.5x，24000 为 0.256x，最低 0.25x
-            Dim Acc = Math.Max(0, -0.65 - Math.Log((Distance / Difficulty + 0.4) / 200)) * Direction * Difficulty '加速度
-            'FrmMain.Title = CInt(AprilTotalDistance) & " - " & Difficulty
-            '5s 不动时回到起始点
+            Dim Difficulty As Double = 1 / (1 + (AprilDifficultiedDistance / 6000) ^ 2) + 0.25 
+            Dim Acc = Math.Max(0, -0.65 - Math.Log((Distance / Difficulty + 0.4) / 200)) * Direction * Difficulty 
+            
+            
             If IdieCount >= 64 * 5 Then
                 Dim SafeDist As Vector = FrmMain.lastMouseArg.GetPosition(FrmMain.PanMain) - New Vector(ButtonWidth, FrmMain.PanMain.ActualHeight - ButtonHeight * 3)
                 Dim Back As New Vector(FrmLaunchLeft.AprilPosTrans.X, FrmLaunchLeft.AprilPosTrans.Y)
@@ -473,11 +473,11 @@ EndHint:
                     Acc -= Back * 0.15
                 End If
             End If
-            '回到边界
+            
             Static Speed As New Vector(0, 0)
             Dim Relative As Point = FrmLaunchLeft.BtnLaunch.TranslatePoint(New Point(0, 0), FrmMain.PanForm)
             If Relative.X < -ButtonWidth * 2 Then
-                FrmLaunchLeft.AprilPosTrans.X += FrmMain.PanForm.ActualWidth + ButtonWidth * 2 '离开左边界
+                FrmLaunchLeft.AprilPosTrans.X += FrmMain.PanForm.ActualWidth + ButtonWidth * 2 
                 Speed.X -= 80
                 If Relative.Y < 0 Then
                     FrmLaunchLeft.AprilPosTrans.Y += ButtonHeight * 2.5
@@ -485,7 +485,7 @@ EndHint:
                     FrmLaunchLeft.AprilPosTrans.Y -= ButtonHeight * 2.5
                 End If
             ElseIf Relative.X > FrmMain.PanForm.ActualWidth Then
-                FrmLaunchLeft.AprilPosTrans.X -= FrmMain.PanForm.ActualWidth + ButtonWidth * 2 '离开右边界
+                FrmLaunchLeft.AprilPosTrans.X -= FrmMain.PanForm.ActualWidth + ButtonWidth * 2 
                 Speed.X += 80
                 If Relative.Y < 0 Then
                     FrmLaunchLeft.AprilPosTrans.Y += ButtonHeight * 2.5
@@ -493,7 +493,7 @@ EndHint:
                     FrmLaunchLeft.AprilPosTrans.Y -= ButtonHeight * 2.5
                 End If
             ElseIf Relative.Y < -ButtonHeight * 2 Then
-                FrmLaunchLeft.AprilPosTrans.Y += FrmMain.PanForm.ActualHeight + ButtonHeight * 2 '离开上边界
+                FrmLaunchLeft.AprilPosTrans.Y += FrmMain.PanForm.ActualHeight + ButtonHeight * 2 
                 Speed.Y -= 25
                 If Relative.X < 0 Then
                     FrmLaunchLeft.AprilPosTrans.X += ButtonWidth * 2
@@ -501,7 +501,7 @@ EndHint:
                     FrmLaunchLeft.AprilPosTrans.X -= ButtonWidth * 2
                 End If
             ElseIf Relative.Y > FrmMain.PanForm.ActualHeight Then
-                FrmLaunchLeft.AprilPosTrans.Y -= FrmMain.PanForm.ActualHeight + ButtonHeight * 2 '离开下边界
+                FrmLaunchLeft.AprilPosTrans.Y -= FrmMain.PanForm.ActualHeight + ButtonHeight * 2 
                 Speed.Y += 25
                 If Relative.X < 0 Then
                     FrmLaunchLeft.AprilPosTrans.X += ButtonWidth * 2
@@ -509,7 +509,7 @@ EndHint:
                     FrmLaunchLeft.AprilPosTrans.X -= ButtonWidth * 2
                 End If
             End If
-            '移动
+            
             Speed = Speed * 0.8 + Acc
             Dim SpeedValue = Math.Min(60, Speed.Length)
             If SpeedValue < 0.01 Then Return
@@ -518,10 +518,10 @@ EndHint:
             AprilDifficultiedDistance += SpeedValue
             FrmLaunchLeft.AprilPosTrans.X += Speed.X
             FrmLaunchLeft.AprilPosTrans.Y += Speed.Y
-            '大小改变
+            
             FrmLaunchLeft.AprilScaleTrans.ScaleX = (1 - (Math.Abs(Direction.X) - Math.Abs(Direction.Y)) * (SpeedValue / 160)).Clamp(0.2, 1.8)
             FrmLaunchLeft.AprilScaleTrans.ScaleY = (1 - (Math.Abs(Direction.Y) - Math.Abs(Direction.X)) * (SpeedValue / 100)).Clamp(0.2, 1.8)
-            '放弃提示
+            
             Static GiveUpDistance As Double = -1500
             GiveUpDistance += SpeedValue
             If GiveUpDistance > 2500 Then
@@ -547,13 +547,13 @@ EndHint:
 
 #Region "系统"
 
-    ''' <summary>
-    ''' 把某个 PCL 窗口拖到最前面。
-    ''' </summary>
+    
+    
+    
     Public Sub ShowWindowToTop(Handle As IntPtr)
         Try
             PostMessage(Handle, 400 * 16 + 2, 0, 0)
-            SetForegroundWindow(Handle) '不在这里放不行，神秘 WinAPI，建议别动
+            SetForegroundWindow(Handle) 
         Catch ex As Exception
             Logger.Error(ex, "设置窗口置顶失败", LogBehavior.Toast)
         End Try
@@ -566,29 +566,29 @@ EndHint:
     Public Const SW_MAXIMIZE As Integer = 3
     Private Declare Function PostMessage Lib "user32" Alias "PostMessageA" (hWnd As IntPtr, msg As UInteger, wParam As Long, lParam As Long) As Boolean
 
-    ''' <summary>
-    ''' 将特定程序设置为使用高性能显卡启动。
-    ''' 如果失败，则抛出异常。
-    ''' </summary>
+    
+    
+    
+    
     Public Sub SetGPUPreference(Executeable As String)
         Const REG_KEY As String = "HKEY_CURRENT_USER\Software\Microsoft\DirectX\UserGpuPreferences"
         Const REG_VALUE As String = "GpuPreference=2;"
-        '查看现有设置
+        
         If RegistryUtils.Read(REG_KEY, Executeable).result?.ToString() = REG_VALUE Then
             Logger.Info($"无需调整显卡设置：{Executeable}")
             Return
         End If
-        '写入新设置
+        
         RegistryUtils.Write(REG_KEY, Executeable, REG_VALUE)
         Logger.Info($"已调整显卡设置：{Executeable}")
     End Sub
 
-    ''' <summary>
-    ''' 对替换标记进行处理。会对替换内容使用 EscapeHandler 进行转义。
-    ''' </summary>
+    
+    
+    
     Public Function ArgumentReplace(Text As String, Optional EscapeHandler As Func(Of String, String) = Nothing, Optional ReplaceTime As Boolean = True) As String
         If Text Is Nothing OrElse Not Text.Contains("{") Then Return Text
-        '预处理（注意，文件夹必须以 \ 结尾）
+        
         Static Replacer As Func(Of String, String) =
         Function(s As String) As String
             If s Is Nothing Then Return ""
@@ -600,7 +600,7 @@ EndHint:
             End If
             Return EscapeHandler(s)
         End Function
-        '基础
+        
         Text = Text.Replace("{pcl_version}", Replacer(VersionBaseName))
         Text = Text.Replace("{pcl_version_code}", Replacer(VersionCode))
         Text = Text.Replace("{pcl_version_branch}", Replacer(BuildTypeDisplay))
@@ -612,12 +612,12 @@ EndHint:
         Text = Text.Replace("{path_temp}", Replacer(PathTemp))
         Text = Text.Replace("{pcl_md5}", Function() Replacer(CryptographyUtils.ComputeFileHash(PathExe, CryptographyUtils.HashMethod.Md5)))
         Text = Text.Replace("{pcl_sha1}", Function() Replacer(CryptographyUtils.ComputeFileHash(PathExe, CryptographyUtils.HashMethod.Sha1)))
-        '时间
-        If ReplaceTime Then '在窗口标题中，时间会被后续动态替换，所以此时不应该替换
+        
+        If ReplaceTime Then 
             Text = Text.Replace("{date}", Replacer(Date.Now.ToString("yyyy'/'M'/'d")))
             Text = Text.Replace("{time}", Replacer(Date.Now.ToString("HH':'mm':'ss")))
         End If
-        'Minecraft
+        
         Text = Text.Replace("{java}", Replacer(McLaunchJavaSelected?.Folder))
         Text = Text.Replace("{minecraft}", Replacer(McFolderSelected))
         If McInstanceSelected?.IsLoaded Then
@@ -643,7 +643,7 @@ EndHint:
             Text = Text.Replace("{neoforge}", Replacer(Nothing))
             Text = Text.Replace("{liteloader}", Replacer(Nothing))
         End If
-        '登录信息
+        
         If McLoginLoader.State = LoadState.Finished Then
             Text = Text.Replace("{user}", Replacer(McLoginLoader.Output.Name))
             Text = Text.Replace("{uuid}", Replacer(McLoginLoader.Output.Uuid?.Lower))
@@ -662,7 +662,7 @@ EndHint:
             Text = Text.Replace("{uuid}", Replacer(Nothing))
             Text = Text.Replace("{login}", Replacer(Nothing))
         End If
-        '高级
+        
         Text = Text.RegexReplace("\{hint\}", Function() Replacer(PageOtherTest.GetRandomHint()))
         Text = Text.RegexReplace("\{cave\}", Function() Replacer(PageOtherTest.GetRandomCave()))
         Text = Text.RegexReplace("\{setup:([a-zA-Z0-9]+)\}", Function(m) Replacer(Settings.GetSafe(m.Groups(1).Value, McInstanceSelected)))
@@ -678,10 +678,10 @@ EndHint:
     Private IsTaskTempCleared As Boolean = False
     Private IsTaskTempClearing As Boolean = False
 
-    ''' <summary>
-    ''' 尝试清理任务缓存文件夹。
-    ''' 在整次运行中只会实际清理一次。
-    ''' </summary>
+    
+    
+    
+    
     Public Sub TryClearTaskTemp()
         If Not IsTaskTempCleared Then
             IsTaskTempCleared = True
@@ -697,30 +697,30 @@ EndHint:
                 IsTaskTempClearing = False
             End Try
         ElseIf IsTaskTempClearing Then
-            '等待另一个清理步骤完成
+            
             Do While IsTaskTempClearing
                 Thread.Sleep(1)
             Loop
         End If
     End Sub
 
-    ''' <summary>
-    ''' 申请一个可用于任务缓存的临时文件夹，以 \ 结尾。这些文件夹无需进行后续清理。
-    ''' 若所有缓存位置均没有权限，会抛出异常。
-    ''' </summary>
-    ''' <param name="RequireNonSpace">是否要求路径不包含空格。</param>
+    
+    
+    
+    
+    
     Public Function RequestTaskTempFolder(Optional RequireNonSpace As Boolean = False) As String
         TryClearTaskTemp()
         Dim ResultFolder As String
         Try
             ResultFolder = $"{PathTemp}TaskTemp\{GetUuid()}-{RandomInteger(0, 1000000)}\"
-            If RequireNonSpace AndAlso ResultFolder.Contains(" ") Then Exit Try '带空格
+            If RequireNonSpace AndAlso ResultFolder.Contains(" ") Then Exit Try 
             DirectoryUtils.Create(ResultFolder)
             CheckPermissionWithException(ResultFolder)
             Return ResultFolder
         Catch
         End Try
-        '使用备用路径
+        
         ResultFolder = $"{OsDrive}ProgramData\PCL\TaskTemp\{GetUuid()}-{RandomInteger(0, 1000000)}\"
         DirectoryUtils.Create(ResultFolder)
         CheckPermission(ResultFolder)
@@ -731,7 +731,7 @@ EndHint:
 
 #Region "反馈与遥测"
 
-    '反馈
+    
     Public Sub Feedback(Optional ShowMsgbox As Boolean = True, Optional ForceOpenLog As Boolean = False)
         On Error Resume Next
         FeedbackInfo()
@@ -740,9 +740,9 @@ EndHint:
         End If
         OpenWebsite("https://github.com/Meloong-Git/PCL/issues/")
     End Sub
-    ''' <summary>
-    ''' 在日志中输出系统诊断信息。
-    ''' </summary>
+    
+    
+    
     Public Sub FeedbackInfo()
         On Error Resume Next
         Logger.Warn($"诊断信息：{vbCrLf}" &
@@ -753,11 +753,11 @@ EndHint:
             "文件位置：" & Paths.Base)
     End Sub
 
-    '遥测
+    
     Public Sub Telemetry([Event] As String, ParamArray Datas As String())
-        If BuildType = BuildTypes.Debug Then Return '开发版不上传遥测
-        If Not Settings.Get(Of Boolean)("SystemSystemTelemetry") Then Return '用户关闭了遥测
-        If Not ClsBaseUrl.StartsWithF("http") Then Return '开源版没有设置遥测地址
+        If BuildType = BuildTypes.Debug Then Return 
+        If Not Settings.Get(Of Boolean)("SystemSystemTelemetry") Then Return 
+        If Not ClsBaseUrl.StartsWithF("http") Then Return 
         RunInNewThread(
         Sub()
             Try
@@ -807,12 +807,12 @@ EndHint:
             Try
 #Region "每 7.5s 执行一次的代码"
                 If FrmMain.BtnExtraApril_ShowCheck AndAlso AprilDifficultiedDistance <> 0 Then FrmMain.BtnExtraApril.Ribble()
-                '以未知原因窗口被丢到一边去的修复（Top、Left = -25600），还有 #745
+                
                 RunInUi(
                 Sub()
                     If Not FrmMain.Hidden Then
                         If FrmMain.Top < -9000 Then FrmMain.Top = 100
-                        If FrmMain.Left < -9000 Then FrmMain.Left = 100 '窗口拉至最大时 Left = -18.8
+                        If FrmMain.Left < -9000 Then FrmMain.Left = 100 
                     End If
                 End Sub)
 #End Region
@@ -820,7 +820,7 @@ EndHint:
                 Logger.Error(ex, "长程主时钟执行异常", LogBehavior.AlertThenCrash)
             End Try
         End If
-        '不再在空闲时自动回收内存：该操作需要管理员权限，会每隔几分钟无端弹出 UAC 提示
+        
     End Sub
     Public Sub TimerMainStart()
         RunInNewThread(

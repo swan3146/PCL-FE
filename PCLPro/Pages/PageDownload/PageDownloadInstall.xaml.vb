@@ -35,7 +35,7 @@ Public Class PageDownloadInstall
         DlFabricListLoader.Start()
         DlNeoForgeListLoader.Start()
 
-        '重载预览
+        
         TextSelectName.ValidateRules = New ObjectModel.Collection(Of Validate) From {New ValidateFolderName(McFolderSelected & "versions")}
         TextSelectName.Validate()
         ReloadSelected()
@@ -43,12 +43,12 @@ Public Class PageDownloadInstall
 
 #Region "页面切换"
 
-    '页面切换动画
+    
     Public IsInSelectPage As Boolean = False
 
-    ''' <summary>
-    ''' 选择页面 UI 初始化。
-    ''' </summary>
+    
+    
+    
     Public Sub PrepareSelectPage()
         IsInSelectPage = True
         PanInner.Margin = New Thickness(25, 10, 25, 40)
@@ -64,7 +64,7 @@ Public Class PageDownloadInstall
             Card.IsSwapped = True
         Next
 
-        '如果在选择页面按了刷新键，选择页的东西可能会由于动画被隐藏，但不会由于加载结束而再次显示，因此这里需要手动恢复
+        
         For Each Control In GetAllAnimControls(PanSelect)
             Control.Opacity = 1
             If Control.RenderTransform Is Nothing OrElse TypeOf Control.RenderTransform Is TranslateTransform Then
@@ -79,14 +79,14 @@ Public Class PageDownloadInstall
         AutoSelectedOptiFabric = False
         PrepareSelectPage()
 
-        '启动 Forge 加载
+        
         If McVersion.IsStandardFormat(VanillaName) Then
             Dim ForgeLoader = New LoaderTask(Of String, List(Of DlForgeVersionEntry))("DlForgeVersion " & VanillaName, AddressOf DlForgeVersionMain)
             LoadForge.State = ForgeLoader
             ForgeLoader.Start(VanillaName)
         End If
 
-        '启动 Fabric API、OptiFabric 加载
+        
         DlFabricApiLoader.Start()
         DlOptiFabricLoader.Start()
 
@@ -125,7 +125,7 @@ Public Class PageDownloadInstall
 
         DisabledPageAnimControls.Add(BtnStart)
         BtnStart.Show = False
-        ClearSelected() '清除已选择项
+        ClearSelected() 
         PanMinecraft.Visibility = Visibility.Visible
         PanSelect.IsHitTestVisible = False
         PanMinecraft.IsHitTestVisible = True
@@ -157,7 +157,7 @@ Public Class PageDownloadInstall
 
 #Region "选择"
 
-    'Minecraft
+    
     Public VanillaName As String
     Public VanillaData As JObject
     Public VanillaIcon As String
@@ -167,7 +167,7 @@ Public Class PageDownloadInstall
         End Get
     End Property
 
-    '附加组件
+    
     Public SelectedOptiFine As DlOptiFineListEntry = Nothing
     Public SelectedLiteLoader As DlLiteLoaderListEntry = Nothing
     Public SelectedForge As DlForgeVersionEntry = Nothing
@@ -176,21 +176,21 @@ Public Class PageDownloadInstall
     Public SelectedFabricApi As ResourceVersion = Nothing
     Public SelectedOptiFabric As ResourceVersion = Nothing
 
-    ''' <summary>
-    ''' 重载已选择的项目的显示。
-    ''' </summary>
+    
+    
+    
     Public Overridable Sub ReloadSelected() Handles CardOptiFine.Swap, LoadOptiFine.StateChanged, CardForge.Swap, LoadForge.StateChanged, CardNeoForge.Swap, LoadNeoForge.StateChanged, CardFabric.Swap, LoadFabric.StateChanged, CardFabricApi.Swap, LoadFabricApi.StateChanged, CardOptiFabric.Swap, LoadOptiFabric.StateChanged, CardLiteLoader.Swap, LoadLiteLoader.StateChanged
-        Static Ongoing As Boolean = False '#3742 中，LoadOptiFineGetError 会初始化 LoadOptiFine，触发事件 LoadOptiFine.StateChanged，导致再次调用 SelectReload
+        Static Ongoing As Boolean = False 
         If VanillaName Is Nothing OrElse Ongoing Then Return
         Ongoing = True
-        '主预览
+        
         SelectNameUpdate()
         ImgLogo.Source = GetSelectLogo()
         ImgMinecraft.Source = VanillaIcon
-        'OptiFine
+        
         Dim OptiFineError As String = LoadOptiFineGetError()
         CardOptiFine.MainSwap.Visibility = If(OptiFineError Is Nothing, Visibility.Visible, Visibility.Collapsed)
-        If OptiFineError IsNot Nothing Then CardOptiFine.IsSwapped = True '例如在同时展开卡片时选择了不兼容项则强制折叠
+        If OptiFineError IsNot Nothing Then CardOptiFine.IsSwapped = True 
         SetPanelVisibility(PanOptiFineInfo, CardOptiFine.IsSwapped)
         If SelectedOptiFine Is Nothing Then
             BtnOptiFineClear.Visibility = Visibility.Collapsed
@@ -203,14 +203,14 @@ Public Class PageDownloadInstall
             LabOptiFine.Text = SelectedOptiFine.DisplayName.Replace(VanillaName & " ", "")
             LabOptiFine.Foreground = ColorGray1
         End If
-        'LiteLoader
+        
         If VanillaDrop >= 130 Then
             CardLiteLoader.Visibility = Visibility.Collapsed
         Else
             CardLiteLoader.Visibility = Visibility.Visible
             Dim LiteLoaderError As String = LoadLiteLoaderGetError()
             CardLiteLoader.MainSwap.Visibility = If(LiteLoaderError Is Nothing, Visibility.Visible, Visibility.Collapsed)
-            If LiteLoaderError IsNot Nothing Then CardLiteLoader.IsSwapped = True '例如在同时展开卡片时选择了不兼容项则强制折叠
+            If LiteLoaderError IsNot Nothing Then CardLiteLoader.IsSwapped = True 
             SetPanelVisibility(PanLiteLoaderInfo, CardLiteLoader.IsSwapped)
             If SelectedLiteLoader Is Nothing Then
                 BtnLiteLoaderClear.Visibility = Visibility.Collapsed
@@ -224,7 +224,7 @@ Public Class PageDownloadInstall
                 LabLiteLoader.Foreground = ColorGray1
             End If
         End If
-        'Forge
+        
         If Not McVersion.IsStandardFormat(VanillaName) Then
             CardForge.Visibility = Visibility.Collapsed
         Else
@@ -245,8 +245,8 @@ Public Class PageDownloadInstall
                 LabForge.Foreground = ColorGray1
             End If
         End If
-        'NeoForge
-        If VanillaData("releaseTime").ToObject(Of Date) < New Date(2023, 6, 11) Then '匹配 1.20.1+ 与一些愚人节版本
+        
+        If VanillaData("releaseTime").ToObject(Of Date) < New Date(2023, 6, 11) Then 
             CardNeoForge.Visibility = Visibility.Collapsed
         Else
             CardNeoForge.Visibility = Visibility.Visible
@@ -266,7 +266,7 @@ Public Class PageDownloadInstall
                 LabNeoForge.Foreground = ColorGray1
             End If
         End If
-        'Fabric
+        
         If VanillaDrop <= 130 Then
             CardFabric.Visibility = Visibility.Collapsed
         Else
@@ -287,7 +287,7 @@ Public Class PageDownloadInstall
                 LabFabric.Foreground = ColorGray1
             End If
         End If
-        'FabricApi
+        
         If SelectedFabric Is Nothing Then
             CardFabricApi.Visibility = Visibility.Collapsed
         Else
@@ -308,7 +308,7 @@ Public Class PageDownloadInstall
                 LabFabricApi.Foreground = ColorGray1
             End If
         End If
-        'OptiFabric
+        
         If SelectedFabric Is Nothing OrElse SelectedOptiFine Is Nothing Then
             CardOptiFabric.Visibility = Visibility.Collapsed
         Else
@@ -329,7 +329,7 @@ Public Class PageDownloadInstall
                 LabOptiFabric.Foreground = ColorGray1
             End If
         End If
-        '主警告
+        
         If SelectedFabric IsNot Nothing AndAlso SelectedFabricApi Is Nothing Then
             HintFabricAPI.Visibility = Visibility.Visible
         Else
@@ -353,12 +353,12 @@ Public Class PageDownloadInstall
         Else
             HintModOptiFine.Visibility = Visibility.Collapsed
         End If
-        '结束
+        
         Ongoing = False
     End Sub
-    ''' <summary>
-    ''' 清空已选择的项目。
-    ''' </summary>
+    
+    
+    
     Public Sub ClearSelected()
         VanillaName = Nothing
         VanillaData = Nothing
@@ -375,7 +375,7 @@ Public Class PageDownloadInstall
             ClearButton.Visibility = Visibility.Collapsed
         Next
     End Sub
-    '信息栏动画
+    
     Private Sub SetPanelVisibility(Panel As Grid, IsVisible As Boolean)
         If Panel.Tag = IsVisible.ToString Then Return
         Panel.Tag = IsVisible.ToString
@@ -392,9 +392,9 @@ Public Class PageDownloadInstall
         End If
     End Sub
 
-    ''' <summary>
-    ''' 获取版本图标。
-    ''' </summary>
+    
+    
+    
     Public Overridable Function GetSelectLogo() As String
         If SelectedFabric IsNot Nothing Then
             Return "pack://application:,,,/images/Blocks/Fabric.png"
@@ -411,10 +411,10 @@ Public Class PageDownloadInstall
         End If
     End Function
 
-    '版本名处理
-    ''' <summary>
-    ''' 获取默认版本名。
-    ''' </summary>
+    
+    
+    
+    
     Public Function GetSelectName() As String
         Dim Name As String = VanillaName
         If SelectedFabric IsNot Nothing Then Name += "-Fabric " & SelectedFabric.BeforeFirst("+")
@@ -446,25 +446,25 @@ Public Class PageDownloadInstall
     Private Sub LoadMinecraft_OnFinish()
         MinecraftVersions = CType(DlClientListLoader.Output.Value("versions").DeepClone(), JArray)
         ShowMinecraftVersionList()
-        TrySelectWaitingVersion() '自动选择版本
+        TrySelectWaitingVersion() 
     End Sub
 
-    '结果数据化
+    
     Public Overridable Sub ShowMinecraftVersionList()
-        ExitSelectPage() '返回
+        ExitSelectPage() 
         Try
             Dim Dict As New Dictionary(Of String, List(Of JObject)) From {
                 {"正式版", New List(Of JObject)}, {"预览版", New List(Of JObject)}, {"远古版", New List(Of JObject)}, {"愚人节版", New List(Of JObject)}
             }
             For Each Version As JObject In MinecraftVersions
-                '确定分类
+                
                 Dim Type As String = Version("type")
                 Select Case Type
                     Case "release"
                         Type = "正式版"
                     Case "snapshot"
                         Type = "预览版"
-                        'Mojang 误分类
+                        
                         If Version("id").ToString.StartsWithF("1.") AndAlso
                             Not Version("id").ToString.Lower.Contains("combat") AndAlso
                             Not Version("id").ToString.Lower.Contains("rc") AndAlso
@@ -473,7 +473,7 @@ Public Class PageDownloadInstall
                             Type = "正式版"
                             Version("type") = "release"
                         End If
-                        '愚人节版本
+                        
                         Select Case Version("id").ToString.Lower
                             Case "20w14infinite", "20w14∞"
                                 Type = "愚人节版"
@@ -484,7 +484,7 @@ Public Class PageDownloadInstall
                                 Type = "愚人节版"
                                 Version("type") = "special"
                                 Version.Add("lore", GetMcFoolName(Version("id")))
-                            Case Else '4/1 自动视作愚人节版
+                            Case Else 
                                 Dim ReleaseDate = Version("releaseTime").Value(Of Date).ToUniversalTime().AddHours(2)
                                 If ReleaseDate.Month = 4 AndAlso ReleaseDate.Day = 1 Then
                                     Type = "愚人节版"
@@ -492,21 +492,21 @@ Public Class PageDownloadInstall
                                 End If
                         End Select
                     Case "special"
-                        '已被处理的愚人节版
+                        
                         Type = "愚人节版"
                     Case Else
                         Type = "远古版"
                 End Select
-                '加入辞典
+                
                 Dict(Type).Add(Version)
             Next
-            '排序
+            
             For Each Pair In Dict.ToList
                 Dict(Pair.Key) = Pair.Value.OrderByDescending(Function(j) j("releaseTime").Value(Of Date)).ToList
             Next
-            '清空当前
+            
             PanMinecraft.Children.Clear()
-            '添加最新版本
+            
             Dim CardInfo As New MyCard With {.Title = "最新版本", .Margin = New Thickness(0, 15, 0, 15)}
             Dim PinnedVersions As New List(Of JObject)
             Dim Release As JObject = Dict("正式版")(0).DeepClone()
@@ -520,14 +520,14 @@ Public Class PageDownloadInstall
             Dim PanInfo As New StackPanel With {.Margin = New Thickness(20, MyCard.SwapedHeight, 18, 0), .VerticalAlignment = VerticalAlignment.Top, .RenderTransform = New TranslateTransform(0, 0)}
             CardInfo.Children.Add(PanInfo)
             CardInfo.SwapControl = PanInfo
-            CardInfo.SetContentBuilder(PinnedVersions, '使用 Lambda 转发点击事件，避免 #535
+            CardInfo.SetContentBuilder(PinnedVersions, 
                 Function(Version) McDownloadListItem(Version, Sub(sender, e) MinecraftSelected(sender, e), False))
             CardInfo.BuildContent()
             PanMinecraft.Children.Insert(0, CardInfo)
-            '添加其他版本
+            
             For Each Pair As KeyValuePair(Of String, List(Of JObject)) In Dict
                 If Not Pair.Value.Any() Then Continue For
-                '增加卡片
+                
                 Dim NewCard As New MyCard With {.Title = Pair.Key, .Margin = New Thickness(0, 0, 0, 15)}
                 Dim NewStack As New StackPanel With {.Margin = New Thickness(20, MyCard.SwapedHeight, 18, 0), .VerticalAlignment = VerticalAlignment.Top, .RenderTransform = New TranslateTransform(0, 0)}
                 NewCard.Children.Add(NewStack)
@@ -552,40 +552,40 @@ Public Class PageDownloadInstall
         Next
     End Sub
 
-    ''' <summary>
-    ''' 当 MC 版本列表加载完时，立即自动选择的版本。用于外部调用。
-    ''' </summary>
+    
+    
+    
     Public Shared VersionWaitingSelect As String = Nothing
 
 #End Region
 
 #Region "OptiFine 列表"
 
-    ''' <summary>
-    ''' 获取 OptiFine 的加载异常信息。若正常则返回 Nothing。
-    ''' </summary>
+    
+    
+    
     Public Function LoadOptiFineGetError() As String
         If SelectedNeoForge IsNot Nothing Then Return "与 NeoForge 不兼容"
-        '检查 Forge 1.13 - 1.14.3：全部不兼容
+        
         If SelectedForge IsNot Nothing AndAlso
             McUtils.CompareVersionGE(VanillaName, "1.13") AndAlso McUtils.CompareVersionGE("1.14.3", VanillaName) Then
             Return "与 Forge 不兼容"
         End If
-        '检查 Fabric 1.20.5+：全部不兼容
+        
         If SelectedFabric IsNot Nothing AndAlso
             McUtils.CompareVersion(VanillaName, "1.20.4") > 0 Then
             Return "与 Fabric 不兼容"
         End If
-        '检查 Loader
+        
         If GetLoaderError(LoadOptiFine) IsNot Nothing Then Return GetLoaderError(LoadOptiFine)
-        '检查 Forge 版本
+        
         Dim HasAny As Boolean = False
         Dim HasRequiredVersion As Boolean = False
         For Each OptiFineVersion As DlOptiFineListEntry In DlOptiFineListLoader.Output.Value
-            If Not OptiFineVersion.DisplayName.StartsWithF(VanillaName & " ") Then Continue For '不是同一个大版本
+            If Not OptiFineVersion.DisplayName.StartsWithF(VanillaName & " ") Then Continue For 
             HasAny = True
-            If SelectedForge Is Nothing Then Return Nothing '未选择 Forge
-            If IsOptiFineSuitForForge(OptiFineVersion, SelectedForge) Then Return Nothing '该版本可用
+            If SelectedForge Is Nothing Then Return Nothing 
+            If IsOptiFineSuitForForge(OptiFineVersion, SelectedForge) Then Return Nothing 
             If OptiFineVersion.RequiredForgeVersion IsNot Nothing Then HasRequiredVersion = True
         Next
         If Not HasAny Then
@@ -597,45 +597,45 @@ Public Class PageDownloadInstall
         End If
     End Function
 
-    '检查某个 OptiFine 是否与某个 Forge 兼容
+    
     Public Shared Function IsOptiFineSuitForForge(OptiFine As DlOptiFineListEntry, Forge As DlForgeVersionEntry) As Boolean
-        If Forge.Inherit <> OptiFine.Inherit Then Return False '不是同一个大版本
-        If OptiFine.RequiredForgeVersion Is Nothing Then Return False '不兼容 Forge
-        If String.IsNullOrWhiteSpace(OptiFine.RequiredForgeVersion) Then Return True '#4183
-        If OptiFine.RequiredForgeVersion.Contains(".") Then 'XX.X.XXX
+        If Forge.Inherit <> OptiFine.Inherit Then Return False 
+        If OptiFine.RequiredForgeVersion Is Nothing Then Return False 
+        If String.IsNullOrWhiteSpace(OptiFine.RequiredForgeVersion) Then Return True 
+        If OptiFine.RequiredForgeVersion.Contains(".") Then 
             Return McUtils.CompareVersion(Forge.Version.ToString, OptiFine.RequiredForgeVersion) = 0
-        Else 'XXXX
+        Else 
             Return Forge.Version.Revision = OptiFine.RequiredForgeVersion
         End If
     End Function
 
-    '限制展开
+    
     Private Sub CardOptiFine_PreviewSwap(sender As Object, e As RouteEventArgs) Handles CardOptiFine.PreviewSwap
         If LoadOptiFineGetError() IsNot Nothing Then e.Handled = True
     End Sub
 
-    ''' <summary>
-    ''' 尝试重新可视化 OptiFine 版本列表。
-    ''' </summary>
+    
+    
+    
     Private Sub OptiFine_Loaded() Handles LoadOptiFine.StateChanged
         Try
             If DlOptiFineListLoader.State <> LoadState.Finished Then Return
 
-            '获取版本列表
+            
             Dim Versions As New List(Of DlOptiFineListEntry)
             For Each Version As DlOptiFineListEntry In DlOptiFineListLoader.Output.Value
                 If SelectedForge IsNot Nothing AndAlso Not IsOptiFineSuitForForge(Version, SelectedForge) Then Continue For
                 If Version.DisplayName.StartsWithF(VanillaName & " ") Then Versions.Add(Version)
             Next
             If Not Versions.Any() Then Return
-            '排序
+            
             Versions = Versions.SortByComparison(
             Function(Left As DlOptiFineListEntry, Right As DlOptiFineListEntry) As Boolean
                 If Not Left.IsPreview AndAlso Right.IsPreview Then Return True
                 If Left.IsPreview AndAlso Not Right.IsPreview Then Return False
                 Return McUtils.CompareVersionGE(Left.DisplayName, Right.DisplayName)
             End Function)
-            '可视化
+            
             PanOptiFine.Children.Clear()
             For Each Version In Versions
                 PanOptiFine.Children.Add(OptiFineDownloadListItem(Version, AddressOf OptiFine_Selected, False))
@@ -645,7 +645,7 @@ Public Class PageDownloadInstall
         End Try
     End Sub
 
-    '选择与清除
+    
     Private Sub OptiFine_Selected(sender As MyListItem, e As EventArgs)
         SelectedOptiFine = sender.Tag
         If SelectedForge IsNot Nothing AndAlso Not IsOptiFineSuitForForge(SelectedOptiFine, SelectedForge) Then SelectedForge = Nothing
@@ -670,34 +670,34 @@ Public Class PageDownloadInstall
 
 #Region "LiteLoader 列表"
 
-    ''' <summary>
-    ''' 获取 LiteLoader 的加载异常信息。若正常则返回 Nothing。
-    ''' </summary>
+    
+    
+    
     Public Function LoadLiteLoaderGetError() As String
-        '检查 Loader
+        
         If GetLoaderError(LoadLiteLoader) IsNot Nothing Then Return GetLoaderError(LoadLiteLoader)
-        '检查版本
+        
         Return If(DlLiteLoaderListLoader.Output.Value.Any(Function(v) v.Inherit = VanillaName), Nothing, "无")
     End Function
 
-    '限制展开
+    
     Private Sub CardLiteLoader_PreviewSwap(sender As Object, e As RouteEventArgs) Handles CardLiteLoader.PreviewSwap
         If LoadLiteLoaderGetError() IsNot Nothing Then e.Handled = True
     End Sub
 
-    ''' <summary>
-    ''' 尝试重新可视化 LiteLoader 版本列表。
-    ''' </summary>
+    
+    
+    
     Private Sub LiteLoader_Loaded() Handles LoadLiteLoader.StateChanged
         Try
             If DlLiteLoaderListLoader.State <> LoadState.Finished Then Return
-            '获取版本列表
+            
             Dim Versions As New List(Of DlLiteLoaderListEntry)
             For Each Version As DlLiteLoaderListEntry In DlLiteLoaderListLoader.Output.Value
                 If Version.Inherit = VanillaName Then Versions.Add(Version)
             Next
             If Not Versions.Any() Then Return
-            '可视化
+            
             PanLiteLoader.Children.Clear()
             For Each Version In Versions
                 PanLiteLoader.Children.Add(LiteLoaderDownloadListItem(Version, AddressOf LiteLoader_Selected, False))
@@ -707,7 +707,7 @@ Public Class PageDownloadInstall
         End Try
     End Sub
 
-    '选择与清除
+    
     Private Sub LiteLoader_Selected(sender As MyListItem, e As EventArgs)
         SelectedLiteLoader = sender.Tag
         CardLiteLoader.IsSwapped = True
@@ -723,23 +723,23 @@ Public Class PageDownloadInstall
 
 #Region "Forge 列表"
 
-    ''' <summary>
-    ''' 获取 Forge 的加载异常信息。若正常则返回 Nothing。
-    ''' </summary>
+    
+    
+    
     Public Function LoadForgeGetError() As String
         If McUtils.CompareVersionGE("1.5.1", VanillaName) AndAlso McUtils.CompareVersionGE(VanillaName, "1.1") Then Return "无"
-        '检查 Loader
+        
         If GetLoaderError(LoadForge) IsNot Nothing Then Return GetLoaderError(LoadForge)
         Dim Loader As LoaderTask(Of String, List(Of DlForgeVersionEntry)) = LoadForge.State
         If VanillaName <> Loader.Input Then Return "获取中……"
-        '检查版本
+        
         For Each Version In Loader.Output
-            If Version.Category = "universal" OrElse Version.Category = "client" Then Continue For '跳过无法自动安装的版本
+            If Version.Category = "universal" OrElse Version.Category = "client" Then Continue For 
             If SelectedNeoForge IsNot Nothing Then Return "与 NeoForge 不兼容"
             If SelectedFabric IsNot Nothing Then Return "与 Fabric 不兼容"
             If SelectedOptiFine IsNot Nothing AndAlso
                 McUtils.CompareVersionGE(VanillaName, "1.13") AndAlso McUtils.CompareVersionGE("1.14.3", VanillaName) Then
-                Return "与 OptiFine 不兼容" '1.13 ~ 1.14.3 OptiFine 检查
+                Return "与 OptiFine 不兼容" 
             End If
             If SelectedOptiFine IsNot Nothing AndAlso Not IsOptiFineSuitForForge(SelectedOptiFine, Version) Then Continue For
             Return Nothing
@@ -747,27 +747,27 @@ Public Class PageDownloadInstall
         Return "与 OptiFine 不兼容"
     End Function
 
-    '限制展开
+    
     Private Sub CardForge_PreviewSwap(sender As Object, e As RouteEventArgs) Handles CardForge.PreviewSwap
         If LoadForgeGetError() IsNot Nothing Then e.Handled = True
     End Sub
 
-    ''' <summary>
-    ''' 尝试重新可视化 Forge 版本列表。
-    ''' </summary>
+    
+    
+    
     Private Sub Forge_Loaded() Handles LoadForge.StateChanged
         Try
             If Not LoadForge.State.IsLoader Then Return
             Dim Loader As LoaderTask(Of String, List(Of DlForgeVersionEntry)) = LoadForge.State
             If VanillaName <> Loader.Input Then Return
             If Loader.State <> LoadState.Finished Then Return
-            '获取要显示的版本
-            Dim Versions = Loader.Output.ToList '复制数组，以免 Output 在实例化后变空
+            
+            Dim Versions = Loader.Output.ToList 
             If Not Loader.Output.Any() Then Return
             PanForge.Children.Clear()
             Versions = Versions.Where(
             Function(v)
-                If v.Category = "universal" OrElse v.Category = "client" Then Return False '跳过无法自动安装的版本
+                If v.Category = "universal" OrElse v.Category = "client" Then Return False 
                 If SelectedOptiFine IsNot Nothing AndAlso Not IsOptiFineSuitForForge(SelectedOptiFine, v) Then Return False
                 Return True
             End Function).OrderByDescending(Function(v) v).ToList()
@@ -780,7 +780,7 @@ Public Class PageDownloadInstall
         End Try
     End Sub
 
-    '选择与清除
+    
     Private Sub Forge_Selected(sender As MyListItem, e As EventArgs)
         SelectedForge = sender.Tag
         CardForge.IsSwapped = True
@@ -799,34 +799,34 @@ Public Class PageDownloadInstall
 
 #Region "NeoForge 列表"
 
-    ''' <summary>
-    ''' 获取 NeoForge 的加载异常信息。若正常则返回 Nothing。
-    ''' </summary>
+    
+    
+    
     Public Function LoadNeoForgeGetError() As String
         If SelectedOptiFine IsNot Nothing Then Return "与 OptiFine 不兼容"
         If SelectedForge IsNot Nothing Then Return "与 Forge 不兼容"
         If SelectedFabric IsNot Nothing Then Return "与 Fabric 不兼容"
-        '检查 Loader
+        
         If GetLoaderError(LoadNeoForge) IsNot Nothing Then Return GetLoaderError(LoadNeoForge)
-        '检查版本
+        
         Return If(DlNeoForgeListLoader.Output.Value.Any(Function(v) v.Inherit = VanillaName), Nothing, "无")
     End Function
 
-    '限制展开
+    
     Private Sub CardNeoForge_PreviewSwap(sender As Object, e As RouteEventArgs) Handles CardNeoForge.PreviewSwap
         If LoadNeoForgeGetError() IsNot Nothing Then e.Handled = True
     End Sub
 
-    ''' <summary>
-    ''' 尝试重新可视化 NeoForge 版本列表。
-    ''' </summary>
+    
+    
+    
     Private Sub NeoForge_Loaded() Handles LoadNeoForge.StateChanged
         Try
-            '获取版本列表
+            
             If DlNeoForgeListLoader.State <> LoadState.Finished Then Return
             Dim Versions = DlNeoForgeListLoader.Output.Value.Where(Function(v) v.Inherit = VanillaName).ToList
             If Not Versions.Any() Then Return
-            '可视化
+            
             PanNeoForge.Children.Clear()
             NeoForgeDownloadListItemPreload(PanNeoForge, Versions, AddressOf NeoForge_Selected, False)
             For Each Version In Versions
@@ -837,7 +837,7 @@ Public Class PageDownloadInstall
         End Try
     End Sub
 
-    '选择与清除
+    
     Private Sub NeoForge_Selected(sender As MyListItem, e As EventArgs)
         SelectedNeoForge = sender.Tag
         CardNeoForge.IsSwapped = True
@@ -855,15 +855,15 @@ Public Class PageDownloadInstall
 
 #Region "Fabric 列表"
 
-    ''' <summary>
-    ''' 获取 Fabric 的加载异常信息。若正常则返回 Nothing。
-    ''' </summary>
+    
+    
+    
     Public Function LoadFabricGetError() As String
-        '检查 OptiFine 1.20.5+：没有 OptiFabric 故全部不兼容
+        
         If SelectedOptiFine IsNot Nothing AndAlso McUtils.CompareVersionGE(VanillaName, "1.20.5") Then Return "与 OptiFine 不兼容"
-        '检查 Loader
+        
         If GetLoaderError(LoadFabric) IsNot Nothing Then Return GetLoaderError(LoadFabric)
-        '检查版本
+        
         For Each Version As JObject In DlFabricListLoader.Output.Value("game")
             If Version("version").ToString = VanillaName.Replace("∞", "infinite").Replace("Combat Test 7c", "1.16_combat-3") Then
                 If SelectedForge IsNot Nothing Then Return "与 Forge 不兼容"
@@ -874,21 +874,21 @@ Public Class PageDownloadInstall
         Return "无"
     End Function
 
-    '限制展开
+    
     Private Sub CardFabric_PreviewSwap(sender As Object, e As RouteEventArgs) Handles CardFabric.PreviewSwap
         If LoadFabricGetError() IsNot Nothing Then e.Handled = True
     End Sub
 
-    ''' <summary>
-    ''' 尝试重新可视化 Fabric 版本列表。
-    ''' </summary>
+    
+    
+    
     Private Sub Fabric_Loaded() Handles LoadFabric.StateChanged
         Try
             If DlFabricListLoader.State <> LoadState.Finished Then Return
-            '获取版本列表
+            
             Dim Versions As JArray = DlFabricListLoader.Output.Value("loader")
             If Not Versions.Any() Then Return
-            '可视化
+            
             PanFabric.Children.Clear()
             CardFabric.SwapControl = PanFabric
             CardFabric.SetContentBuilder(Versions.OfType(Of JObject),
@@ -899,7 +899,7 @@ Public Class PageDownloadInstall
         End Try
     End Sub
 
-    '选择与清除
+    
     Public Sub Fabric_Selected(sender As MyListItem, e As EventArgs)
         SelectedFabric = sender.Tag("version").ToString
         FabricApi_Loaded()
@@ -923,9 +923,9 @@ Public Class PageDownloadInstall
 
 #Region "Fabric API 列表"
 
-    ''' <summary>
-    ''' 判断某 Fabric API 是否适配指定的原版版本。
-    ''' </summary>
+    
+    
+    
     Public Shared Function IsFabricApiCompatible(FabricApi As ResourceVersion, MinecraftVersion As String) As Boolean
         Dim FabricApiName = FabricApi.Display
         Try
@@ -934,25 +934,25 @@ Public Class PageDownloadInstall
             Dim TargetName = MinecraftVersion.Replace("∞", "infinite").Replace("Combat Test 7c", "1.16_combat-3").Lower
             If FabricApiName.StartsWithF("[" & TargetName & "]") Then Return True
             If Not FabricApiName.Contains("/") OrElse Not FabricApiName.Contains("]") Then Return False
-            '直接的判断（例如 1.18.1/22w03a）
+            
             For Each Part As String In FabricApiName.BeforeFirst("]").TrimStart("[").Split("/")
                 If Part = TargetName Then Return True
             Next
-            '将版本名分割语素（例如 1.16.4/5）
+            
             Dim Lefts = FabricApiName.BeforeFirst("]").RegexSearch("[a-z/]+|[0-9/]+").ToList
             Dim Rights = TargetName.BeforeFirst("]").RegexSearch("[a-z/]+|[0-9/]+").ToList
-            '对每段进行判断
+            
             Dim i As Integer = 0
             While True
-                '两边均缺失，感觉是一个东西
+                
                 If Lefts.Count - 1 < i AndAlso Rights.Count - 1 < i Then Return True
-                '确定两边是否一致
+                
                 Dim LeftValue As String = If(Lefts.Count - 1 < i, "-1", Lefts(i))
                 Dim RightValue As String = If(Rights.Count - 1 < i, "-1", Rights(i))
                 If Not LeftValue.Contains("/") Then
                     If LeftValue <> RightValue Then Return False
                 Else
-                    '左边存在斜杠
+                    
                     If Not LeftValue.Contains(RightValue) Then Return False
                 End If
                 i += 1
@@ -964,14 +964,14 @@ Public Class PageDownloadInstall
         End Try
     End Function
 
-    ''' <summary>
-    ''' 获取 FabricApi 的加载异常信息。若正常则返回 Nothing。
-    ''' </summary>
+    
+    
+    
     Public Function LoadFabricApiGetError() As String
-        '检查 Loader
+        
         If GetLoaderError(LoadFabricApi) IsNot Nothing Then Return GetLoaderError(LoadFabricApi)
         If DlFabricApiLoader.Output Is Nothing Then Return If(SelectedFabric Is Nothing, "需要安装 Fabric", "获取中……")
-        '检查版本
+        
         If DlFabricApiLoader.Output.Any(Function(f) IsFabricApiCompatible(f, VanillaName)) Then
             Return If(SelectedFabric Is Nothing, "需要安装 Fabric", Nothing)
         Else
@@ -979,20 +979,20 @@ Public Class PageDownloadInstall
         End If
     End Function
 
-    '限制展开
+    
     Private Sub CardFabricApi_PreviewSwap(sender As Object, e As RouteEventArgs) Handles CardFabricApi.PreviewSwap
         If LoadFabricApiGetError() IsNot Nothing Then e.Handled = True
     End Sub
 
     Public AutoSelectedFabricApi As Boolean = False
-    ''' <summary>
-    ''' 尝试重新可视化 FabricApi 版本列表。
-    ''' </summary>
+    
+    
+    
     Private Sub FabricApi_Loaded() Handles LoadFabricApi.StateChanged
         Try
             If DlFabricApiLoader.State <> LoadState.Finished Then Return
             If VanillaName Is Nothing OrElse SelectedFabric Is Nothing Then Return
-            '获取版本列表
+            
             Dim Versions As New List(Of ResourceVersion)
             For Each Version In DlFabricApiLoader.Output
                 If IsFabricApiCompatible(Version, VanillaName) Then
@@ -1005,12 +1005,12 @@ Public Class PageDownloadInstall
             Next
             If Not Versions.Any() Then Return
             Versions = Versions.OrderByDescending(Function(v) v.ReleaseDate).ToList
-            '可视化
+            
             PanFabricApi.Children.Clear()
             For Each Version In Versions
                 PanFabricApi.Children.Add(FabricApiDownloadListItem(Version, AddressOf FabricApi_Selected))
             Next
-            '自动选择 Fabric API
+            
             If Not AutoSelectedFabricApi Then
                 AutoSelectedFabricApi = True
                 Dim Item As MyListItem = MyVirtualizingElement.TryInit(PanFabricApi.Children(0))
@@ -1022,7 +1022,7 @@ Public Class PageDownloadInstall
         End Try
     End Sub
 
-    '选择与清除
+    
     Private Sub FabricApi_Selected(sender As MyListItem, e As EventArgs)
         SelectedFabricApi = sender.Tag
         CardFabricApi.IsSwapped = True
@@ -1038,9 +1038,9 @@ Public Class PageDownloadInstall
 
 #Region "OptiFabric 列表"
 
-    ''' <summary>
-    ''' 判断某 OptiFabric 是否适配指定的原版版本。
-    ''' </summary>
+    
+    
+    
     Public Shared Function IsOptiFabricCompatible(ModFile As ResourceVersion, MinecraftVersion As String) As Boolean
         Try
             If MinecraftVersion Is Nothing Then Return False
@@ -1052,14 +1052,14 @@ Public Class PageDownloadInstall
     End Function
 
     Public AutoSelectedOptiFabric As Boolean = False
-    ''' <summary>
-    ''' 获取 OptiFabric 的加载异常信息。若正常则返回 Nothing。
-    ''' </summary>
+    
+    
+    
     Public Function LoadOptiFabricGetError() As String
         If VanillaDrop >= 140 AndAlso VanillaDrop <= 150 Then Return "不兼容老版本 Fabric，请手动下载 OptiFabric Origins"
-        '检查 Loader
+        
         If GetLoaderError(LoadOptiFabric) IsNot Nothing Then Return GetLoaderError(LoadOptiFabric)
-        '检查版本
+        
         If DlOptiFabricLoader.Output Is Nothing Then
             If SelectedFabric Is Nothing AndAlso SelectedOptiFine Is Nothing Then Return "需要安装 OptiFine 与 Fabric"
             If SelectedFabric Is Nothing Then Return "需要安装 Fabric"
@@ -1067,42 +1067,42 @@ Public Class PageDownloadInstall
             Return "获取中……"
         End If
         For Each Version In DlOptiFabricLoader.Output
-            If Not IsOptiFabricCompatible(Version, VanillaName) Then Continue For '2135#
+            If Not IsOptiFabricCompatible(Version, VanillaName) Then Continue For 
             If SelectedFabric Is Nothing AndAlso SelectedOptiFine Is Nothing Then Return "需要安装 OptiFine 与 Fabric"
             If SelectedFabric Is Nothing Then Return "需要安装 Fabric"
             If SelectedOptiFine Is Nothing Then Return "需要安装 OptiFine"
-            Return Nothing '通过检查
+            Return Nothing 
         Next
         Return "无"
     End Function
 
-    '限制展开
+    
     Private Sub CardOptiFabric_PreviewSwap(sender As Object, e As RouteEventArgs) Handles CardOptiFabric.PreviewSwap
         If LoadOptiFabricGetError() IsNot Nothing Then e.Handled = True
     End Sub
 
-    ''' <summary>
-    ''' 尝试重新可视化 OptiFabric 版本列表。
-    ''' </summary>
+    
+    
+    
     Private Sub OptiFabric_Loaded() Handles LoadOptiFabric.StateChanged
         Try
             If DlOptiFabricLoader.State <> LoadState.Finished Then Return
             If VanillaName Is Nothing OrElse SelectedFabric Is Nothing OrElse SelectedOptiFine Is Nothing Then Return
-            '获取版本列表
+            
             Dim Versions As New List(Of ResourceVersion)
             For Each Version In DlOptiFabricLoader.Output
                 If IsOptiFabricCompatible(Version, VanillaName) Then Versions.Add(Version)
             Next
             If Not Versions.Any() Then Return
-            '排序
+            
             Versions = Versions.OrderByDescending(Function(v) v.ReleaseDate).ToList
-            '可视化
+            
             PanOptiFabric.Children.Clear()
             For Each Version In Versions
                 PanOptiFabric.Children.Add(OptiFabricDownloadListItem(Version, AddressOf OptiFabric_Selected))
             Next
-            '自动选择 OptiFabric
-            If AutoSelectedOptiFabric OrElse VanillaDrop >= 140 AndAlso VanillaDrop <= 150 Then Return '1.14~15 不自动选择
+            
+            If AutoSelectedOptiFabric OrElse VanillaDrop >= 140 AndAlso VanillaDrop <= 150 Then Return 
             AutoSelectedOptiFabric = True
             Dim Item As MyListItem = MyVirtualizingElement.TryInit(PanOptiFabric.Children(0))
             Logger.Info($"已自动选择 OptiFabric：{Item.Title}")
@@ -1112,7 +1112,7 @@ Public Class PageDownloadInstall
         End Try
     End Sub
 
-    '选择与清除
+    
     Private Sub OptiFabric_Selected(sender As MyListItem, e As EventArgs)
         SelectedOptiFabric = sender.Tag
         CardOptiFabric.IsSwapped = True
@@ -1128,9 +1128,9 @@ Public Class PageDownloadInstall
 
 #Region "安装"
 
-    ''' <summary>
-    ''' 获取当前选择的组件信息。
-    ''' </summary>
+    
+    
+    
     Public Function GetSelectedComponents() As McComponents
         Return New McComponents(
             minecraftVersion:=VanillaName,
@@ -1147,7 +1147,7 @@ Public Class PageDownloadInstall
         If e.Key = Key.Enter AndAlso IsInSelectPage AndAlso BtnStart.IsEnabled Then BtnStart_Click()
     End Sub
     Private Sub BtnStart_Click() Handles BtnStart.Click
-        '提交安装申请
+        
         Dim InstanceName As String = TextSelectName.Text
         Dim Request As New McInstallRequest With {
             .NewInstanceName = InstanceName,
@@ -1164,7 +1164,7 @@ Public Class PageDownloadInstall
     End Sub
 
     Public Overridable Sub StartInstall(Request As McInstallRequest)
-        '确认版本隔离
+        
         If (SelectedForge IsNot Nothing OrElse SelectedNeoForge IsNot Nothing OrElse SelectedFabric IsNot Nothing) AndAlso
            (Settings.Get(Of Integer)("LaunchArgumentIndieV2") = 0 OrElse Settings.Get(Of Integer)("LaunchArgumentIndieV2") = 2) Then
             If MyMsgBox("你尚未开启版本隔离，多个 MC 版本会共用同一个 Mod 文件夹。" & vbCrLf &
@@ -1174,7 +1174,7 @@ Public Class PageDownloadInstall
             End If
         End If
         If Not McInstallStart(Request) Then Return
-        '返回，这样在再次进入安装页面时这个版本就会显示文件夹已重复
+        
         ExitSelectPage()
     End Sub
 

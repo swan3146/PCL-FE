@@ -4,17 +4,17 @@ Imports System.Windows.Markup
 Public Class MyCheckBox
     Implements ISettingControl
 
-    '基础
+    
 
     Public Uuid As Integer = GetUuid()
-    ''' <summary>
-    ''' 复选框勾选状态改变。
-    ''' </summary>
-    ''' <param name="user">是否为用户手动改变的勾选状态。</param>
+    
+    
+    
+    
     Public Event Change(sender As Object, user As Boolean)
     Public Event PreviewChange(sender As Object, e As RouteEventArgs)
 
-    '自定义属性
+    
     Public Property Checked As Boolean
         Get
             Return GetValue(CheckedProperty)
@@ -26,21 +26,21 @@ Public Class MyCheckBox
     Public Shared ReadOnly CheckedProperty As DependencyProperty =
         DependencyProperty.Register("Checked", GetType(Boolean), GetType(MyCheckBox), New PropertyMetadata(False,
         Sub(d As MyCheckBox, e As DependencyPropertyChangedEventArgs)
-            '在使用 XAML 设置 Checked 属性时，不会触发 Checked_Set 方法，所以需要在这里手动触发 UI 改变
+            
             If Not d.IsLoaded Then d.SyncUI()
         End Sub))
 
-    Private Const AnimationTimeOfCheck As Integer = 150 '勾选状态变更动画长度
-    ''' <summary>
-    ''' 手动设置 Checked 属性。
-    ''' </summary>
-    ''' <param name="value">新的 Checked 属性。</param>
-    ''' <param name="user">是否由用户引发。</param>
+    Private Const AnimationTimeOfCheck As Integer = 150 
+    
+    
+    
+    
+    
     Public Sub SetChecked(value As Boolean, user As Boolean)
         Try
             If value = Checked Then Return
 
-            'Preview 事件
+            
             If value AndAlso user Then
                 Dim e = New RouteEventArgs(user)
                 RaiseEvent PreviewChange(Me, e)
@@ -55,7 +55,7 @@ Public Class MyCheckBox
             SetValue(CheckedProperty, value)
             If IsLoaded Then RaiseEvent Change(Me, user)
 
-            '更改动画
+            
             SyncUI()
             RaiseCustomEvent()
         Catch ex As Exception
@@ -63,10 +63,10 @@ Public Class MyCheckBox
         End Try
     End Sub
     Private Sub SyncUI()
-        If AniControlEnabled = 0 AndAlso IsLoaded Then '防止默认属性变更触发动画
+        If AniControlEnabled = 0 AndAlso IsLoaded Then 
             AllowMouseDown = False
             If Checked Then
-                '由无变有
+                
                 AniStart({
                       AaScale(ShapeBorder, 12 - ShapeBorder.Width, AnimationTimeOfCheck, , New AniEaseOutFluent, , True),
                       AaScaleTransform(ShapeCheck, 1 - CType(ShapeCheck.RenderTransform, ScaleTransform).ScaleX, AnimationTimeOfCheck * 2, AnimationTimeOfCheck * 0.7, New AniEaseOutBack(AniEasePower.Weak)),
@@ -79,7 +79,7 @@ Public Class MyCheckBox
                       AaCode(Sub() AllowMouseDown = True, AnimationTimeOfCheck * 2)
                  }, "MyCheckBox AllowMouseDown " & Uuid)
             Else
-                '由有变无
+                
                 AniStart({
                       AaScale(ShapeBorder, 12 - ShapeBorder.Width, AnimationTimeOfCheck, , New AniEaseOutFluent, , True),
                       AaScaleTransform(ShapeCheck, -CType(ShapeCheck.RenderTransform, ScaleTransform).ScaleX, AnimationTimeOfCheck * 0.9, , New AniEaseInFluent(AniEasePower.Weak)),
@@ -93,7 +93,7 @@ Public Class MyCheckBox
                  }, "MyCheckBox AllowMouseDown " & Uuid)
             End If
         Else
-            '不使用动画
+            
             AniStop("MyCheckBox Scale " & Uuid)
             AniStop("MyCheckBox BorderColor " & Uuid)
             AniStop("MyCheckBox AllowMouseDown " & Uuid)
@@ -121,13 +121,13 @@ Public Class MyCheckBox
         Set(value As String)
             SetValue(TextProperty, value)
         End Set
-    End Property '内容
+    End Property 
     Public Shared ReadOnly TextProperty As DependencyProperty = DependencyProperty.Register("Text", GetType(String), GetType(MyCheckBox), New PropertyMetadata(New PropertyChangedCallback(
     Sub(sender As DependencyObject, e As DependencyPropertyChangedEventArgs)
         If Not IsNothing(sender) Then CType(sender, MyCheckBox).LabText.Text = e.NewValue
     End Sub)))
 
-    '点击事件
+    
 
     Private MouseDowned As Boolean = False
     Private AllowMouseDown As Boolean = True
@@ -166,18 +166,18 @@ Public Class MyCheckBox
         End If
     End Sub
 
-    '指向动画
+    
 
     Private Const AnimationTimeOfMouseIn As Integer = 100
     Private Const AnimationTimeOfMouseOut As Integer = 200
     Private Sub Checkbox_IsEnabledChanged() Handles Me.IsEnabledChanged
-        If IsLoaded AndAlso AniControlEnabled = 0 Then '防止默认属性变更触发动画
-            '有动画
+        If IsLoaded AndAlso AniControlEnabled = 0 Then 
+            
             If IsEnabled Then
-                '可用
+                
                 Checkbox_MouseLeaveAnimation()
             Else
-                '不可用
+                
                 AniStart({
                          AaColor(ShapeBorder, Border.BorderBrushProperty, ColorGray5 - ShapeBorder.BorderBrush, AnimationTimeOfMouseOut)
                  }, "MyCheckBox BorderColor " & Uuid)
@@ -186,7 +186,7 @@ Public Class MyCheckBox
                  }, "MyCheckBox TextColor " & Uuid)
             End If
         Else
-            '无动画
+            
             AniStop("MyCheckBox TextColor " & Uuid)
             AniStop("MyCheckBox BorderColor " & Uuid)
             LabText.SetResourceReference(TextBlock.ForegroundProperty, If(Me.IsEnabled, "ColorBrush1", "ColorBrushGray5"))
@@ -202,7 +202,7 @@ Public Class MyCheckBox
          }, "MyCheckBox BorderColor " & Uuid)
     End Sub
     Private Sub Checkbox_MouseLeaveAnimation() Handles Me.MouseLeave
-        If Not IsEnabled Then Return 'MouseLeave 比 IsEnabledChanged 后执行，所以如果自定义事件修改了 IsEnabled，将导致显示错误
+        If Not IsEnabled Then Return 
         AniStart({
                  AaColor(LabText, TextBlock.ForegroundProperty, If(Me.IsEnabled, "ColorBrush1", "ColorBrushGray5"), AnimationTimeOfMouseOut)
          }, "MyCheckBox TextColor " & Uuid)

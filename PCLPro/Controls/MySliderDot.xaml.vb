@@ -1,12 +1,12 @@
 Public Class MySliderDot
 
-    '基础
+    
 
     Public Uuid As Integer = GetUuid()
     Public Event Change(sender As Object, user As Boolean)
     Public Event PreviewChange(sender As Object, e As RouteEventArgs)
 
-    '自定义属性
+    
 
     Private _MaxValue As Integer = 100
     Public Property MaxValue As Integer
@@ -31,7 +31,7 @@ Public Class MySliderDot
                 newValue = MathRange(newValue, 0, MaxValue)
                 If _Value = newValue Then Exit Property
 
-                '触发前瞻事件，修改新值
+                
                 Dim OldValue = _Value
                 _Value = newValue
                 If AniControlEnabled = 0 Then
@@ -72,11 +72,11 @@ Public Class MySliderDot
         SetTop(ShapeDot, NewHeight)
     End Sub
 
-    '拖动
+    
 
     Public GetHintText As [Delegate]
     Private Sub DragStart(sender As Object, e As MouseButtonEventArgs) Handles ShapeDot.MouseLeftButtonDown
-        e.Handled = True '防止 ScrollViewer 失焦问题
+        e.Handled = True 
         DragControl = Me
         AniStart({
                  AaScaleTransform(ShapeDot, 2 - CType(ShapeDot.RenderTransform, ScaleTransform).ScaleX, 100,, New AniEaseOutFluent)
@@ -99,71 +99,71 @@ Public Class MySliderDot
         End If
     End Sub
 
-    '指向动画
+    
 
     Private Sub RefreshColor() Handles Me.IsEnabledChanged, Me.MouseEnter, Me.MouseLeave
-        'Try
+        
 
-        '    '判断当前颜色
-        '    Dim ColorName As String
-        '    Dim AnimationTime As Integer
-        '    If IsEnabled Then
-        '        If IsMouseOver OrElse (Not IsNothing(DragControl) AndAlso DragControl.Equals(Me)) Then
-        '            ColorName = "ColorBrush3"
-        '            AnimationTime = 100
-        '        Else
-        '            ColorName = "ColorBrush1"
-        '            AnimationTime = 200
-        '        End If
-        '    Else
-        '        ColorName = "ColorBrushGray4"
-        '        AnimationTime = 200
-        '    End If
-        '    '触发颜色动画
-        '    If IsLoaded AndAlso AniControlEnabled = 0 Then '防止默认属性变更触发动画
-        '        '有动画
-        '        AniStart({AaColor(Me, BorderBrushProperty, ColorName, AnimationTime)}, "MySlider Color " & Uuid)
-        '    Else
-        '        '无动画
-        '        AniStop("MySlider Color " & Uuid)
-        '        SetResourceReference(BorderBrushProperty, ColorName)
-        '    End If
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 
-        'Catch ex As Exception
-        '    Log(ex, "滑动条颜色改变出错")
-        'End Try
+        
+        
+        
     End Sub
 
-    '按键改变
+    
 
-    'Public Property ValueByKey As UInteger = 1
-    'Private Sub MySlider_MouseEnter() Handles Me.MouseEnter
-    '    Focus() '确保按键能改变值
-    'End Sub
-    'Private Sub MySlider_KeyDown(sender As Object, e As KeyEventArgs) Handles Me.KeyDown
-    '    '拒绝一边拖动一边用按键改变
-    '    If ReferenceEquals(Me, DragControl) Then Exit Sub
-    '    '改变值
-    '    If e.Key = Key.Left Then
-    '        ChangeByKey = True
-    '        Value -= ValueByKey
-    '        ChangeByKey = False
-    '        e.Handled = True
-    '    ElseIf e.Key = Key.Right Then
-    '        ChangeByKey = True
-    '        Value += ValueByKey
-    '        ChangeByKey = False
-    '        e.Handled = True
-    '    Else
-    '        Exit Sub
-    '    End If
-    '    '更新 Popup
-    '    If GetHintText IsNot Nothing Then
-    '        TextHint.Text = GetHintText.DynamicInvoke(Value)
-    '        Popup.IsOpen = True
-    '        AniStop("MySlider KeyPopup " & Uuid)
-    '        AniStart(AaCode(Sub() Popup.IsOpen = False, 700 * AniSpeed), "MySlider KeyPopup " & Uuid)
-    '    End If
-    'End Sub
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 End Class

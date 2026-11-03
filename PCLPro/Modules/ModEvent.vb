@@ -4,10 +4,10 @@
 
 Imports PCL.FormMain
 
-''' <summary>
-''' 用于在 XAML 中初始化列表对象。
-''' 附加属性无法在 XAML 中为每个对象初始化独立的列表对象，因此需要一个包装类，然后在 XAML 中显式初始化。
-''' </summary>
+
+
+
+
 <Markup.ContentProperty("Events")>
 Public Class CustomEventCollection
     Implements IEnumerable(Of CustomEvent)
@@ -25,12 +25,12 @@ Public Class CustomEventCollection
     End Function
 End Class
 
-''' <summary>
-''' 提供自定义事件的附加属性。
-''' </summary>
+
+
+
 Public Class CustomEventService
 
-    'Events
+    
     Public Shared ReadOnly EventsProperty As DependencyProperty =
             DependencyProperty.RegisterAttached("Events", GetType(CustomEventCollection), GetType(CustomEventService), New PropertyMetadata(Nothing))
     <AttachedPropertyBrowsableForType(GetType(DependencyObject))>
@@ -43,7 +43,7 @@ Public Class CustomEventService
         Return d.GetValue(EventsProperty)
     End Function
 
-    'EventType
+    
     Public Shared ReadOnly EventTypeProperty As DependencyProperty =
             DependencyProperty.RegisterAttached("EventType", GetType(CustomEvent.EventType), GetType(CustomEventService), New PropertyMetadata(Nothing))
     <AttachedPropertyBrowsableForType(GetType(DependencyObject))>
@@ -55,7 +55,7 @@ Public Class CustomEventService
         Return d.GetValue(EventTypeProperty)
     End Function
 
-    'EventData
+    
     Public Shared ReadOnly EventDataProperty As DependencyProperty =
             DependencyProperty.RegisterAttached("EventData", GetType(String), GetType(CustomEventService), New PropertyMetadata(Nothing))
     <AttachedPropertyBrowsableForType(GetType(DependencyObject))>
@@ -71,17 +71,17 @@ End Class
 
 Partial Public Module ModMain
 
-    ''' <summary>
-    ''' 触发该控件上的自定义事件。
-    ''' 事件会在新线程中执行。
-    ''' </summary>
+    
+    
+    
+    
     <Runtime.CompilerServices.Extension>
     Public Sub RaiseCustomEvent(Control As DependencyObject)
-        '收集事件列表
+        
         Dim Events = CustomEventService.GetEvents(Control).ToList
         Dim EventType = CustomEventService.GetEventType(Control)
         If EventType <> CustomEvent.EventType.None Then Events.Add(New CustomEvent(EventType, CustomEventService.GetEventData(Control)))
-        '执行事件
+        
         If Not Events.Any Then Return
         RunInNewThread(
         Sub()
@@ -95,9 +95,9 @@ End Module
 
 #End Region
 
-''' <summary>
-''' 自定义事件。
-''' </summary>
+
+
+
 Public Class CustomEvent
     Inherits DependencyObject
 
@@ -136,9 +136,9 @@ Public Class CustomEvent
         Me.Data = Data
     End Sub
 
-    ''' <summary>
-    ''' 在当前线程中触发该自定义事件。
-    ''' </summary>
+    
+    
+    
     Public Sub Raise()
         Raise(Type, Data)
     End Sub
@@ -172,9 +172,9 @@ Public Class CustomEvent
         检查更新
     End Enum
 
-    ''' <summary>
-    ''' 在当前线程中触发一个自定义事件。
-    ''' </summary>
+    
+    
+    
     Public Shared Sub Raise(Type As EventType, Arg As String)
         If Type = EventType.None Then Return
         Logger.Info($"执行自定义事件：{Type}, {Arg}")
@@ -186,7 +186,7 @@ Public Class CustomEvent
             Select Case Type
                 Case EventType.打开网页
                     Arg = Arg.Replace("\", "/")
-                    If Not Arg.Contains("://") OrElse Arg.StartsWithF("file", True) Then '为了支持更多协议（#2200）
+                    If Not Arg.Contains("://") OrElse Arg.StartsWithF("file", True) Then 
                         MyMsgBox("EventData 必须为一个网址。" & vbCrLf & "如果想要启动程序，请将 EventType 改为 打开文件。", "事件执行失败")
                         Return
                     End If
@@ -197,11 +197,11 @@ Public Class CustomEvent
                     RunInThread(
                     Sub()
                         Try
-                            '确认实际路径
+                            
                             Dim ActualPaths = GetAbsoluteUrls(Arg0, Type)
                             Dim Location = ActualPaths(0), WorkingDir = ActualPaths(1)
                             Logger.Info($"打开类自定义事件实际路径：{Location}，工作目录：{WorkingDir}")
-                            '执行
+                            
                             If Not EventSafetyConfirm("即将执行：" & Location & If(Args.Length >= 2, " " & Arg1, "")) Then Return
                             Dim Info As New ProcessStartInfo With {
                                 .Arguments = If(Args.Length >= 2, Arg1, ""),
@@ -346,18 +346,18 @@ Public Class CustomEvent
         End Try
     End Sub
 
-    ''' <summary>
-    ''' 返回自定义事件的绝对 Url。实际返回 {绝对 Url, WorkingDir}。
-    ''' 失败会抛出异常。
-    ''' </summary>
+    
+    
+    
+    
     Public Shared Function GetAbsoluteUrls(RelativeUrl As String, Type As EventType) As String()
 
-        '网页确认
+        
         If RelativeUrl.StartsWithF("http", True) Then
             If RunInUi() Then
                 Throw New Exception("能打开联网帮助页面的 MyListItem 必须手动设置 Title、Info 属性！")
             End If
-            '获取文件名
+            
             Dim RawFileName As String
             Try
                 RawFileName = PathUtils.GetLastPart(RelativeUrl)
@@ -368,7 +368,7 @@ Public Class CustomEvent
                                     " - https://www.baidu.com/test.json（填写这个路径）" & vbCrLf &
                                     " - https://www.baidu.com/test.xaml（同时也需要包含这个文件）", ex)
             End Try
-            '下载文件
+            
             Dim LocalTemp As String = RequestTaskTempFolder() & RawFileName
             Logger.Info($"转换网络资源：{RelativeUrl} -> {LocalTemp}")
             Try
@@ -385,36 +385,36 @@ Public Class CustomEvent
         End If
         RelativeUrl = RelativeUrl.Replace("/", "\").Lower.TrimStart("\")
 
-        '确认实际路径
+        
         Dim Location As String, WorkingDir As String = Paths.Base & "PCL"
         If RelativeUrl.Contains(":\") Then
-            '绝对路径
+            
             Location = RelativeUrl
             Logger.Info($"自定义事件中由绝对路径{Type}：{Location}")
         ElseIf FileUtils.Exists(Paths.Base & "PCL\" & RelativeUrl) Then
-            '相对 PCL 文件夹的路径
+            
             Location = Paths.Base & "PCL\" & RelativeUrl
             Logger.Info($"自定义事件中由相对 PCL 文件夹的路径{Type}：{Location}")
         ElseIf FileUtils.Exists(Paths.Base & "PCL\Help\" & RelativeUrl) Then
-            '相对 PCL 本地帮助文件夹的路径
+            
             Location = Paths.Base & "PCL\Help\" & RelativeUrl
             WorkingDir = Paths.Base & "PCL\Help\"
             Logger.Info($"自定义事件中由相对 PCL 本地帮助文件夹的路径{Type}：{Location}")
         ElseIf Type = EventType.打开文件 OrElse Type = EventType.执行命令 Then
-            '直接使用原有路径启动程序
+            
             Location = RelativeUrl
             Logger.Info($"自定义事件中直接{Type}：{Location}")
         Else
-            '打开帮助，但是格式不对劲
+            
             Throw New FileNotFoundException("未找到 EventData 指向的本地 xaml 文件：" & RelativeUrl, RelativeUrl)
         End If
 
         Return {Location, WorkingDir}
     End Function
 
-    ''' <summary>
-    ''' 弹出安全确认弹窗。返回是否继续执行。
-    ''' </summary>
+    
+    
+    
     Private Shared Function EventSafetyConfirm(Message As String) As Boolean
         If Settings.Get(Of Boolean)("HintCustomCommand") Then Return True
         Select Case MyMsgBox(Message & vbCrLf & "请在确认没有安全隐患后再继续。", "执行确认", "继续", "继续且今后不再要求确认", "取消")

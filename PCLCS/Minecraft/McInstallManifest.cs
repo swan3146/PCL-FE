@@ -1,20 +1,20 @@
 namespace PCLCS;
 
-/// <summary>
-/// MC 版本安装清单及 PCL 管理文件清单。
-/// </summary>
-/// <param name="SchemaVersion"> 清单格式版本；无版本的旧清单为 0。</param>
-/// <param name="Components"> 安装目标及受管理组件版本。</param>
-/// <param name="LastModifiedUtc"> 最后修改时间（UTC）。</param>
-/// <param name="ManagedFiles"> 受管理文件；没有文件时为空列表。</param>
+
+
+
+
+
+
+
 public record McInstallManifest(int SchemaVersion, McComponents Components, DateTime LastModifiedUtc, IReadOnlyList<McInstallManifest.ManagedFile> ManagedFiles) {
-    /// <summary>
-    /// 清理以 Mod 形式安装的、已删除或修改的组件的记录，并更新清单。
-    /// </summary>
+    
+    
+    
     public McInstallManifest RefreshModComponents(string gameFolder) {
         List<ManagedFile> invalidFiles = [];
         foreach (ManagedFile entry in ManagedFiles) {
-            if (entry.Component is null) continue; // 不检查非组件文件
+            if (entry.Component is null) continue; 
             FileInfo file = new(Path.Combine(gameFolder, entry.RelativePath));
             if (!file.Exists || file.LastWriteTimeUtc != entry.LastWriteTimeUtc.ToUniversalTime()) invalidFiles.Add(entry);
         }
@@ -30,22 +30,22 @@ public record McInstallManifest(int SchemaVersion, McComponents Components, Date
         };
     }
 
-    /// <summary>
-    /// 由 PCL 管理并记录的版本内文件。
-    /// </summary>
-    /// <param name="RelativePath"> 相对于游戏目录的文件路径。确保路径为全小写且可比较。</param>
-    /// <param name="Sha1"> 小写的 SHA1。</param>
-    /// <param name="LastWriteTimeUtc"> 目标文件的最后修改时间（UTC）。</param>
-    /// <param name="Component"> 安装器组件名；为空时表示文件由整合包管理。</param>
+    
+    
+    
+    
+    
+    
+    
     public record ManagedFile(string RelativePath, string Sha1, DateTime LastWriteTimeUtc,
         [property: JsonProperty(NullValueHandling = NullValueHandling.Ignore)] string? Component = null);
 }
 
-/// <param name="MinecraftVersion"> 目标 Minecraft 版本。</param>
-/// <param name="ModLoaderVersions"> 目标中各个 Mod Loader 的版本；原版为空字典。</param>
-/// <param name="OptiFineEntry"> OptiFine 条目信息，不安装时为 <see langword="null"/>。</param>
-/// <param name="FabricApiVersion"> 由 PCL 管理的 Fabric API 版本；不安装时为 <see langword="null"/>。</param>
-/// <param name="OptiFabricVersion"> 由 PCL 管理的 OptiFabric 版本；不安装时为 <see langword="null"/>。</param>
+
+
+
+
+
 [method: JsonConstructor]
 public record McComponents(string MinecraftVersion, Dictionary<ModLoaders, string> ModLoaderVersions,
         [property: JsonProperty(NullValueHandling = NullValueHandling.Ignore)] JObject? OptiFineEntry = null,

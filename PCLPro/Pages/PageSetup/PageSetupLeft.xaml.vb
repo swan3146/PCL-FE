@@ -1,21 +1,21 @@
 Public Class PageSetupLeft
 
     Private IsLoad As Boolean = False
-    Private IsPageSwitched As Boolean = False '如果在 Loaded 前切换到其他页面，会导致触发 Loaded 时再次切换一次
+    Private IsPageSwitched As Boolean = False 
     Private Sub PageSetupLeft_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
-        '是否处于隐藏的子页面
+        
         Dim IsHiddenPage As Boolean = False
         If ItemLaunch.Checked AndAlso Settings.Get(Of Boolean)("UiHiddenSetupLaunch") Then IsHiddenPage = True
         If ItemUI.Checked AndAlso Settings.Get(Of Boolean)("UiHiddenSetupUi") Then IsHiddenPage = True
         If ItemSystem.Checked AndAlso Settings.Get(Of Boolean)("UiHiddenSetupSystem") Then IsHiddenPage = True
         If ItemLink.Checked AndAlso Settings.Get(Of Boolean)("UiHiddenSetupLink") Then IsHiddenPage = True
         If PageSetupUI.HiddenForceShow Then IsHiddenPage = False
-        '若页面错误，或尚未加载，则继续
+        
         If IsLoad AndAlso Not IsHiddenPage Then Return
         IsLoad = True
-        '刷新子页面隐藏情况
+        
         PageSetupUI.HiddenRefresh()
-        '选择第一个未被禁用的子页面
+        
         If IsPageSwitched Then Return
         If Not Settings.Get(Of Boolean)("UiHiddenSetupLaunch") Then
             ItemLaunch.SetChecked(True, False, False)
@@ -35,13 +35,13 @@ Public Class PageSetupLeft
 
 #Region "页面切换"
 
-    ''' <summary>
-    ''' 当前页面的编号。从左往右从 0 开始计算。
-    ''' </summary>
+    
+    
+    
     Public PageID As FormMain.PageSubType
     Public Sub New()
         InitializeComponent()
-        '选择第一个未被禁用的子页面
+        
         If Not Settings.Get(Of Boolean)("UiHiddenSetupLaunch") Then
             PageID = FormMain.PageSubType.SetupLaunch
         ElseIf Not Settings.Get(Of Boolean)("UiHiddenSetupUi") Then
@@ -55,18 +55,18 @@ Public Class PageSetupLeft
         End If
     End Sub
 
-    ''' <summary>
-    ''' 勾选事件改变页面。
-    ''' </summary>
+    
+    
+    
     Private Sub PageCheck(sender As MyListItem, e As EventArgs) Handles ItemLaunch.Check, ItemSystem.Check, ItemUI.Check, ItemLink.Check
-        '尚未初始化控件属性时，sender.Tag 为 Nothing，会跳过切换，且由于 PageID 默认为 0 而切换到第一个页面
-        '若使用 IsLoaded，则会导致模拟点击不被执行（模拟点击切换页面时，控件的 IsLoaded 为 False）
+        
+        
         If sender.Tag IsNot Nothing Then PageChange(Val(sender.Tag))
     End Sub
 
-    ''' <summary>
-    ''' 获取当前导航指定的右页面。
-    ''' </summary>
+    
+    
+    
     Public Function PageGet(Optional ID As FormMain.PageSubType = -1)
         If ID = -1 Then ID = PageID
         Select Case ID
@@ -87,9 +87,9 @@ Public Class PageSetupLeft
         End Select
     End Function
 
-    ''' <summary>
-    ''' 切换现有页面。
-    ''' </summary>
+    
+    
+    
     Public Sub PageChange(ID As FormMain.PageSubType)
         If PageID = ID Then Return
         AniControlEnabled += 1
@@ -121,7 +121,7 @@ Public Class PageSetupLeft
         End Try
     End Sub
     Private Shared Sub PageChangeRun(Target As MyPageRight)
-        AniStop("FrmMain PageChangeRight") '停止主页面的右页面切换动画，防止它与本动画一起触发多次 PageOnEnter
+        AniStop("FrmMain PageChangeRight") 
         If Target.Parent IsNot Nothing Then Target.SetValue(ContentPresenter.ContentProperty, Nothing)
         FrmMain.PageRight = Target
         CType(FrmMain.PanMainRight.Child, MyPageRight).PageOnExit()
@@ -134,7 +134,7 @@ Public Class PageSetupLeft
             End Sub, 130),
             AaCode(
             Sub()
-                '延迟触发页面通用动画，以使得在 Loaded 事件中加载的控件得以处理
+                
                 FrmMain.PageRight.Opacity = 1
                 FrmMain.PageRight.PageOnEnter()
             End Sub, 30, True)

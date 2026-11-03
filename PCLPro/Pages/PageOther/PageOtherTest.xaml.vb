@@ -2,7 +2,7 @@
 
 #Region "趣味内容"
 
-    '回声洞的句子
+    
     Private Shared ReadOnly Caves As String() = {
         "洞里传来回声：别睡，再挖一格就到钻石了。",
         "洞里传来回声：你的显卡风扇正在替你喊加油。",
@@ -29,7 +29,7 @@
         "洞里传来回声：你的火把插得比星星还密。",
         "洞里传来回声：掉进岩浆的东西，就让它留在那里吧。"
     }
-    'PCL 使用小贴士
+    
     Private Shared ReadOnly Hints As String() = {
         "在 更多 → 帮助 里按关键词搜索，可以找到绝大部分问题的答案。",
         "设置 → 个性化 里可以换主题、换背景图，还能拖动滑块自定义主色调。",
@@ -50,7 +50,7 @@
         "日志文件夹里的 Log1.txt 是最新的日志，出问题时把它发给别人最好排查。",
         "导出整合包时可以顺手把 mods 和存档一起打包给朋友。"
     }
-    '主页预设相关的随机提示
+    
     Private Shared ReadOnly PresetHints As String() = {
         "试试换个主页预设，也许会有新气象？",
         "预设可以自己写，具体标记用法可以在帮助里搜索「替换标记」。",
@@ -75,9 +75,9 @@
         Return Pick(PresetHints)
     End Function
 
-    ''' <summary>
-    ''' 今日人品。基于当天日期与本机的识别码计算，同一天结果稳定。
-    ''' </summary>
+    
+    
+    
     Private Shared Function GetJrrpValue() As Integer
         Dim Key As String = DateTime.Now.ToString("yyyy/MM/dd") & "|" & Identify
         Dim Hash As Long = 5381
@@ -121,10 +121,10 @@
     <System.Runtime.InteropServices.DllImport("kernel32.dll")>
     Private Shared Function CloseHandle(hObject As IntPtr) As Boolean
     End Function
-    Private Const ProcessQueryInformation As Integer = &H400 'PROCESS_QUERY_INFORMATION
-    Private Const ProcessSetQuota As Integer = &H100 'PROCESS_SET_QUOTA
+    Private Const ProcessQueryInformation As Integer = &H400 
+    Private Const ProcessSetQuota As Integer = &H100 
 
-    '清理系统内存时需要的特权与 API
+    
     Private Const TokenAdjustPrivileges As Integer = &H20
     Private Const TokenQuery As Integer = &H8
     Private Const SePrivilegeEnabled As Integer = &H2
@@ -161,9 +161,9 @@
     Private Shared Function NtSetSystemInformation(InfoClass As Integer, Info As IntPtr, Length As Integer) As Integer
     End Function
 
-    ''' <summary>
-    ''' 在当前进程令牌中启用指定特权；未提权时调用会失败，忽略即可。
-    ''' </summary>
+    
+    
+    
     Private Shared Function EnablePrivilege(Name As String) As Boolean
         Dim Token As IntPtr = IntPtr.Zero
         Try
@@ -179,10 +179,10 @@
         End Try
     End Function
 
-    ''' <summary>
-    ''' 清空系统备用内存列表（Standby List）。这部分内存不计入进程占用，但会被系统当作可用内存回收，
-    ''' 是“物理内存占用降低”体感最明显的一步，需要 SeProfileSingleProcessPrivilege。
-    ''' </summary>
+    
+    
+    
+    
     Private Shared Sub PurgeStandbyList()
         Try
             Dim Buffer As IntPtr = Runtime.InteropServices.Marshal.AllocHGlobal(4)
@@ -196,10 +196,10 @@
         End Try
     End Sub
 
-    ''' <summary>
-    ''' 执行内存优化。与 PCL2 原版一致：清理的对象是整个系统的物理内存（不仅限于 PCL），
-    ''' 这需要管理员权限，所以通过带 UAC 的 --memory 子进程执行；已经以管理员身份运行时直接在本进程执行。
-    ''' </summary>
+    
+    
+    
+    
     Public Shared Sub MemoryOptimize(ShowHint As Boolean)
         Dim Before As Long = My.Computer.Info.AvailablePhysicalMemory
         Dim FreedKb As Long = 0
@@ -213,11 +213,11 @@
             End Try
         Else
             Try
-                '子进程的返回代码即清理的内存量（KB）
+                
                 FreedKb = Math.Max(0, RunAsAdmin("--memory"))
                 Success = True
             Catch ex As Exception
-                '用户在 UAC 提示中取消
+                
                 Logger.Info($"内存优化未执行：{ex.Message}")
             End Try
         End If
@@ -233,20 +233,20 @@
         LastMemoryText = $"PCL 当前占用内存：{Math.Round(Process.GetCurrentProcess().WorkingSet64 / 1048576.0, 1)} MB"
     End Sub
 
-    ''' <summary>
-    ''' 真正执行内存清理：把其它进程的工作集换出到页面文件，再回收本进程的托管与工作集内存。
-    ''' 逐进程的 EmptyWorkingSet 需要 SeDebugPrivilege，因此必须以管理员权限运行。
-    ''' </summary>
+    
+    
+    
+    
     Public Shared Sub MemoryOptimizeInternal(ShowHint As Boolean)
         Dim SelfId As Integer = Process.GetCurrentProcess().Id
-        '启用清理所需的系统特权；非管理员时这些调用会直接失败，不影响后续步骤
+        
         EnablePrivilege("SeDebugPrivilege")
         EnablePrivilege("SeProfileSingleProcessPrivilege")
         EnablePrivilege("SeIncreaseQuotaPrivilege")
-        '清空系统备用内存列表与文件缓存，这是物理内存占用下降最明显的一步
+        
         PurgeStandbyList()
         Try
-            '两个 -1 表示不限制缓存范围，系统会丢弃现有文件缓存
+            
             SetSystemFileCacheSize(New IntPtr(-1), New IntPtr(-1), 0)
         Catch
         End Try
@@ -263,7 +263,7 @@
                     End If
                 End If
             Catch ex As Exception
-                '受保护的系统进程无法访问，跳过即可
+                
             Finally
                 Proc.Dispose()
             End Try
@@ -278,9 +278,9 @@
         End Try
     End Sub
 
-    ''' <summary>
-    ''' 获取文件夹内所有文件的总大小，失败时返回 0。
-    ''' </summary>
+    
+    
+    
     Private Shared Function GetFolderSize(Folder As String) As Long
         Dim Total As Long = 0
         Try
@@ -295,9 +295,9 @@
         End Try
         Return Total
     End Function
-    ''' <summary>
-    ''' 删除文件夹内的全部内容，返回释放的字节数与文件数量。
-    ''' </summary>
+    
+    
+    
     Private Shared Function ClearFolder(Folder As String, ByRef Count As Integer) As Long
         Dim Freed As Long = 0
         Try
@@ -334,9 +334,9 @@
     Public Shared Sub RubbishClear()
         Dim FreedSize As Long = 0
         Dim FreedCount As Integer = 0
-        'PCL 的临时缓存目录
+        
         FreedSize += ClearFolder(PathTemp, FreedCount)
-        '旧的日志文件与崩溃转储
+        
         Try
             Dim PclFolder As String = Paths.Base & "PCL\"
             If Directory.Exists(PclFolder) Then
@@ -357,7 +357,7 @@
                     Catch
                     End Try
                 Next
-                '残留的自动更新文件
+                
                 Dim UpdateFile As String = PclFolder & "Plain Craft Launcher Pro.exe"
                 If System.IO.File.Exists(UpdateFile) Then
                     FreedSize += New FileInfo(UpdateFile).Length
@@ -420,9 +420,9 @@
         LabTestHint.Text = GetRandomHint()
         RefreshStats()
     End Sub
-    ''' <summary>
-    ''' 刷新底部的统计信息（在后台线程中计算，避免卡界面）。
-    ''' </summary>
+    
+    
+    
     Private Sub RefreshStats()
         RunInNewThread(
         Sub()
@@ -448,7 +448,7 @@
         LabTestHint.Text = GetRandomHint()
     End Sub
     Private Sub BtnTestMemory_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnTestMemory.Click
-        '内存优化为实验性功能，执行前要求二次确认
+        
         Dim Choice As Integer = MyMsgBox(
             "内存优化会清空系统的备用内存与文件缓存，并把各程序的内存换出到页面文件。" & vbCrLf &
             "· 执行后短时间内程序与游戏读盘会变慢，机械硬盘尤其明显；" & vbCrLf &

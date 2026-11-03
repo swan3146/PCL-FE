@@ -123,7 +123,7 @@ public class ConfigTest : TestWithFolder {
                 firstStarted.Set();
                 provider.Save();
             }, TaskCreationOptions.LongRunning);
-            // 阻止首次保存写盘，稳定复现第二次 Save 在写盘完成前返回的窗口。
+            
             firstBlocked = firstStarted.Wait(3000) && SpinWait.SpinUntil(
                 () => (firstThread!.ThreadState & ThreadState.WaitSleepJoin) != 0, 3000);
             secondSave = Task.Factory.StartNew(() => {
@@ -155,7 +155,7 @@ public class ConfigTest : TestWithFolder {
             using (var stream = new FileStream(PathUtils.ForApi(configFile), FileMode.Open, FileAccess.Read, FileShare.None)) {
                 Assert.Throws<IOException>(() => provider.Save());
             }
-            // 无需再次 Set，失败的内容仍应处于待保存状态。
+            
             provider.Save();
         }
 

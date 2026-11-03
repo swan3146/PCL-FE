@@ -76,7 +76,7 @@ Public Class Settings
         New Setting("CacheJavaListVersion", 0, Source:=Sources.Registry),
         New Setting("LoginRemember", True, Source:=Sources.Registry, Encrypted:=True),
         New Setting("LoginLegacyName", "", Source:=Sources.Registry, Encrypted:=True),
-        New Setting("LoginMsJson", "{}", Source:=Sources.Registry, Encrypted:=True), '{UserName: OAuthToken, ...}
+        New Setting("LoginMsJson", "{}", Source:=Sources.Registry, Encrypted:=True), 
         New Setting("LoginNideEmail", "", Source:=Sources.Registry, Encrypted:=True),
         New Setting("LoginNidePass", "", Source:=Sources.Registry, Encrypted:=True),
         New Setting("LoginAuthEmail", "", Source:=Sources.Registry, Encrypted:=True),
@@ -129,7 +129,7 @@ Public Class Settings
         New Setting("ToolUpdateSnapshot", False, Source:=Sources.Registry),
         New Setting("ToolUpdateReleaseLast", "", Source:=Sources.Registry),
         New Setting("ToolUpdateSnapshotLast", "", Source:=Sources.Registry),
-        New Setting("UiLauncherTransparent", 600, OnChanged:=Sub(Value As Integer) If FrmMain IsNot Nothing Then FrmMain.Opacity = Value / 1000 + 0.4), '避免与 PCL1 设置冲突（UiLauncherOpacity）
+        New Setting("UiLauncherTransparent", 600, OnChanged:=Sub(Value As Integer) If FrmMain IsNot Nothing Then FrmMain.Opacity = Value / 1000 + 0.4), 
         New Setting("UiLauncherHue", 180),
         New Setting("UiLauncherSat", 80),
         New Setting("UiLauncherDelta", 90),
@@ -154,7 +154,7 @@ Public Class Settings
         New Setting("UiCheckUpdateAtStartup", True),
         New Setting("UiVideoBackground", "", OnChanged:=AddressOf FormMain.VideoBackgroundRefresh),
         New Setting("UiFirewallGuideShown", False),
-        New Setting("UiBackgroundColorful", True, OnChanged:=Sub() ThemeRefresh()), '不传入参数
+        New Setting("UiBackgroundColorful", True, OnChanged:=Sub() ThemeRefresh()), 
         New Setting("UiBackgroundOpacity", 1000, OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
         New Setting("UiBackgroundBlur", 0, OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
         New Setting("UiBackgroundSuit", 0, OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
@@ -224,13 +224,13 @@ Public Class Settings
         Public Encrypted As Boolean
         Public DefaultValue As Object
         Public Source As Sources
-        ''' <summary>
-        ''' 当设置项的值实际被改变时触发，参数为新值。
-        ''' </summary>
+        
+        
+        
         Public OnChanged As Action(Of Object)
-        ''' <summary>
-        ''' 该设置的值的实际类型。
-        ''' </summary>
+        
+        
+        
         Public Type As Type
         Public Sub New(Key As String, Value As Object, Optional Source As Sources = Sources.Normal, Optional Encrypted As Boolean = False, Optional OnChanged As Action(Of Object) = Nothing)
             Try
@@ -241,14 +241,14 @@ Public Class Settings
                 Me.Type = If(Value, "").GetType
                 Me.OnChanged = OnChanged
             Catch ex As Exception
-                Logger.Error(ex, "初始化设置项失败") '#5095 的 fallback
+                Logger.Error(ex, "初始化设置项失败") 
             End Try
         End Sub
 
-        ''' <summary>
-        ''' 读取过的设置的缓存，若从未读取过则为 Nothing。
-        ''' 若为版本独立设置，键为版本路径；否则，键为空字符串。
-        ''' </summary>
+        
+        
+        
+        
         Public ValueCache As New ConcurrentDictionary(Of String, Object)
         Public Function GetCache(Instance As McInstance)
             Dim Key As String = If(Source = Sources.Instance, Instance.PathVersion, "")
@@ -260,9 +260,9 @@ Public Class Settings
             ValueCache(Key) = Value
         End Sub
 
-        ''' <summary>
-        ''' 立即将当前的 Value 写入对应的注册表或文件。
-        ''' </summary>
+        
+        
+        
         Public Sub Save(Optional Instance As McInstance = Nothing)
             Dim Value As String = GetCache(Instance)
             Logger.Trace($"保存设置：{Key} {If(Encrypted, "", "= " & Value)}{If(Instance Is Nothing, "", $"（实例：{Instance?.PathVersion}）")}")
@@ -291,30 +291,30 @@ Public Class Settings
 
     End Class
 
-    ''' <summary>
-    ''' 改变某个设置项的值。
-    ''' </summary>
+    
+    
+    
     Public Shared Sub [Set](Key As String, Value As Object, Optional Instance As McInstance = Nothing)
         Dim Entry As Setting = Nothing
         If Not Entries.TryGetValue(Key, Entry) Then Throw New KeyNotFoundException("未找到设置项：" & Key)
         Try
-            '判断是否一致
+            
             Value = CTypeDynamic(Value, Entry.Type)
             If Entry.GetCache(Instance) Is Nothing Then [Get](Key, Instance)
             If Entry.GetCache(Instance) = Value Then Return
-            '设置新值
+            
             Entry.Set(Value, Instance)
             Entry.Save(Instance)
-            '触发改变事件（必须在保存之后，以保证 VersionServerLogin 之类的在事件中读取到的是最新的值）
+            
             If Entry.OnChanged IsNot Nothing Then Entry.OnChanged.Invoke(Value)
         Catch ex As Exception
             Logger.Error(ex, $"设置设置项时出错（{Key}, {Value}）")
         End Try
     End Sub
-    ''' <summary>
-    ''' 写入某个未经加密的设置项。
-    ''' 若该设置项经过了加密，则会抛出异常。
-    ''' </summary>
+    
+    
+    
+    
     Public Shared Sub SetSafe(Key As String, Value As Object, Optional Instance As McInstance = Nothing)
         Dim Entry As Setting = Nothing
         If Not Entries.TryGetValue(Key, Entry) Then Throw New KeyNotFoundException("未找到设置项：" & Key)
@@ -322,25 +322,25 @@ Public Class Settings
         [Set](Key, Value, Instance)
     End Sub
 
-    ''' <summary>
-    ''' 获取某个设置项的值。
-    ''' </summary>
+    
+    
+    
     Public Shared Function [Get](Key As String, Optional Instance As McInstance = Nothing)
         Dim Entry As Setting = Nothing
         If Not Entries.TryGetValue(Key, Entry) Then Throw New KeyNotFoundException("未找到设置项：" & Key)
         Dim Value = Entry.GetCache(Instance)
         If Value IsNot Nothing Then Return Value
-        '对部分设置强制赋值
-        '（开源版原本在此强制隐藏联机功能，现已恢复联机，不再强制赋值）
+        
+        
         Static ForcedSettings As New Dictionary(Of String, Object)
         Dim ForcedSetting As Object = Nothing
         If ForcedSettings.TryGetValue(Key, ForcedSetting) Then
             Entry.Set(ForcedSetting, Instance)
             Return ForcedSetting
         End If
-        '正常读取
+        
         Try
-            Dim GotValue As String = Nothing '先用 String 储存，避免类型转换
+            Dim GotValue As String = Nothing 
             Dim DefaultValue As String = If(Entry.Encrypted, DesEncrypt(Entry.DefaultValue, "PCL" & Identify), Entry.DefaultValue)
             Select Case Entry.Source
                 Case Sources.Normal
@@ -378,10 +378,10 @@ Public Class Settings
     Public Shared Function [Get](Of T)(Key As String, Optional Instance As McInstance = Nothing) As T
         Return [Get](Key, Instance)
     End Function
-    ''' <summary>
-    ''' 获取某个未经加密的设置项的值。
-    ''' 若该设置项经过了加密，则会抛出异常。
-    ''' </summary>
+    
+    
+    
+    
     Public Shared Function GetSafe(Key As String, Optional Instance As McInstance = Nothing)
         Dim Entry As Setting = Nothing
         If Not Entries.TryGetValue(Key, Entry) Then Throw New KeyNotFoundException("未找到设置项：" & Key)
@@ -389,17 +389,17 @@ Public Class Settings
         Return [Get](Key, Instance)
     End Function
 
-    ''' <summary>
-    ''' 初始化某个设置项的值。
-    ''' </summary>
+    
+    
+    
     Public Shared Sub Reset(Key As String, Optional Instance As McInstance = Nothing)
         Dim Entry As Setting = Nothing
         If Not Entries.TryGetValue(Key, Entry) Then Throw New KeyNotFoundException("未找到设置项：" & Key)
         Try
-            '判断是否一致
+            
             If Entry.GetCache(Instance) Is Nothing Then [Get](Key, Instance)
             If Entry.GetCache(Instance) = Entry.DefaultValue Then Return
-            '设置新值
+            
             Entry.Set(Entry.DefaultValue, Instance)
             Select Case Entry.Source
                 Case Sources.Normal
@@ -414,24 +414,24 @@ Public Class Settings
                     If Instance Is Nothing Then Throw New Exception($"重置版本设置 {Key} 时未提供目标版本")
                     DeleteIniKey(Instance.PathVersion & "PCL\Setup.ini", Key)
             End Select
-            '触发改变事件
+            
             If Entry.OnChanged IsNot Nothing Then Entry.OnChanged.Invoke(Entry.DefaultValue)
         Catch ex As Exception
             Logger.Error(ex, $"重置设置项时出错（{Key}）")
         End Try
     End Sub
 
-    ''' <summary>
-    ''' 获取某个设置项的默认值。
-    ''' </summary>
+    
+    
+    
     Public Shared Function GetDefault(Key As String) As String
         Return Entries(Key).DefaultValue
     End Function
 
-    ''' <summary>
-    ''' 对应的注册表或文件是否已经储存了某个设置项。
-    ''' 若改成了和默认值一样的，在 2.12.3- 会储存更改，在 2.12.4+ 不会储存更改。
-    ''' </summary>
+    
+    
+    
+    
     Public Shared Function HasSaved(Key As String, Optional Instance As McInstance = Nothing) As Boolean
         Select Case Entries(Key).Source
             Case Sources.Normal
@@ -443,7 +443,7 @@ Public Class Settings
                     Logger.Warn(ex, $"判断注册表 {Key} 是否存在时出错")
                     Return False
                 End Try
-            Case Else 'Source.Instance
+            Case Else 
                 If Instance Is Nothing Then Throw New Exception($"判断版本设置 {Key} 是否存在时未提供目标版本")
                 Return HasIniKey(Instance.PathVersion & "PCL\Setup.ini", Key)
         End Select
@@ -453,9 +453,9 @@ Public Class Settings
 
     Private Shared ReadOnly desInitialVector As Byte() = Encoding.UTF8.GetBytes("95168702")
 
-    ''' <summary>
-    ''' 使用 DES 对称加密算法加密字符串。
-    ''' </summary>
+    
+    
+    
     Private Shared Function DesEncrypt(sourceString As String, Optional key As String = Nothing) As String
         key = If(key Is Nothing, "@;$ Abv2", key.GetStableHashCode().ToString().EnsureLength("X"c, 8).Substring(0, 8))
         Dim btKey As Byte() = Encoding.UTF8.GetBytes(key)
@@ -471,9 +471,9 @@ Public Class Settings
         End Using
     End Function
 
-    ''' <summary>
-    ''' 使用 DES 对称加密算法解密字符串。
-    ''' </summary>
+    
+    
+    
     Private Shared Function DesDecrypt(encryptedString As String, Optional key As String = Nothing) As String
         key = If(key Is Nothing, "@;$ Abv2", key.GetStableHashCode().ToString().EnsureLength("X"c, 8).Substring(0, 8))
         Dim btKey As Byte() = Encoding.UTF8.GetBytes(key)

@@ -1,9 +1,9 @@
 Public Class MyDropShadow
     Inherits Decorator
 
-    ''' <summary>
-    ''' 阴影颜色。
-    ''' </summary>
+    
+    
+    
     Public Property Color As Color
         Get
             Return GetValue(ColorProperty)
@@ -15,9 +15,9 @@ Public Class MyDropShadow
     Public Shared ReadOnly ColorProperty As DependencyProperty = DependencyProperty.Register("Color", GetType(Color), GetType(MyDropShadow),
         New FrameworkPropertyMetadata(Color.FromArgb(&H71, &H0, &H0, &H0), FrameworkPropertyMetadataOptions.AffectsRender, New PropertyChangedCallback(AddressOf ClearBrushes)))
 
-    ''' <summary>
-    ''' 阴影模糊半径。
-    ''' </summary>
+    
+    
+    
     Public Property ShadowRadius As Double
         Get
             Return GetValue(ShadowRadiusProperty)
@@ -29,9 +29,9 @@ Public Class MyDropShadow
     Public Shared ReadOnly ShadowRadiusProperty As DependencyProperty = DependencyProperty.Register("ShadowRadius", GetType(Double), GetType(MyDropShadow),
         New FrameworkPropertyMetadata(CDbl(5), FrameworkPropertyMetadataOptions.AffectsRender, New PropertyChangedCallback(AddressOf ClearBrushes)))
 
-    ''' <summary>
-    ''' 圆角大小。
-    ''' </summary>
+    
+    
+    
     Public Property CornerRadius As CornerRadius
         Get
             Return GetValue(CornerRadiusProperty)
@@ -48,9 +48,9 @@ Public Class MyDropShadow
         New FrameworkPropertyMetadata(New CornerRadius(), FrameworkPropertyMetadataOptions.AffectsRender, New PropertyChangedCallback(AddressOf ClearBrushes)), New ValidateValueCallback(AddressOf IsCornerRadiusValid))
 
 
-    ' =======================================
-    '  渲染
-    ' =======================================
+    
+    
+    
 
 
     Protected Overrides Sub OnRender(drawingContext As DrawingContext)
@@ -321,4 +321,3 @@ Public Class MyDropShadow
 
 End Class
 
-'参考自：https://referencesource.microsoft.com/#PresentationFramework.Aero/parent/Shared/Microsoft/Windows/Themes/SystemDropShadowChrome.cs,6d9c27d92a8128c1

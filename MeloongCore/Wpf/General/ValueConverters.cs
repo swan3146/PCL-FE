@@ -4,9 +4,9 @@ using System.Windows.Data;
 
 namespace MeloongCore.Wpf;
 
-/// <summary>
-/// 对数据绑定进行加法运算，使用 <paramref name="parameter"/> 决定加数。
-/// </summary>
+
+
+
 public class AdditionConverter : IValueConverter {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) {
         if (value is null) return 0;
@@ -24,9 +24,9 @@ public class AdditionConverter : IValueConverter {
     }
 }
 
-/// <summary>
-/// 对数据绑定进行乘法运算，使用 <paramref name="parameter"/> 决定乘数。
-/// </summary>
+
+
+
 public class MultiplicationConverter : IValueConverter {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) {
         if (value is null) return 0;
@@ -45,9 +45,9 @@ public class MultiplicationConverter : IValueConverter {
     }
 }
 
-/// <summary>
-/// 将取反的 <see cref="bool"/> 绑定到 <see cref="Visibility"/>。
-/// </summary>
+
+
+
 public class InverseBooleanToVisibilityConverter : IValueConverter {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) {
         if (value is null) return Visibility.Visible;
@@ -59,9 +59,9 @@ public class InverseBooleanToVisibilityConverter : IValueConverter {
     }
 }
 
-/// <summary>
-/// 将 <see cref="bool"/> 取反。
-/// </summary>
+
+
+
 public class InverseBooleanConverter : IValueConverter {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) {
         if (value is null) return false;

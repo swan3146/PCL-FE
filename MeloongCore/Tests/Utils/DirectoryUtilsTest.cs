@@ -20,7 +20,7 @@ public class DirectoryUtilsTest : TestWithFolder {
         await Assert.That(FileUtils.ReadAsString(Path.Combine(dest, "a.txt"))).IsEqualTo("aaa");
         await Assert.That(FileUtils.ReadAsString(Path.Combine(src, "sub", "b file.txt"))).IsEqualTo("bbb");
         await Assert.That(FileUtils.ReadAsString(Path.Combine(dest, "sub", "b file.txt"))).IsEqualTo("bbb");
-        await Assert.That(DirectoryUtils.EnumerateDirectories(tempFolder, true)).Contains(dest); // 目标文件夹名
+        await Assert.That(DirectoryUtils.EnumerateDirectories(tempFolder, true)).Contains(dest); 
     }
 
     [Test]
@@ -39,12 +39,12 @@ public class DirectoryUtilsTest : TestWithFolder {
         await Assert.That(FileUtils.ReadAsString(Path.Combine(dest, "a.txt"))).IsEqualTo("aaa");
         await Assert.That(FileUtils.ReadAsString(Path.Combine(dest, "sub", "b file.txt"))).IsEqualTo("bbb");
         if (src != dest) await Assert.That(DirectoryUtils.EnumerateDirectories(tempFolder, true)).DoesNotContain(src);
-        await Assert.That(DirectoryUtils.EnumerateDirectories(tempFolder, true)).Contains(dest); // 目标文件夹名
+        await Assert.That(DirectoryUtils.EnumerateDirectories(tempFolder, true)).Contains(dest); 
     }
 
     [Test]
     public async Task 剪切_不同磁盘() {
-        // 寻找两个磁盘
+        
         var drives = DriveInfo.GetDrives()
             .Where(d => d.IsReady && d.DriveType == DriveType.Fixed)
             .ToArray();

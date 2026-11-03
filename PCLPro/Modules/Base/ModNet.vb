@@ -4,9 +4,9 @@ Public Module ModNet
 
 #Region "网络请求"
 
-    ''' <summary>
-    ''' 发送一次网络请求并获取返回内容。
-    ''' </summary>
+    
+    
+    
     Public Function NetRequestByClient(Url As String, Optional Method As HttpMethod = Nothing,
             Optional Content As Object = Nothing, Optional ContentType As String = Nothing, Optional Accept As String = "*/*",
             Optional Timeout As Integer = 25000, Optional Headers As String(,) = Nothing, Optional RequireJson As Boolean = False,
@@ -18,10 +18,10 @@ Public Module ModNet
             If ContentType IsNot Nothing Then HeaderDictionary("Content-Type") = ContentType
             If Accept IsNot Nothing Then HeaderDictionary("Accept") = Accept
             Dim Result = SendRequest(Url, Method, Content, HeaderDictionary, Timeout:=Timeout, Encoding:=Encoding, SimulateBrowserHeaders:=SimulateBrowserHeaders).GetString(Encoding)
-            '检查结果是否为完整 JSON（在 #6683 中可能返回空，在被 GFW 截断时可能不完整）
-            '在此处检查并报错，可以让 NetRequestByClientRetry 等方法进行重试
+            
+            
             If RequireJson Then
-                Result = Result.Trim((vbCrLf & " ").ToCharArray) 'Authlib-Injector 的结果会在末尾附带一个空行
+                Result = Result.Trim((vbCrLf & " ").ToCharArray) 
                 If Not (Result.StartsWithF("{") AndAlso Result.EndsWithF("}")) AndAlso
                    Not (Result.StartsWithF("[") AndAlso Result.EndsWithF("]")) Then
                     Throw New FormatException("返回结果并非 JSON 格式：" &
@@ -36,11 +36,11 @@ Public Module ModNet
             Throw
         End Try
     End Function
-    ''' <summary>
-    ''' 发送网络请求并获取返回内容。
-    ''' 会进行至多 45 秒 3 次的尝试，允许最长 30s 的超时。
-    ''' </summary>
-    ''' <param name="BackupUrl">如果第一次尝试失败，换用的备用 URL。</param>
+    
+    
+    
+    
+    
     Public Function NetRequestByClientRetry(Url As String, Optional Method As HttpMethod = Nothing, Optional BackupUrl As String = Nothing,
             Optional Content As Object = Nothing, Optional ContentType As String = Nothing, Optional Accept As String = "*/*",
             Optional Headers As String(,) = Nothing, Optional RequireJson As Boolean = False,
@@ -51,14 +51,14 @@ Public Module ModNet
         Try
 Retry:
             Select Case RetryCount
-                Case 0 '正常尝试
+                Case 0 
                     Return NetRequestByClient(Url, Method, Content, ContentType, Accept, 10000, Headers, RequireJson, Encoding, SimulateBrowserHeaders)
-                Case 1 '慢速重试
+                Case 1 
                     Thread.Sleep(500)
                     Return NetRequestByClient(Url, Method, Content, ContentType, Accept, 30000, Headers, RequireJson, Encoding, SimulateBrowserHeaders)
-                Case Else '快速重试
+                Case Else 
                     If GetTimeMs() - StartTime > 5500 Then
-                        '若前两次加载耗费 5 秒以上，才进行重试
+                        
                         Thread.Sleep(500)
                         Return NetRequestByClient(Url, Method, Content, ContentType, Accept, 4000, Headers, RequireJson, Encoding, SimulateBrowserHeaders)
                     Else
@@ -70,9 +70,9 @@ Retry:
             If TypeOf ex Is HttpRequestCodeException Then
                 If CType(ex, HttpRequestCodeException).StatusCode = HttpStatusCode.Forbidden Then Throw
                 If CType(ex, HttpRequestCodeException).StatusCode = HttpStatusCode.NotFound Then Throw
-                If CType(ex, HttpRequestCodeException).StatusCode = 429 Then Thread.Sleep(10000) 'Too Many Requests
+                If CType(ex, HttpRequestCodeException).StatusCode = 429 Then Thread.Sleep(10000) 
             End If
-            '重试
+            
             Select Case RetryCount
                 Case 0
                     RetryException = ex
@@ -86,10 +86,10 @@ Retry:
             End Select
         End Try
     End Function
-    ''' <summary>
-    ''' 生成数个线程，同时发送网络请求并获取返回内容。
-    ''' 每个线程开始之前会略有延迟。
-    ''' </summary>
+    
+    
+    
+    
     Public Function NetRequestByClientMultiple(Url As String, Optional Method As HttpMethod = Nothing, Optional ThreadCount As Integer = 3,
             Optional Content As Object = Nothing, Optional ContentType As String = Nothing, Optional Accept As String = "*/*",
             Optional Headers As String(,) = Nothing, Optional RequireJson As Boolean = False, Optional Timeout As Integer = 25000,
@@ -137,17 +137,17 @@ RequestFinished:
         Return Nothing
     End Function
 
-    ''' <summary>
-    ''' 以多线程下载网页文件的方式获取内容。
-    ''' 不支持缓存协商；若需缓存协商，需要换用 NetRequestByClient。
-    ''' </summary>
+    
+    
+    
+    
     Public Function NetRequestByLoader(Url As String, Optional Timeout As Integer = 45000, Optional IsJson As Boolean = False, Optional SimulateBrowserHeaders As Boolean = False) As String
         Return NetRequestByLoader({Url}, Timeout, IsJson, SimulateBrowserHeaders)
     End Function
-    ''' <summary>
-    ''' 以多线程下载网页文件的方式获取内容。
-    ''' 不支持缓存协商；若需缓存协商，需要换用 NetRequestByClient。
-    ''' </summary>
+    
+    
+    
+    
     Public Function NetRequestByLoader(Urls As IEnumerable(Of String), Optional Timeout As Integer = 45000, Optional IsJson As Boolean = False, Optional SimulateBrowserHeaders As Boolean = False) As String
         Dim Temp As String = RequestTaskTempFolder() & "download.txt"
         Dim NewTask As New LoaderDownload("源码获取 " & GetUuid() & "#", New List(Of NetFile) From {New NetFile(Urls, Temp, New FileChecker With {.IsJson = IsJson}, SimulateBrowserHeaders)})
@@ -165,10 +165,10 @@ RequestFinished:
 
 #Region "文件下载"
 
-    ''' <summary>
-    ''' 通过网络请求直接下载小文件，若文件已存在将被覆盖。
-    ''' 不建议用于下载大文件。
-    ''' </summary>
+    
+    
+    
+    
     Public Sub NetDownloadByClient(Url As String, LocalPath As String, Optional SimulateBrowserHeaders As Boolean = False)
         Logger.Info($"通过网络请求直接下载小文件：{Url} → {LocalPath}")
         Dim RetryCount As Integer = 0
@@ -186,17 +186,17 @@ Retry:
         End Try
     End Sub
 
-    ''' <summary>
-    ''' 通过多线程下载引擎下载文件。
-    ''' </summary>
+    
+    
+    
     Public Sub NetDownloadByLoader(Url As String, LocalPath As String, Optional LoaderToSyncProgress As LoaderBase = Nothing, Optional Check As FileChecker = Nothing, Optional SimulateBrowserHeaders As Boolean = False)
         NetDownloadByLoader({Url}, LocalPath, LoaderToSyncProgress, Check, SimulateBrowserHeaders)
     End Sub
-    ''' <summary>
-    ''' 通过多线程下载引擎下载文件。
-    ''' </summary>
-    ''' <param name="Urls">文件的 Url 列表。</param>
-    ''' <param name="LocalPath">下载的本地地址。</param>
+    
+    
+    
+    
+    
     Public Sub NetDownloadByLoader(Urls As IEnumerable(Of String), LocalPath As String, Optional LoaderToSyncProgress As LoaderBase = Nothing, Optional Check As FileChecker = Nothing, Optional SimulateBrowserHeaders As Boolean = False)
         Dim NewTask As New LoaderDownload($"文件下载 {GetUuid()}#", New List(Of NetFile) From {New NetFile(Urls, LocalPath, Check, SimulateBrowserHeaders)})
         Try
@@ -212,27 +212,27 @@ Retry:
 
 #Region "基础请求引擎"
 
-    '基础请求函数
+    
     Private Function SendRequest(Url As String, Method As HttpMethod,
             Optional Content As Object = Nothing, Optional Headers As Dictionary(Of String, String) = Nothing,
             Optional SimulateBrowserHeaders As Boolean = False, Optional Timeout As Integer = 25000, Optional Encoding As Encoding = Nothing) As Byte()
         If RunInUi() AndAlso Not Url.Contains("//127.") Then Throw New Exception("在 UI 线程执行了网络请求")
         Dim Request As HttpRequestMessage = Nothing, CancelToken As CancellationTokenSource = Nothing, Response As HttpResponseMessage = Nothing
         Try
-            '构建 RequestClient
+            
             Directory.CreateDirectory(PathTemp & "Cache\Http\")
             SyncLock RequestClientLock
-                If RequestClient Is Nothing Then '延迟初始化，以避免在程序启动前加载 CacheCow 导致 DLL 加载失败
+                If RequestClient Is Nothing Then 
                     RequestClient = CacheCow.Client.ClientExtensions.CreateClient(New CacheCow.Client.FileCacheStore.FileStore(PathTemp & "Cache/Http/"), New HttpClientHandler With {
                         .AutomaticDecompression = DecompressionMethods.Deflate Or DecompressionMethods.GZip,
-                        .UseCookies = False '不设为 False 就不能从 Header 手动传入 Cookies
+                        .UseCookies = False 
                     })
                 End If
             End SyncLock
-            '构建请求
+            
             Url = SecretCdnSign(Url)
             Request = New HttpRequestMessage(Method, Url)
-            If Content IsNot Nothing AndAlso Request.Method <> HttpMethod.Get AndAlso Request.Method <> HttpMethod.Head Then '写入 Content
+            If Content IsNot Nothing AndAlso Request.Method <> HttpMethod.Get AndAlso Request.Method <> HttpMethod.Head Then 
                 If TypeOf Content Is HttpContent Then
                     Request.Content = DirectCast(Content, HttpContent).Clone()
                 ElseIf TypeOf Content Is Byte() Then
@@ -241,7 +241,7 @@ Retry:
                     Request.Content = New ByteArrayContent(If(Encoding, Encoding.UTF8).GetBytes(Content.ToString()))
                 End If
             End If
-            For Each Header In If(Headers, New Dictionary(Of String, String)) '写入 Headers
+            For Each Header In If(Headers, New Dictionary(Of String, String)) 
                 If Header.Key.Lower = "content-type" Then
                     Request.Content?.Headers.TryAddWithoutValidation(Header.Key, Header.Value)
                 Else
@@ -249,19 +249,19 @@ Retry:
                 End If
             Next
             SecretHeadersSign(Url, Request, SimulateBrowserHeaders)
-            '发送请求
-            'CacheCow 读取缓存时若文件被占用，会调用不存在的 System.Net.Http.Formatting.resources，抛出异常（#8150）
+            
+            
             Retrier.Attempt(delay:=Function() TimeSpan.FromMilliseconds(200), isRetryAllowed:=Function(ex) TypeOf ex Is FileNotFoundException OrElse TypeOf ex Is IOException, action:=
             Sub(Attempt)
                 CancelToken?.Dispose() : CancelToken = New CancellationTokenSource(Timeout)
-                Dim ClonedRequest As HttpRequestMessage = Request.Clone() 'HttpRequestMessage 只能发送一次，重试时需要克隆一个新的
+                Dim ClonedRequest As HttpRequestMessage = Request.Clone() 
                 Try
                     Response = RequestClient.SendAsync(ClonedRequest, HttpCompletionOption.ResponseHeadersRead, CancelToken.Token).GetResultWithTimeout(CancelToken, Timeout)
                 Finally
                     ClonedRequest.Dispose()
                 End Try
             End Sub)
-            '读取响应
+            
             Dim ResponseBytes As Byte()
             CancelToken.Dispose() : CancelToken = New CancellationTokenSource(Timeout)
             Using ResponseStream = Response.Content.ReadAsStreamAsync().GetResultWithTimeout(CancelToken, Timeout)
@@ -282,7 +282,7 @@ Retry:
         Catch ex As TimeoutException
             Throw New WebException($"连接服务器超时，请稍后再试，或使用 VPN 改善网络环境（{Method}, {Url}）", WebExceptionStatus.Timeout)
         Catch ex As Exception
-            If TypeOf ex IsNot TaskCanceledException Then ex.ThrowIfCanceled() 'GetResultWithTimeout 会抛出 TaskCanceledException
+            If TypeOf ex IsNot TaskCanceledException Then ex.ThrowIfCanceled() 
             If ex.IsBadNetwork Then
                 Throw New WebException($"网络请求失败，请稍后再试，或使用 VPN 改善网络环境（{Method}, {Url}）", WebExceptionStatus.Timeout)
             Else
@@ -305,21 +305,21 @@ Retry:
         .AutomaticDecompression = DecompressionMethods.Deflate Or DecompressionMethods.GZip
     })
 
-    ''' <summary>
-    ''' 最大线程数。
-    ''' </summary>
+    
+    
+    
     Public ReadOnly Property NetTaskThreadLimit As Integer
         Get
             Return Settings.Get(Of Integer)("ToolDownloadThread") + 1
         End Get
     End Property
-    ''' <summary>
-    ''' 速度下限。
-    ''' </summary>
-    Public NetTaskSpeedLimitLow As Long = 256 * 1024L '256K/s
-    ''' <summary>
-    ''' 速度上限。若无限制则为 -1。
-    ''' </summary>
+    
+    
+    
+    Public NetTaskSpeedLimitLow As Long = 256 * 1024L 
+    
+    
+    
     Public ReadOnly Property NetTaskSpeedLimitHigh As Long
         Get
             If _NetTaskSpeedLimitHigh Is Nothing Then
@@ -341,104 +341,104 @@ Retry:
     Public Sub UpdateNetTaskSpeedLimitHigh(Value As Integer)
         _NetTaskSpeedLimitHigh = Nothing
     End Sub
-    ''' <summary>
-    ''' 基于限速，当前可以下载的剩余量。
-    ''' </summary>
+    
+    
+    
     Public NetTaskSpeedLimitLeft As Long = -1
-    ''' <summary>
-    ''' 正在运行中的线程数。
-    ''' </summary>
+    
+    
+    
     Public NetTaskThreadCount As Integer = 0
 
-    ''' <summary>
-    ''' 下载源。
-    ''' </summary>
+    
+    
+    
     Public Class NetSource
         Public Id As Integer
         Public Url As String
         Public FailCount As Integer
         Public Ex As Exception
-        ''' <summary>
-        ''' 若该下载源正在进行强制单线程下载，标记这个唯一的线程。
-        ''' </summary>
+        
+        
+        
         Public SingleThread As NetThread
         Public IsFailed As Boolean
         Public Overrides Function ToString() As String
             Return Url
         End Function
     End Class
-    ''' <summary>
-    ''' 下载进度标示。
-    ''' </summary>
+    
+    
+    
     Public Enum NetState
-        ''' <summary>
-        ''' 尚未进行已存在检查。
-        ''' </summary>
+        
+        
+        
         WaitingToCheck = -1
-        ''' <summary>
-        ''' 尚未开始。
-        ''' </summary>
+        
+        
+        
         WaitingToDownload = 0
-        ''' <summary>
-        ''' 正在连接，尚未获取文件大小。
-        ''' </summary>
+        
+        
+        
         Connecting = 1
-        ''' <summary>
-        ''' 已连接，正在尝试接收首个下载数据包。
-        ''' </summary>
+        
+        
+        
         Reading = 2
-        ''' <summary>
-        ''' 正在下载。
-        ''' </summary>
+        
+        
+        
         Downloading = 3
-        ''' <summary>
-        ''' 正在合并文件。
-        ''' </summary>
+        
+        
+        
         Merging = 4
-        ''' <summary>
-        ''' 已完成。
-        ''' </summary>
+        
+        
+        
         Finished = 5
-        ''' <summary>
-        ''' 已失败或中断。
-        ''' </summary>
+        
+        
+        
         Canceled = 6
     End Enum
-    ''' <summary>
-    ''' 预下载检查行为。
-    ''' </summary>
+    
+    
+    
     Public Enum NetPreDownloadBehaviour
-        ''' <summary>
-        ''' 当文件已存在时，显示提示以提醒用户是否继续下载。
-        ''' </summary>
+        
+        
+        
         HintWhileExists
-        ''' <summary>
-        ''' 当文件已存在或正在下载时，直接退出下载函数执行，不对用户进行提示。
-        ''' </summary>
+        
+        
+        
         ExitWhileExistsOrDownloading
-        ''' <summary>
-        ''' 不进行已存在检查。
-        ''' </summary>
+        
+        
+        
         IgnoreCheck
     End Enum
 
-    ''' <summary>
-    ''' 下载线程。
-    ''' </summary>
+    
+    
+    
     Public Class NetThread
         Implements IEnumerable(Of NetThread), IEquatable(Of NetThread)
 
-        ''' <summary>
-        ''' 对应的下载任务。
-        ''' </summary>
+        
+        
+        
         Public Task As NetFile
-        ''' <summary>
-        ''' 对应的线程。
-        ''' </summary>
+        
+        
+        
         Public Thread As Thread
-        ''' <summary>
-        ''' 链表中的下一个线程。
-        ''' </summary>
+        
+        
+        
         Public NextThread As NetThread
         Private ReadOnly Iterator Property [Next]() As IEnumerable(Of NetThread)
             Get
@@ -456,36 +456,36 @@ Retry:
             Return [Next].GetEnumerator()
         End Function
 
-        ''' <summary>
-        ''' 分配给任务中每个线程（无论其是否失败）的编号。
-        ''' </summary>
+        
+        
+        
         Public Uuid As Integer
-        ''' <summary>
-        ''' 是否为第一个线程。
-        ''' </summary>
+        
+        
+        
         Public ReadOnly Property IsFirstThread As Boolean
             Get
                 Return DownloadStart = 0 AndAlso Task.FileSize = -2
             End Get
         End Property
-        ''' <summary>
-        ''' 该线程的缓存文件。
-        ''' </summary>
+        
+        
+        
         Public Temp As String
 
-        ''' <summary>
-        ''' 线程下载起始位置。
-        ''' </summary>
+        
+        
+        
         Public DownloadStart As Long
-        ''' <summary>
-        ''' 线程下载结束位置。
-        ''' </summary>
+        
+        
+        
         Public ReadOnly Property DownloadEnd As Long
             Get
                 SyncLock Task.LockChain
                     If NextThread Is Nothing Then
                         If Task.IsUnknownSize Then
-                            Return 1000 * 1000 * 1000 * 1000L '约 1T
+                            Return 1000 * 1000 * 1000 * 1000L 
                         Else
                             Return Task.FileSize - 1
                         End If
@@ -495,30 +495,30 @@ Retry:
                 End SyncLock
             End Get
         End Property
-        ''' <summary>
-        ''' 线程未下载的文件大小。
-        ''' </summary>
+        
+        
+        
         Public ReadOnly Property DownloadUndone As Long
             Get
                 Return DownloadEnd - (DownloadStart + DownloadDone) + 1
             End Get
         End Property
-        ''' <summary>
-        ''' 线程已下载的文件大小。
-        ''' </summary>
+        
+        
+        
         Public DownloadDone As Long = 0
 
-        ''' <summary>
-        ''' 上次记速时的时间。
-        ''' </summary>
+        
+        
+        
         Private SpeedLastTime As Long = GetTimeMs()
-        ''' <summary>
-        ''' 上次记速时的已下载大小。
-        ''' </summary>
+        
+        
+        
         Private SpeedLastDone As Long = 0
-        ''' <summary>
-        ''' 当前的下载速度，单位为 Byte / 秒。
-        ''' </summary>
+        
+        
+        
         Public ReadOnly Property Speed As Long
             Get
                 If GetTimeMs() - SpeedLastTime > 200 Then
@@ -532,34 +532,34 @@ Retry:
         End Property
         Private _Speed As Long = 0
 
-        ''' <summary>
-        ''' 线程初始化时的时间。
-        ''' </summary>
+        
+        
+        
         Public InitTime As Long = GetTimeMs()
-        ''' <summary>
-        ''' 上次接受到有效数据的时间，-1 表示尚未有有效数据。
-        ''' </summary>
+        
+        
+        
         Public LastReceiveTime As Long = -1
 
-        ''' <summary>
-        ''' 当前线程的状态。
-        ''' </summary>
+        
+        
+        
         Public State As NetState = NetState.WaitingToDownload
-        ''' <summary>
-        ''' 是否已经结束。
-        ''' </summary>
+        
+        
+        
         Public ReadOnly Property IsEnded As Boolean
             Get
                 Return State = NetState.Finished OrElse State = NetState.Canceled
             End Get
         End Property
 
-        ''' <summary>
-        ''' 当前选取的是哪一个 Url。
-        ''' </summary>
+        
+        
+        
         Public Source As NetSource
 
-        '允许进行 UUID 比较
+        
         Public Overloads Function Equals(other As NetThread) As Boolean Implements IEquatable(Of NetThread).Equals
             Return other IsNot Nothing AndAlso Uuid = other.Uuid
         End Function
@@ -573,42 +573,42 @@ Retry:
             Return Not left = right
         End Operator
     End Class
-    ''' <summary>
-    ''' 下载单个文件。
-    ''' </summary>
+    
+    
+    
     Public Class NetFile
 
 #Region "属性"
 
-        ''' <summary>
-        ''' 所属的文件列表任务。
-        ''' </summary>
+        
+        
+        
         Public Tasks As New ConcurrentList(Of LoaderDownload)
-        ''' <summary>
-        ''' 所有下载源。
-        ''' </summary>
+        
+        
+        
         Public Sources As List(Of NetSource)
-        ''' <summary>
-        ''' 用于在第一个线程出错时切换下载源。
-        ''' </summary>
+        
+        
+        
         Private FirstThreadSource As Integer = 0
-        ''' <summary>
-        ''' 所有已经被标记为失败的，但未完整尝试过的，不允许断点续传的下载源。
-        ''' </summary>
+        
+        
+        
         Public SourcesOnce As New ConcurrentList(Of NetSource)
-        ''' <summary>
-        ''' 仅当合并失败或首次下载失败时，会将所有下载源重新标记为不允许断点续传的下载源，逐个重新尝试下载。
-        ''' 这一策略可以兼容多个下载源中的一部分返回错误的文件的情况，以及部分在多线程下载时会抽风的源。
-        ''' </summary>
+        
+        
+        
+        
         Private Retried As Boolean = False
-        ''' <summary>
-        ''' 获取从某个源开始，第一个可用的源。
-        ''' </summary>
+        
+        
+        
         Private Function GetSource(Optional Id As Integer = 0) As NetSource
             If Id >= Sources.Count OrElse Id < 0 Then Id = 0
             SyncLock LockSource
                 If HasAvailableSource(False) Then
-                    '存在多线程可用源
+                    
                     Dim CurrentSource As NetSource = Sources(Id)
                     While CurrentSource.IsFailed
                         Id += 1
@@ -617,94 +617,94 @@ Retry:
                     End While
                     Return CurrentSource
                 ElseIf SourcesOnce.Any Then
-                    '仅存在单线程可用源
+                    
                     Return SourcesOnce.First
                 Else
-                    '没有可用源
+                    
                     Return Nothing
                 End If
             End SyncLock
         End Function
-        ''' <summary>
-        ''' 是否存在可用源。
-        ''' </summary>
+        
+        
+        
         Public Function HasAvailableSource(Optional AllowOnceSource As Boolean = True) As Boolean
             SyncLock LockSource
-                If Sources.Any(Function(s) Not s.IsFailed) Then Return True '存在多线程可用源
-                If AllowOnceSource AndAlso SourcesOnce.Any Then Return True '存在单线程可用源
+                If Sources.Any(Function(s) Not s.IsFailed) Then Return True 
+                If AllowOnceSource AndAlso SourcesOnce.Any Then Return True 
             End SyncLock
             Return False
         End Function
 
-        ''' <summary>
-        ''' 存储在本地的带文件名的地址。
-        ''' </summary>
+        
+        
+        
         Public LocalPath As String = Nothing
-        ''' <summary>
-        ''' 存储在本地的文件名。
-        ''' </summary>
+        
+        
+        
         Public LocalName As String = Nothing
 
-        ''' <summary>
-        ''' 当前的下载状态。
-        ''' </summary>
+        
+        
+        
         Public State As NetState = NetState.WaitingToCheck
-        ''' <summary>
-        ''' 导致下载失败的原因。
-        ''' </summary>
+        
+        
+        
         Public Ex As New List(Of Exception)
 
-        ''' <summary>
-        ''' 作为文件组成部分的线程链表。
-        ''' 如果没有线程，可以为 Nothing。
-        ''' </summary>
+        
+        
+        
+        
         Public Threads As NetThread
 
-        ''' <summary>
-        ''' 文件的总大小。若为 -2 则为未获取，若为 -1 则为无法获取准确大小。
-        ''' </summary>
+        
+        
+        
         Public FileSize As Long = -2
-        ''' <summary>
-        ''' 该文件是否无法获取准确大小。
-        ''' </summary>
+        
+        
+        
         Public IsUnknownSize As Boolean = False
-        ''' <summary>
-        ''' 该文件是否不需要分割。
-        ''' </summary>
+        
+        
+        
         Public ReadOnly Property IsNoSplit As Boolean
             Get
-                Return IsUnknownSize OrElse FileSize < 1024 * 1024 '小于 1MB 的文件不分割
+                Return IsUnknownSize OrElse FileSize < 1024 * 1024 
             End Get
         End Property
-        ''' <summary>
-        ''' 为不需要分割的小文件在内存中提供临时存储。
-        ''' </summary>
+        
+        
+        
         Private Cache As MemoryStream
 
-        ''' <summary>
-        ''' 文件的已下载大小。
-        ''' </summary>
+        
+        
+        
         Public DownloadDone As Long = 0
-        ''' <summary>
-        ''' 文件的校验规则。
-        ''' </summary>
+        
+        
+        
         Public Check As FileChecker
-        ''' <summary>
-        ''' 是否模拟浏览器的 UserAgent 和 Referer。
-        ''' </summary>
+        
+        
+        
         Public SimulateBrowserHeaders As Boolean
 
-        ''' <summary>
-        ''' 上次记速时的时间。
-        ''' </summary>
+        
+        
+        
         Private SpeedLastTime As Long = GetTimeMs()
-        ''' <summary>
-        ''' 上次记速时的已下载大小。
-        ''' </summary>
+        
+        
+        
         Private SpeedLastDone As Long = 0
-        ''' <summary>
-        ''' 当前的下载速度，单位为 Byte / 秒。
-        ''' </summary>
+        
+        
+        
         Public ReadOnly Property Speed As Long
             Get
                 If GetTimeMs() - SpeedLastTime > 200 Then
@@ -718,13 +718,13 @@ Retry:
         End Property
         Private _Speed As Long = 0
 
-        ''' <summary>
-        ''' 该文件是否由本地文件直接复制完成。
-        ''' </summary>
+        
+        
+        
         Public IsCopy As Boolean = False
-        ''' <summary>
-        ''' 本文件的显示进度。
-        ''' </summary>
+        
+        
+        
         Public ReadOnly Property Progress As Double
             Get
                 Select Case State
@@ -737,7 +737,7 @@ Retry:
                     Case NetState.Reading
                         Return 0.04
                     Case NetState.Downloading
-                        '正在下载中，对应 5% ~ 98%
+                        
                         Dim OriginalProgress As Double = If(IsUnknownSize, 0.5, DownloadDone / Math.Max(FileSize, 1))
                         OriginalProgress = 1 - (1 - OriginalProgress) ^ 0.9
                         Return OriginalProgress * 0.93 + 0.05
@@ -751,20 +751,20 @@ Retry:
             End Get
         End Property
 
-        ''' <summary>
-        ''' 各个线程建立连接成功的总次数。
-        ''' </summary>
+        
+        
+        
         Private ConnectCount As Integer = 0
-        ''' <summary>
-        ''' 各个线程建立连接成功的总时间。
-        ''' </summary>
+        
+        
+        
         Private ConnectTime As Long = 0
-        ''' <summary>
-        ''' 各个线程建立连接成功的平均时间，单位为毫秒，-1 代表尚未有成功连接。
-        ''' </summary>
+        
+        
+        
         Private ReadOnly Property ConnectAverage As Integer
             Get
-                Dim CurrentConnectCount As Integer = ConnectCount '防止竞态条件
+                Dim CurrentConnectCount As Integer = ConnectCount 
                 Return If(CurrentConnectCount = 0, -1, ConnectTime / CurrentConnectCount)
             End Get
         End Property
@@ -782,10 +782,10 @@ Retry:
 
 #End Region
 
-        ''' <summary>
-        ''' 新建一个需要下载的文件。
-        ''' </summary>
-        ''' <param name="LocalPath">包含文件名的本地地址。</param>
+        
+        
+        
+        
         Public Sub New(Urls As IEnumerable(Of String), LocalPath As String, Optional Checker As FileChecker = Nothing, Optional SimulateBrowserHeaders As Boolean = False)
             Dim Sources As New List(Of NetSource)
             Dim Count As Integer = 0
@@ -801,16 +801,16 @@ Retry:
             Me.LocalName = PathUtils.GetLastPart(LocalPath)
         End Sub
 
-        ''' <summary>
-        ''' 尝试开始一个新的下载线程。
-        ''' 如果失败，返回 Nothing。
-        ''' </summary>
+        
+        
+        
+        
         Public Function TryBeginThread() As NetThread
             Try
 
                 Dim StartPosition As Long, StartSource As NetSource = Nothing
                 Dim Th As Thread, ThreadInfo As NetThread
-                '条件检测
+                
                 SyncLock LockSource
                     If NetTaskThreadCount >= NetTaskThreadLimit OrElse Not HasAvailableSource() OrElse
                         (IsNoSplit AndAlso Threads IsNot Nothing AndAlso Threads.State <> NetState.Canceled) Then Return Nothing
@@ -818,11 +818,11 @@ Retry:
                     SyncLock LockState
                         If State < NetState.Connecting Then State = NetState.Connecting
                     End SyncLock
-                    '初始化参数
-                    '获取线程起点与下载源
-                    '不分割
+                    
+                    
+                    
                     If IsNoSplit Then GoTo StartSingleThreadDownload
-                    '只剩下单线程可用点
+                    
                     If Not HasAvailableSource(False) Then
                         If SourcesOnce.First.SingleThread IsNot Nothing AndAlso SourcesOnce.First.SingleThread.State <> NetState.Canceled Then Return Nothing
 StartSingleThreadDownload:
@@ -831,14 +831,14 @@ StartSingleThreadDownload:
                     End If
                 End SyncLock
                 SyncLock LockChain
-                    '首个开始点
+                    
                     If Threads Is Nothing Then
                         StartPosition = 0
                         StartSource = GetSource(FirstThreadSource)
                         FirstThreadSource = StartSource.Id + 1
                         GoTo StartThread
                     End If
-                    '寻找失败点
+                    
                     For Each Thread As NetThread In Threads
                         If Thread.State = NetState.Canceled AndAlso Thread.DownloadUndone > 0 Then
                             StartPosition = Thread.DownloadStart + Thread.DownloadDone
@@ -846,14 +846,14 @@ StartSingleThreadDownload:
                             GoTo StartThread
                         End If
                     Next
-                    '是否禁用多线程，以及规定碎片大小
+                    
                     Dim Source As NetSource = GetSource()
                     If Source Is Nothing Then Return Nothing
                     Dim TargetUrl As String = Source.Url
                     If TargetUrl.Contains("pcl2-server") OrElse TargetUrl.Contains("meloong.com") OrElse TargetUrl.Contains("bmclapi") OrElse TargetUrl.Contains("github.com") OrElse
                        TargetUrl.Contains("optifine.net") OrElse TargetUrl.Contains("momot.rs") Then Return Nothing
-                    '寻找最大碎片
-                    'FUTURE: 下载引擎重做，计算下载源平均链接时间和线程下载速度，按最高时间节省来开启多线程
+                    
+                    
                     Dim FilePieceMax As NetThread = Threads
                     For Each Thread As NetThread In Threads
                         If Thread.DownloadUndone > FilePieceMax.DownloadUndone Then FilePieceMax = Thread
@@ -862,15 +862,15 @@ StartSingleThreadDownload:
                     StartPosition = FilePieceMax.DownloadEnd - FilePieceMax.DownloadUndone * 0.4
                     StartSource = GetSource()
 
-                    '开始线程
+                    
 StartThread:
                     If (StartPosition > FileSize AndAlso FileSize >= 0 AndAlso Not IsUnknownSize) OrElse StartPosition < 0 OrElse IsNothing(StartSource) Then Return Nothing
-                    '构建线程
+                    
                     Dim ThreadUuid As Integer = GetUuid()
-                    If Not Tasks.Any() Then Return Nothing '由于中断，已没有可用任务
+                    If Not Tasks.Any() Then Return Nothing 
                     Th = New Thread(AddressOf Thread) With {.Name = $"下载 {Tasks(0).Uuid}/{Uuid}/{ThreadUuid}#", .Priority = ThreadPriority.BelowNormal}
                     ThreadInfo = New NetThread With {.Uuid = ThreadUuid, .DownloadStart = StartPosition, .Thread = Th, .Source = StartSource, .Task = Me, .State = NetState.WaitingToDownload}
-                    '链表处理
+                    
                     If ThreadInfo.IsFirstThread OrElse Threads Is Nothing Then
                         Threads = ThreadInfo
                     Else
@@ -883,7 +883,7 @@ StartThread:
                     End If
 
                 End SyncLock
-                '开始线程
+                
                 Interlocked.Increment(NetTaskThreadCount)
                 SyncLock LockSource
                     If Not HasAvailableSource(False) Then SourcesOnce.First.SingleThread = ThreadInfo
@@ -896,16 +896,16 @@ StartThread:
                 Return Nothing
             End Try
         End Function
-        ''' <summary>
-        ''' 每个下载线程执行的代码。
-        ''' </summary>
+        
+        
+        
         Private Sub Thread(Th As NetThread)
             Logger.Log($"{LocalName}：开始，起始点 {Th.DownloadStart}，{Th.Source.Url}", If(Th.DownloadStart = 0, LogLevel.Info, LogLevel.Trace))
             Dim ResultStream As Stream = Nothing, HttpRequest As HttpRequestMessage = Nothing,
                 Response As HttpResponseMessage = Nothing, ResponseStream As Stream = Nothing,
                 CancelToken As CancellationTokenSource = Nothing
-            '部分下载源真的特别慢，并且只需要一个请求，例如 Ping 为 20s，如果增长太慢，就会造成类似 2.5s 5s 7.5s 10s 12.5s... 的极大延迟
-            '延迟过长会导致某些特别慢的链接迟迟不被掐死
+            
+            
             Dim Timeout As Integer = Math.Min(Math.Max(ConnectAverage, 15000) * (1 + Th.Source.FailCount), 30000)
             Th.State = NetState.Connecting
             Try
@@ -917,12 +917,12 @@ StartThread:
                 If Not Th.IsFirstThread Then HttpRequest.Headers.Range = New Headers.RangeHeaderValue(Th.DownloadStart, Nothing)
                 Dim ContentLength As Long = 0
                 Response = ThreadClient.SendAsync(HttpRequest, HttpCompletionOption.ResponseHeadersRead, CancelToken.Token).GetResultWithTimeout(CancelToken, Timeout)
-                If Not Response.IsSuccessStatusCode Then '状态码检查
+                If Not Response.IsSuccessStatusCode Then 
                     Throw New HttpRequestCodeException($"错误码 {Response.StatusCode} ({CInt(Response.StatusCode)})，{Th.Source.Url}", Response.StatusCode, Nothing)
                 End If
-                If State = NetState.Canceled Then GoTo SourceBreak '快速中断
+                If State = NetState.Canceled Then GoTo SourceBreak 
                 If Response.RequestMessage.RequestUri.ToString <> Th.Source.Url Then Logger.Trace(Function() $"{LocalName}：重定向至 {Response.RequestMessage.RequestUri}")
-                '文件大小校验
+                
                 ContentLength = Response.Content.Headers.ContentLength.GetValueOrDefault(-1)
                 If ContentLength < 0 Then
                     If FileSize > 1 Then
@@ -947,7 +947,7 @@ StartThread:
                     End If
                     FileSize = ContentLength : IsUnknownSize = False
                     Logger.Info($"{LocalName}：文件大小 {ContentLength}（{StringUtils.FormatByteSize(ContentLength)}）")
-                    '若文件大小大于 50 M，进行剩余磁盘空间校验
+                    
                     If ContentLength > 50 * 1024 * 1024 Then
                         For Each Drive As DriveInfo In DriveInfo.GetDrives
                             Dim DriveName As String = Drive.Name.First.ToString
@@ -970,12 +970,12 @@ NotSupportRange:
                 ElseIf Not FileSize - Th.DownloadStart = ContentLength Then
                     Throw New RangeNotSupportedException($"获取到的分段大小不一致：Range 起始于 {Th.DownloadStart}，预期 ContentLength 为 {FileSize - Th.DownloadStart}，返回 ContentLength 为 {ContentLength}，总文件大小 {FileSize}")
                 End If
-                'Log($"[Download] {LocalName} {Info.Uuid}#：通过大小检查，文件大小 {FileSize}，起始点 {Info.DownloadStart}，ContentLength {ContentLength}")
+                
                 Th.State = NetState.Reading
                 SyncLock LockState
                     If State < NetState.Reading Then State = NetState.Reading
                 End SyncLock
-                '创建缓存文件
+                
                 If IsNoSplit Then
                     Th.Temp = Nothing
                     Cache = New MemoryStream
@@ -984,26 +984,26 @@ NotSupportRange:
                     Th.Temp = $"{PathTemp}Download\{Uuid}_{Th.Uuid}_{RandomInteger(0, 999999)}.tmp"
                     ResultStream = FileUtils.CreateAsStream(Th.Temp)
                 End If
-                '开始下载
-                CancelToken.Dispose() : CancelToken = New CancellationTokenSource() '重置超时，不再让 CancellationToken 在固定时间后触发（#8488）
+                
+                CancelToken.Dispose() : CancelToken = New CancellationTokenSource() 
                 ResponseStream = Response.Content.ReadAsStreamAsync().GetAwaiter().GetResult()
                 If Settings.Get(Of Boolean)("SystemDebugDelay") Then Threading.Thread.Sleep(RandomInteger(50, 3000))
                 Dim ResponseBytes As Byte() = New Byte(16384) {}
                 HttpDataCount = ResponseStream.ReadAsync(ResponseBytes, 0, 16384, CancelToken.Token).GetResultWithTimeout(CancelToken, Timeout)
-                While (IsUnknownSize OrElse Th.DownloadUndone > 0) AndAlso '判断是否下载完成
+                While (IsUnknownSize OrElse Th.DownloadUndone > 0) AndAlso 
                             HttpDataCount > 0 AndAlso Not IsProgramEnding AndAlso State < NetState.Merging AndAlso (Not Th.Source.IsFailed OrElse Th.Source.SingleThread = Th)
-                    '限速
+                    
                     While NetTaskSpeedLimitHigh > 0 AndAlso NetTaskSpeedLimitLeft <= 0
                         Threading.Thread.Sleep(16)
                     End While
                     Dim RealDataCount As Integer = If(IsUnknownSize, HttpDataCount, Math.Min(HttpDataCount, Th.DownloadUndone))
                     If NetTaskSpeedLimitHigh > 0 Then Interlocked.Add(NetTaskSpeedLimitLeft, -RealDataCount)
                     Dim DeltaTime = GetTimeMs() - Th.LastReceiveTime
-                    If DeltaTime > 100000000 Then DeltaTime = 1 '避免时间刻反转导致出现极大值
+                    If DeltaTime > 100000000 Then DeltaTime = 1 
                     If RealDataCount > 0 Then
-                        '有数据
+                        
                         If Th.DownloadDone = 0 Then
-                            '第一次接受到数据
+                            
                             Th.State = NetState.Downloading
                             SyncLock LockState
                                 If State < NetState.Downloading Then State = NetState.Downloading
@@ -1019,30 +1019,30 @@ NotSupportRange:
                         Interlocked.Add(DownloadDone, RealDataCount)
                         Th.DownloadDone += RealDataCount
                         ResultStream.Write(ResponseBytes, 0, RealDataCount)
-                        '已完成
+                        
                         If Th.DownloadUndone = 0 AndAlso Not IsUnknownSize Then Exit While
-                        '检查速度是否过慢
-                        If Th.LastReceiveTime > 0 AndAlso DeltaTime > 5000 AndAlso DeltaTime > RealDataCount AndAlso '数据包间隔大于 5s，且速度小于 1K/s
-                                    Th.Source.SingleThread Is Nothing Then '且并非单线程下载
+                        
+                        If Th.LastReceiveTime > 0 AndAlso DeltaTime > 5000 AndAlso DeltaTime > RealDataCount AndAlso 
+                                    Th.Source.SingleThread Is Nothing Then 
                             Throw New TimeoutException("由于速度过慢断开链接，下载 " & RealDataCount & " B，消耗 " & DeltaTime & " ms。")
                         End If
                         Th.LastReceiveTime = GetTimeMs()
                     ElseIf Th.LastReceiveTime > 0 AndAlso DeltaTime > Timeout Then
-                        '无数据，且已超时
+                        
                         Throw New TimeoutException("操作超时，无数据。")
                     End If
                     HttpDataCount = ResponseStream.ReadAsync(ResponseBytes, 0, 16384, CancelToken.Token).GetResultWithTimeout(CancelToken, Timeout)
                 End While
 SourceBreak:
                 If State = NetState.Canceled OrElse (Th.Source.IsFailed AndAlso Th.Source.SingleThread <> Th) OrElse (Th.DownloadUndone > 0 AndAlso Not IsUnknownSize) Then
-                    '被外部中断
+                    
                     Th.State = NetState.Canceled
                     Logger.Info($"{LocalName}：中断")
                 ElseIf HttpDataCount = 0 AndAlso Th.DownloadUndone > 0 AndAlso Not IsUnknownSize Then
-                    '服务器无返回数据
+                    
                     Throw New Exception($"返回的 ContentLength 过多：ContentLength 为 {ContentLength}，但获取到的总数据量仅为 {Th.DownloadDone}（全文件总数据量 {DownloadDone}）")
                 Else
-                    '本线程完成
+                    
                     Th.State = NetState.Finished
                     Logger.Trace(Function() $"{LocalName}：完成，已下载 {Th.DownloadDone}（{Th.DownloadStart}~{Th.DownloadEnd}）")
                 End If
@@ -1054,35 +1054,35 @@ SourceBreak:
                 End If
                 SourceFail(Th, ex, False)
             Finally
-                '释放资源
+                
                 HttpRequest?.Dispose()
                 Response?.Dispose()
                 ResponseStream?.Dispose()
                 CancelToken?.Dispose()
                 If Not IsNoSplit Then ResultStream?.Dispose()
-                '改变计数
+                
                 Interlocked.Decrement(NetTaskThreadCount)
-                '合并
+                
                 If ((FileSize >= 0 AndAlso DownloadDone >= FileSize) OrElse (FileSize = -1 AndAlso DownloadDone > 0)) AndAlso
                     State < NetState.Merging AndAlso Th.State <> NetState.Canceled Then Merge(Th)
             End Try
         End Sub
         Private Sub SourceFail(Th As NetThread, ex As Exception, IsMergeFailure As Boolean)
-            '状态变更
+            
             Interlocked.Increment(Th.Source.FailCount)
             For Each Task In Tasks
                 Interlocked.Increment(Task.FailCount)
             Next
             Th.State = NetState.Canceled
             Th.Source.Ex = ex
-            '根据情况判断，是否在多线程下禁用下载源（连续错误过多，或不支持断点续传）
+            
             Dim IsRangeNotSupported As Boolean = TypeOf ex Is RangeNotSupportedException OrElse ex.Message.Contains("(416)")
             If IsMergeFailure OrElse IsRangeNotSupported OrElse
                ex.Message.Contains("(502)") OrElse ex.Message.Contains("(404)") OrElse
                ex.Message.Contains("未能解析") OrElse ex.Message.Contains("无返回数据") OrElse ex.Message.Contains("空间不足") OrElse
-               ((ex.Message.Contains("(403)") OrElse ex.Message.Contains("(429)")) AndAlso Not Th.Source.Url.Contains("bmclapi")) OrElse 'BMCLAPI 的部分源在高频率请求下会返回 403/429，所以不应因此禁用下载源
+               ((ex.Message.Contains("(403)") OrElse ex.Message.Contains("(429)")) AndAlso Not Th.Source.Url.Contains("bmclapi")) OrElse 
                (Th.Source.FailCount >= NetTaskThreadLimit.Clamp(5, 30) AndAlso DownloadDone < 1) OrElse Th.Source.FailCount > NetTaskThreadLimit + 2 Then
-                '当一个下载源有多个线程在下载时，只选择其中一个线程进行后续处理
+                
                 Dim IsThisFail As Boolean = False
                 SyncLock LockSource
                     If Not Th.Source.IsFailed OrElse Th.Source.SingleThread = Th Then
@@ -1090,7 +1090,7 @@ SourceBreak:
                         Th.Source.IsFailed = True
                     End If
                 End SyncLock
-                '……后续处理
+                
                 If IsThisFail Then
                     Logger.Info($"{LocalName}：下载源被禁用（{Th.Source.Id}，Range 问题：{IsRangeNotSupported}）：{Th.Source.Url}")
                     Logger.Warn(ex, $"{If(SourcesOnce.FirstOrDefault?.SingleThread Is Nothing, "", "单线程")}下载源 {Th.Source.Id} 已被禁用")
@@ -1098,13 +1098,13 @@ SourceBreak:
                         SourcesOnce.Remove(Th.Source)
                     End SyncLock
                     If ex.Message.Contains("空间不足") Then
-                        '硬盘空间不足：强制失败
+                        
                         Fail(ex)
                     ElseIf HasAvailableSource() AndAlso Not IsMergeFailure Then
-                        '当前源失败，但还有下载源：正常地继续执行
+                        
                     ElseIf Not Retried Then
-                        '合并失败或首次下载失败，未重试：将所有下载源重新标记为不允许断点续传的下载源，逐个重新尝试下载
-                        '若所有源均不支持 Range，也会走到这里重试
+                        
+                        
                         If Not IsRangeNotSupported Then Logger.Warn($"{LocalName}：文件下载失败，正在自动重试……")
                         Retried = True
                         SyncLock LockSource
@@ -1119,13 +1119,13 @@ SourceBreak:
                             State = NetState.WaitingToDownload
                         End SyncLock
                     ElseIf HasAvailableSource() AndAlso IsMergeFailure Then
-                        '合并失败且单个源失败：继续下一个源
+                        
                         Reset()
                         SyncLock LockState
                             State = NetState.WaitingToDownload
                         End SyncLock
                     Else
-                        '失败
+                        
                         Logger.Info($"{LocalName}：已无可用下载源，下载失败")
                         Dim ExampleEx As Exception = Nothing
                         SyncLock LockSource
@@ -1141,7 +1141,7 @@ SourceBreak:
                     End If
                 End If
             End If
-            '清理当前已下载的内容
+            
             If FileSize = -2 Then Reset()
         End Sub
         Private Sub Reset()
@@ -1155,13 +1155,13 @@ SourceBreak:
             SpeedLastDone = 0
         End Sub
 
-        '最终收束事件
+        
 
-        ''' <summary>
-        ''' 下载完成。合并文件。
-        ''' </summary>
+        
+        
+        
         Private Sub Merge(Th As NetThread)
-            '状态判断
+            
             SyncLock LockState
                 If State < NetState.Merging Then
                     State = NetState.Merging
@@ -1172,21 +1172,21 @@ SourceBreak:
             Dim RetryCount As Integer = 0
             Try
 Retry:
-                '创建文件夹
+                
                 DirectoryUtils.Create(PathUtils.RemoveLastPart(LocalPath))
                 FileUtils.Delete(LocalPath)
                 SyncLock LockChain
-                    '合并文件
+                    
                     If IsNoSplit Then
-                        '仅有一个线程，从内存中输出
+                        
                         Logger.Trace(Function() $"{LocalName}：下载结束，从内存输出文件")
                         FileUtils.Write(LocalPath, Cache)
                     ElseIf Threads.DownloadDone = DownloadDone AndAlso Threads.Temp IsNot Nothing Then
-                        '仅有一个文件，直接复制
+                        
                         Logger.Trace(Function() $"{LocalName}：下载结束，仅有一个文件，无需合并")
                         FileUtils.Copy(Threads.Temp, LocalPath)
                     Else
-                        '有多个线程，合并
+                        
                         Logger.Trace(Function() $"{LocalName}：下载结束，开始合并文件")
                         Using MergeFile = FileUtils.CreateAsStream(LocalPath)
                             Using AddWriter As New BinaryWriter(MergeFile)
@@ -1201,11 +1201,11 @@ Retry:
                             End Using
                         End Using
                     End If
-                    '检查文件
+                    
                     Dim CheckResult As String = Check?.Check(LocalPath)
                     If CheckResult Is Nothing AndAlso Not IsUnknownSize AndAlso Check IsNot Nothing Then
                         If Check.ActualSize = -1 Then
-                            CheckResult = (New FileChecker With {.ActualSize = FileSize}).Check(LocalPath) '不修改原始的 Checker，以免污染原始实例
+                            CheckResult = (New FileChecker With {.ActualSize = FileSize}).Check(LocalPath) 
                         ElseIf Check.ActualSize <> FileSize Then
                             CheckResult = $"文件大小不一致：任务校验要求为 {Check.ActualSize}，请求结果为 {FileSize}"
                         End If
@@ -1217,7 +1217,7 @@ Retry:
                         Next
                         Throw New Exception(CheckResult)
                     End If
-                    '后处理
+                    
                     If Not IsNoSplit Then
                         For Each Thread As NetThread In Threads
                             If Thread.Temp IsNot Nothing Then FileUtils.Delete(Thread.Temp)
@@ -1227,14 +1227,14 @@ Retry:
                 End SyncLock
             Catch ex As Exception
                 RetryCount += 1
-                If State > NetState.Merging Then Return '通常是因为在合并时被中断了
+                If State > NetState.Merging Then Return 
                 Logger.Warn(ex, $"合并文件出错，第 {RetryCount} 次尝试（{LocalName}）")
-                '重新尝试合并
+                
                 If RetryCount < 3 Then
                     Threading.Thread.Sleep(500 * RetryCount)
                     GoTo Retry
                 End If
-                '失败，禁用当前下载源并重启下载
+                
                 Try
                     FileUtils.Delete(LocalPath)
                 Catch exx As Exception
@@ -1245,14 +1245,14 @@ Retry:
                 Cache?.Dispose()
             End Try
         End Sub
-        ''' <summary>
-        ''' 下载失败。
-        ''' </summary>
+        
+        
+        
         Private Sub Fail(Optional RaiseEx As Exception = Nothing)
             SyncLock LockState
                 If State >= NetState.Finished Then Return
                 If RaiseEx IsNot Nothing Then Ex.Add(RaiseEx)
-                '凉凉
+                
                 Logger.Info($"{LocalName}：已失败，当前状态 {State}")
                 State = NetState.Canceled
             End SyncLock
@@ -1261,14 +1261,14 @@ Retry:
                 Task.OnFileFail(Me)
             Next
         End Sub
-        ''' <summary>
-        ''' 取消下载。
-        ''' </summary>
+        
+        
+        
         Public Sub Cancel(CanceledTask As LoaderDownload)
-            '从特定任务中移除，如果它还属于其他任务，则继续下载
+            
             Tasks.Remove(CanceledTask)
             If Tasks.Any Then Return
-            '确认中断
+            
             SyncLock LockState
                 If State >= NetState.Finished Then Return
                 Logger.Info($"{LocalName}：已中断，当前状态 {State}")
@@ -1282,10 +1282,10 @@ Retry:
             Interlocked.Decrement(NetManager.FileRemain)
         End Sub
 
-        '状态改变接口
-        ''' <summary>
-        ''' 将该文件设置为已下载完成。
-        ''' </summary>
+        
+        
+        
+        
         Public Sub Finish(Optional PrintLog As Boolean = True)
             SyncLock LockState
                 If State >= NetState.Finished Then Return
@@ -1305,31 +1305,31 @@ Retry:
             MyBase.New(Message)
         End Sub
     End Class
-    ''' <summary>
-    ''' 下载一系列文件的加载器。
-    ''' </summary>
+    
+    
+    
     Public Class LoaderDownload
         Inherits LoaderBase
 
 #Region "属性"
 
-        ''' <summary>
-        ''' 需要下载的文件。
-        ''' </summary>
+        
+        
+        
         Public Files As ConcurrentQueue(Of NetFile)
-        ''' <summary>
-        ''' 剩余未完成的文件数。（用于减轻 FilesLock 的占用）
-        ''' </summary>
+        
+        
+        
         Private FileRemain As Integer
         Private ReadOnly FileRemainLock As New Object
 
-        ''' <summary>
-        ''' 用于显示的百分比进度。
-        ''' </summary>
+        
+        
+        
         Public Overrides Property Progress As Double
             Get
                 If State >= LoadState.Finished Then Return 1
-                If Not Files.Any() Then Return 0 '必须返回 0，否则在获取列表的时候会错觉已经下载完了
+                If Not Files.Any() Then Return 0 
                 Return _Progress
             End Get
             Set(value As Double)
@@ -1338,9 +1338,9 @@ Retry:
         End Property
         Private _Progress As Double = 0
 
-        ''' <summary>
-        ''' 任务中的文件的连续失败计数。
-        ''' </summary>
+        
+        
+        
         Public Property FailCount As Integer
             Get
                 Return _FailCount
@@ -1368,11 +1368,11 @@ FinishExCatch:
 
 #End Region
 
-        ''' <summary>
-        ''' 刷新公开属性。由 NetManager 每 0.1 秒调用一次。
-        ''' </summary>
+        
+        
+        
         Public Sub RefreshStat()
-            '计算进度
+            
             Dim NewProgress As Double = 0
             Dim TotalProgress As Double = 0
             For Each File In Files
@@ -1385,7 +1385,7 @@ FinishExCatch:
                 End If
             Next
             If TotalProgress > 0 AndAlso Not Double.IsNaN(TotalProgress) Then NewProgress /= TotalProgress
-            '刷新进度
+            
             _Progress = NewProgress
         End Sub
 
@@ -1395,18 +1395,18 @@ FinishExCatch:
         End Sub
         Public Overrides Sub Start(Optional Input As Object = Nothing, Optional IsForceRestart As Boolean = False)
             If Input IsNot Nothing Then Files = New ConcurrentQueue(Of NetFile)(CType(Input, IEnumerable(Of NetFile)))
-            '去重
+            
             Files = New ConcurrentQueue(Of NetFile)(Files.DistinctBy(Function(a) PathUtils.ForCompare(a.LocalPath).Lower()))
-            '设置剩余文件数
+            
             SyncLock FileRemainLock
                 FileRemain += Files.Where(Function(f) f.State <> NetState.Finished).Count
             End SyncLock
             State = LoadState.Loading
-            '开始执行
+            
             RunInNewThread(
             Sub()
                 Try
-                    '输入检测
+                    
                     If Not Files.Any() Then
                         OnFinish()
                         Return
@@ -1423,22 +1423,22 @@ FinishExCatch:
                         File.LocalPath = File.LocalPath.Replace("/", "\")
                         If Not File.LocalPath.Contains(":\") Then Throw New ArgumentException("输入的本地文件地址不正确：" & File.LocalPath)
                         If File.LocalPath.EndsWithF("\") Then Throw New ArgumentException("请输入含文件名的完整文件路径：" & File.LocalPath)
-                        DirectoryUtils.Create(PathUtils.RemoveLastPart(File.LocalPath)) '创建目标文件夹
+                        DirectoryUtils.Create(PathUtils.RemoveLastPart(File.LocalPath)) 
                     Next
-                    '接入下载管理器，获取新开始下载的文件列表
+                    
                     Dim NewFiles = NetManager.Start(Me)
 
 
-                    '====================================
-                    ' 已存在文件查找
-                    '====================================
+                    
+                    
+                    
 
-                    '整理允许进行查找的文件
+                    
                     Dim FilesToCheck As New List(Of NetFile)
                     For Each File In NewFiles
                         If File.Check IsNot Nothing Then
                             FilesToCheck.Add(File)
-                        Else '没有校验信息，直接开始下载
+                        Else 
                             SyncLock LockState
                                 File.State = NetState.WaitingToDownload
                                 File.IsCopy = False
@@ -1446,14 +1446,14 @@ FinishExCatch:
                         End If
                     Next
                     If Not FilesToCheck.Any Then Return
-                    '获取 MC 文件夹列表
+                    
                     Dim Folders As New List(Of String)
-                    Folders.Add(Paths.AppData & ".minecraft\") '总是添加官启文件夹，因为 HMCL 会把所有文件存在这里
+                    Folders.Add(Paths.AppData & ".minecraft\") 
                     Folders.AddRange(McFolderList.Select(Function(f) f.Location))
                     Folders = Folders.Distinct.Where(Function(f) DirectoryUtils.Exists(f)).ToList
-                    '平均分配到多个检查线程
-                    Dim ThreadCount As Integer = (FilesToCheck.Count \ 40).Clamp(1, 8) '每个线程至少 40 个文件，最多 8 线程
-                    If ThreadCount = 1 Then '只有一个线程，直接执行
+                    
+                    Dim ThreadCount As Integer = (FilesToCheck.Count \ 40).Clamp(1, 8) 
+                    If ThreadCount = 1 Then 
                         CheckExistingFiles(FilesToCheck, Folders)
                     Else
                         Dim BaseSize = FilesToCheck.Count \ ThreadCount
@@ -1474,19 +1474,19 @@ FinishExCatch:
         Private Sub CheckExistingFiles(Files As List(Of NetFile), FolderList As List(Of String))
             Try
                 Logger.Trace(Function() $"文件检查开始，本线程负责 {Files.Count} 个文件，首个文件为 {Files.FirstOrDefault?.LocalName}")
-                '列出 MC 文件夹中的各个版本文件夹
+                
                 Dim VersionFolders As New List(Of String)
                 For Each McFolder In FolderList
                     For Each VersionFolder In DirectoryUtils.EnumerateDirectories(McFolder & "versions\")
                         VersionFolders.Add(PathUtils.AddSlashSuffix(VersionFolder))
                     Next
                 Next
-                '处理每个文件
+                
                 For Each File As NetFile In Files
                     Dim Target As String = CheckExistingFile(FolderList, VersionFolders, File)
                     Logger.Trace(Function() $"本地文件匹配：{File.LocalName} → {If(Target, "无匹配")}，当前状态 {File.State}")
-                    If File.State >= NetState.WaitingToDownload Then Continue For '中断
-                    '已找到相同文件
+                    If File.State >= NetState.WaitingToDownload Then Continue For 
+                    
                     If Target IsNot Nothing Then
                         File.IsCopy = True
                         Try
@@ -1496,7 +1496,7 @@ FinishExCatch:
                         Catch
                         End Try
                     End If
-                    '回退到下载
+                    
                     SyncLock LockState
                         File.State = NetState.WaitingToDownload
                         File.IsCopy = False
@@ -1507,53 +1507,53 @@ FinishExCatch:
             End Try
         End Sub
         Private Function CheckExistingFile(FolderList As List(Of String), VersionFolders As List(Of String), File As NetFile) As String
-            '目标文件已存在
+            
             If File.Check.Check(File.LocalPath) Is Nothing Then Return File.LocalPath
-            '在设置中禁用了复制
+            
             If Settings.Get(Of Boolean)("SystemDebugSkipCopy") Then Return Nothing
-            '没有可用的检查规则，只能开始下载
+            
             If File.Check.Hash Is Nothing AndAlso File.Check.ActualSize < 0 Then Return Nothing
-            '大致判断文件类别
+            
             Dim TypeIndexes =
                 {"\assets\", "\libraries\", "\versions\", "\mods\", "\coremods\", "\lib\", "\resourcepacks\", "\texturepacks\", "\shaderpacks\"}.
                 Select(Function(FolderName) (FolderName, File.LocalPath.IndexOfF(FolderName, True))).
                 Where(Function(kv) kv.Item2 >= 0).ToList
             If Not TypeIndexes.Any Then
                 If PathUtils.GetExtension(File.LocalName) = "jar" Then
-                    TypeIndexes.Add(("\versions\", 1)) '总是对 jar 进行版本文件检查，以包括另存为 jar 的情况
+                    TypeIndexes.Add(("\versions\", 1)) 
                 Else
                     Return Nothing
                 End If
             End If
             Dim Type = TypeIndexes.MaxBy(Function(kv) kv.Item2).FolderName.TrimStart("\"c)
-            '根据类别进行查找
+            
             Static Sizes As New ConcurrentDictionary(Of String, Long)
             Static CheckCandidate As Func(Of String, FileChecker, Boolean) =
             Function(Candidate, Checker)
-                '快速进行大小校验
+                
                 Dim Length = Sizes.GetOrAdd(Candidate, Function(c) If(FileUtils.Exists(c), FileUtils.GetInfo(c).Length, -1))
                 If Checker.ActualSize <> Length Then Return False
-                '进一步进行 Hash 校验
+                
                 Return Checker.Check(Candidate) Is Nothing
             End Function
             Select Case Type
                 Case "assets\", "libraries\"
-                    'assets/libraries：查找 MC 文件夹下的相同路径
+                    
                     For Each Folder In FolderList
                         Dim Candidate = Folder & Type & File.LocalPath.AfterFirst(Type)
                         If CheckCandidate(Candidate, File.Check) Then Return Candidate
                     Next
                     Return Nothing
                 Case "versions\"
-                    '版本 jar 或 json：查找 MC 文件夹下的各个版本文件夹
+                    
                     For Each VersionFolder In VersionFolders
                         For Each Candidate In DirectoryUtils.EnumerateFiles(VersionFolder, searchPattern:="*." & PathUtils.GetExtension(File.LocalPath))
                             If CheckCandidate(Candidate, File.Check) Then Return Candidate
                         Next
                     Next
                 Case Else
-                    '社区资源
-                    If File.Check.ActualSize < 0 OrElse File.Check.Hash Is Nothing Then Return Nothing '必须要求指定了文件大小和 Hash
+                    
+                    If File.Check.ActualSize < 0 OrElse File.Check.Hash Is Nothing Then Return Nothing 
                     For Each Folder In FolderList.Concat(VersionFolders)
                         For Each Candidate In DirectoryUtils.EnumerateFiles(Folder & Type)
                             If CheckCandidate(Candidate, File.Check) Then Return Candidate
@@ -1564,7 +1564,7 @@ FinishExCatch:
         End Function
 
         Public Sub OnFileFinish(File As NetFile)
-            '要求全部文件完成
+            
             SyncLock FileRemainLock
                 FileRemain -= 1
                 If FileRemain > 0 Then Return
@@ -1579,7 +1579,7 @@ FinishExCatch:
             End SyncLock
         End Sub
         Public Sub OnFileFail(File As NetFile)
-            '将下载源的错误加入主错误列表
+            
             For Each Source In File.Sources
                 If Not IsNothing(Source.Ex) Then File.Ex.Add(Source.Ex)
             Next
@@ -1592,30 +1592,30 @@ FinishExCatch:
             SyncLock LockState
                 If State >= LoadState.Finished Then Return
                 If ExList Is Nothing OrElse Not ExList.Any() Then ExList = New List(Of Exception) From {New Exception("未知错误！")}
-                '寻找有效的错误信息
+                
                 Dim UsefulExs = ExList.Where(Function(e) Not e.IsCanceled AndAlso TypeOf e IsNot TimeoutException).ToList
                 [Error] = If(UsefulExs.FirstOrDefault, ExList.FirstOrDefault)
-                '获取实际失败的文件
+                
                 For Each File In Files
                     If File.State <> NetState.Canceled Then Continue For
                     If File.Sources.All(Function(s) s.Ex.IsCanceled OrElse TypeOf s.Ex Is TimeoutException) Then Continue For
                     Dim Detail As String = File.Sources.Select(Function(s) $"{If(s.Ex Is Nothing, "无错误信息。", s.Ex.GetDisplay(False))}（{s.Url}）").Join(vbCrLf)
                     [Error] = New Exception("文件下载失败：" & File.LocalPath & vbCrLf &
                                             "各下载源的错误如下：" & vbCrLf & Detail, [Error])
-                    '上报
+                    
                     Telemetry("文件下载失败",
                               "FileName", File.LocalName,
                               "Exception", Detail)
                     Exit For
                 Next
-                '在设置 Error 对象后再更改为失败，避免 WaitForExit 无法捕获错误
+                
                 State = LoadState.Failed
             End SyncLock
-            '中断所有文件
+            
             For Each TaskFile In Files
                 TaskFile.Cancel(Me)
             Next
-            '在退出同步锁后再进行日志输出
+            
             Logger.Error(New AggregateException(ExList), "下载加载器失败", LogBehavior.None)
         End Sub
         Public Overrides Sub Cancel()
@@ -1624,7 +1624,7 @@ FinishExCatch:
                 State = LoadState.Canceled
             End SyncLock
             Logger.Info($"{Name} 已取消！")
-            '中断所有文件
+            
             For Each TaskFile In Files
                 TaskFile.Cancel(Me)
             Next
@@ -1633,60 +1633,60 @@ FinishExCatch:
     End Class
 
     Public NetManager As New NetManagerClass
-    ''' <summary>
-    ''' 下载文件管理。
-    ''' </summary>
+    
+    
+    
     Public Class NetManagerClass
 
 #Region "属性"
 
-        ''' <summary>
-        ''' 需要下载的文件。为“本地地址 - 文件对象”键值对。
-        ''' </summary>
+        
+        
+        
         Public AllFiles As New ConcurrentDictionary(Of String, NetFile)
 
-        ''' <summary>
-        ''' 当前的所有下载任务。
-        ''' </summary>
+        
+        
+        
         Public Tasks As New ConcurrentBag(Of LoaderDownload)
 
-        ''' <summary>
-        ''' 已下载完成的大小。
-        ''' </summary>
+        
+        
+        
         Public DownloadDone As Long = 0
 
-        ''' <summary>
-        ''' 尚未完成下载的文件数。
-        ''' </summary>
+        
+        
+        
         Public FileRemain As Integer = 0
 
-        '这些属性由 RefreshStat 刷新
-        ''' <summary>
-        ''' 当前的全局下载速度，单位为 Byte / 秒。
-        ''' </summary>
+        
+        
+        
+        
         Public Speed As Long = 0
 
         Public ReadOnly Uuid As Integer = GetUuid()
 
 #End Region
 
-        ''' <summary>
-        ''' 进度与下载速度由下载管理线程每隔约 0.1 秒刷新一次。
-        ''' </summary>
+        
+        
+        
         Private Sub RefreshStat()
             Try
                 Dim DeltaTime As Long = GetTimeMs() - RefreshStatLast
                 If DeltaTime = 0 Then Return
                 RefreshStatLast += DeltaTime
 #Region "刷新整体速度"
-                '计算瞬时速度
-                Static SpeedLast As New List(Of Long) '记录至多最近 30 次下载速度的记录，较新的在前面
-                Static SpeedLastDone As Long = 0 '上次记速时的已下载大小
+                
+                Static SpeedLast As New List(Of Long) 
+                Static SpeedLastDone As Long = 0 
                 Dim ActualSpeed As Double = Math.Max(0, (DownloadDone - SpeedLastDone) / (DeltaTime / 1000))
                 SpeedLast.Insert(0, ActualSpeed)
                 If SpeedLast.Count >= 31 Then SpeedLast.RemoveAt(30)
                 SpeedLastDone = DownloadDone
-                '计算用于显示的速度
+                
                 Dim SpeedSum As Long = 0, SpeedDiv As Long = 0, Weight = SpeedLast.Count
                 For Each SpeedRecord In SpeedLast
                     SpeedSum += SpeedRecord * Weight
@@ -1694,9 +1694,9 @@ FinishExCatch:
                     Weight -= 1
                 Next
                 Speed = If(SpeedDiv > 0, SpeedSum / SpeedDiv, 0)
-                '计算新的速度下限
+                
                 Dim Limit As Long = 0
-                If SpeedLast.Count >= 10 Then Limit = SpeedLast.Take(10).Average * 0.85 '取近 1 秒的平均速度的 85%
+                If SpeedLast.Count >= 10 Then Limit = SpeedLast.Take(10).Average * 0.85 
                 If Limit > NetTaskSpeedLimitLow Then
                     NetTaskSpeedLimitLow = Limit
                     Logger.Info($"速度下限已提升到 {StringUtils.FormatByteSize(Limit)}")
@@ -1713,22 +1713,22 @@ FinishExCatch:
         End Sub
         Private RefreshStatLast As Long
 
-        ''' <summary>
-        ''' 启动监控线程，用于新增下载线程。
-        ''' </summary>
+        
+        
+        
         Private Sub StartManager()
             Static IsStarted As Boolean = False
             If IsStarted Then Return
             IsStarted = True
             Dim ThreadStarter =
-            Sub(Id As Integer) '0 或 1
+            Sub(Id As Integer) 
                 Try
                     While True
                         Thread.Sleep(20)
-                        '获取文件列表
+                        
                         Dim WaitingFiles As New List(Of NetFile)
                         Dim OngoingFiles As New List(Of NetFile)
-                        If Id = 0 AndAlso FileRemain = 0 Then AllFiles.Clear() '若已完成，则清空
+                        If Id = 0 AndAlso FileRemain = 0 Then AllFiles.Clear() 
                         For Each File As NetFile In AllFiles.Values
                             If File.Uuid Mod 2 = Id Then Continue For
                             If File.State = NetState.WaitingToDownload Then
@@ -1737,17 +1737,17 @@ FinishExCatch:
                                 OngoingFiles.Add(File)
                             End If
                         Next
-                        '为等待中的文件开始线程
+                        
                         For Each File As NetFile In WaitingFiles
-                            If NetTaskThreadCount >= NetTaskThreadLimit Then Continue While '最大线程数检查
+                            If NetTaskThreadCount >= NetTaskThreadLimit Then Continue While 
                             Dim NewThread = File.TryBeginThread()
-                            If NewThread IsNot Nothing AndAlso NewThread.Source.Url.Contains("bmclapi") Then Thread.Sleep(100) '减少 BMCLAPI 请求频率
+                            If NewThread IsNot Nothing AndAlso NewThread.Source.Url.Contains("bmclapi") Then Thread.Sleep(100) 
                         Next
-                        '为进行中的文件追加线程
-                        If Speed >= NetTaskSpeedLimitLow Then Continue While '下载速度足够，无需新增
+                        
+                        If Speed >= NetTaskSpeedLimitLow Then Continue While 
                         For Each File As NetFile In OngoingFiles
-                            If NetTaskThreadCount >= NetTaskThreadLimit Then Continue While '最大线程数检查
-                            '线程种类计数
+                            If NetTaskThreadCount >= NetTaskThreadLimit Then Continue While 
+                            
                             Dim PreparingCount = 0, DownloadingCount = 0
                             If File.Threads IsNot Nothing Then
                                 For Each Thread As NetThread In File.Threads.ToList
@@ -1758,10 +1758,10 @@ FinishExCatch:
                                     End If
                                 Next
                             End If
-                            '新增线程
-                            If PreparingCount > DownloadingCount Then Continue For '准备中的线程已多于下载中的线程，不再新增
+                            
+                            If PreparingCount > DownloadingCount Then Continue For 
                             Dim NewThread = File.TryBeginThread()
-                            If NewThread IsNot Nothing AndAlso NewThread.Source.Url.Contains("bmclapi") Then Thread.Sleep(100) '减少 BMCLAPI 请求频率
+                            If NewThread IsNot Nothing AndAlso NewThread.Source.Url.Contains("bmclapi") Then Thread.Sleep(100) 
                         Next
                     End While
                 Catch ex As Exception
@@ -1775,17 +1775,17 @@ FinishExCatch:
                 Try
                     Dim NextTick As Long = GetTimeMs()
                     While True
-                        '增加限速余量
+                        
                         If NetTaskSpeedLimitHigh > 0 Then Interlocked.Add(NetTaskSpeedLimitLeft, CLng(NetTaskSpeedLimitHigh / 10))
-                        '刷新公开属性
+                        
                         RefreshStat()
-                        '等待 100 ms
+                        
                         NextTick += 100
                         Dim SleepTime = NextTick - GetTimeMs()
                         If SleepTime > 0 Then
                             Thread.Sleep(SleepTime)
                         Else
-                            NextTick = GetTimeMs() '超时，直接追帧，不等待
+                            NextTick = GetTimeMs() 
                         End If
                     End While
                 Catch ex As Exception
@@ -1796,13 +1796,13 @@ FinishExCatch:
 
         Private DownloadCacheLock As New Object
         Private IsDownloadCacheCleared As Boolean = False
-        ''' <summary>
-        ''' 开始一个下载任务。
-        ''' </summary>
+        
+        
+        
         Public Function Start(Task As LoaderDownload) As List(Of NetFile)
             StartManager()
-            '清理缓存
-            SyncLock DownloadCacheLock '防止同时开启多个下载任务时重复清理
+            
+            SyncLock DownloadCacheLock 
                 If Not IsDownloadCacheCleared Then
                     Try
                         Logger.Info("开始清理下载缓存")
@@ -1814,17 +1814,17 @@ FinishExCatch:
                     IsDownloadCacheCleared = True
                 End If
             End SyncLock
-            '添加每个文件
+            
             Dim NewFiles As New List(Of NetFile)
             Dim NewFilesList As New List(Of NetFile)
             For Each File In Task.Files
                 Dim OngoingFile As NetFile = Nothing
                 If AllFiles.TryGetValue(File.LocalPath, OngoingFile) AndAlso OngoingFile.State < NetState.Finished Then
-                    '该文件正在被另一个任务下载
+                    
                     Logger.Trace(Function() $"{File.LocalName}：无需开始，该文件已在下载中，目标 {File.LocalPath}")
-                    File = OngoingFile '将列表中的文件替换成下载中的文件，即两个任务指向同一个文件；抛弃现在的 File 对象
+                    File = OngoingFile 
                 Else
-                    '常规情况（该文件可能已在其他任务中下载完成，但这并不影响）
+                    
                     Logger.Trace(Function() $"{File.LocalName}：开始，目标 {File.LocalPath}")
                     AllFiles(File.LocalPath) = File
                     NewFiles.Add(File)
@@ -1840,9 +1840,9 @@ FinishExCatch:
 
     End Class
 
-    ''' <summary>
-    ''' 是否有正在进行中、需要在任务管理页面显示的下载任务？
-    ''' </summary>
+    
+    
+    
     Public Function HasDownloadingTask(Optional IgnoreCustomDownload As Boolean = False) As Boolean
         Return LoaderTaskbar.Any(
         Function(Task) Task.Show AndAlso Task.State = LoadState.Loading AndAlso
@@ -1853,9 +1853,9 @@ FinishExCatch:
 
 #Region "端口"
 
-    ''' <summary>
-    ''' 随机获取单个可用的端口。
-    ''' </summary>
+    
+    
+    
     Public Function FindFreePort() As Integer
         Dim Listener As New TcpListener(IPAddress.Loopback, 0)
         Listener.Start()
@@ -1864,9 +1864,9 @@ FinishExCatch:
         Return port
     End Function
 
-    ''' <summary>
-    ''' 获取当前已被占用的端口列表。
-    ''' </summary>
+    
+    
+    
     Public Function GetUsedPorts() As List(Of Integer)
         Dim IPProperties = NetworkInformation.IPGlobalProperties.GetIPGlobalProperties()
         Dim UsedPorts As New List(Of Integer)
@@ -1876,9 +1876,9 @@ FinishExCatch:
         Return UsedPorts.Distinct().ToList()
     End Function
 
-    ''' <summary>
-    ''' 寻找数个连续编号的可用端口。
-    ''' </summary>
+    
+    
+    
     Public Function FindFreePorts(ConsecutiveCount As Integer, ParamArray ExtraBlackLists As Integer()) As List(Of Integer)
         Dim UsedPorts = GetUsedPorts().Concat(ExtraBlackLists)
         For port = 12000 + RandomInteger(0, 1000) To 65000 - ConsecutiveCount
@@ -1890,9 +1890,9 @@ FinishExCatch:
 
 #End Region
 
-    ''' <summary>
-    ''' 测试 Ping。失败则返回 -1。
-    ''' </summary>
+    
+    
+    
     Public Function Ping(Ip As String, Optional Timeout As Integer = 10000, Optional MakeLog As Boolean = True) As Integer
         Dim PingResult As NetworkInformation.PingReply
         Try
@@ -1910,20 +1910,20 @@ FinishExCatch:
         End If
     End Function
 
-    ''' <summary>
-    ''' 设置是否应当在正版登录时校验 SSL 证书。
-    ''' </summary>
+    
+    
+    
     Public Sub ShouldValidateSslCertificateOnLogin(Enabled As Boolean)
         ServicePointManager.ServerCertificateValidationCallback =
         Function(Sender, Certificate, Chain, Failure)
             Dim Request As HttpWebRequest = TryCast(Sender, HttpWebRequest)
-            If Failure = Net.Security.SslPolicyErrors.None Then Return True '已通过验证
-            '基于 #3018 和 #5879，只在访问正版登录 API 时跳过证书验证
+            If Failure = Net.Security.SslPolicyErrors.None Then Return True 
+            
             Logger.Warn($"未通过 SSL 证书验证（{Failure}），提供的证书为 {Certificate?.Subject}，URL：{Request?.Address}")
             If Request Is Nothing Then
                 Return Not Enabled
             ElseIf Request.Address.Host.Contains("xboxlive") OrElse Request.Address.Host.Contains("minecraftservices") Then
-                Return Not Enabled '根据设置决定是否忽略错误
+                Return Not Enabled 
             Else
                 Return False
             End If

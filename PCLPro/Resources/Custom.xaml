@@ -1,7 +1,7 @@
-﻿<!-- 这是 PCL 的主页自定义文件。你可以通过修改这个文件来自定义 PCL 主页：添加文本、打开网页、启动游戏，等等。
-     如果你倒腾这个文件把 PCL 玩炸了，把这个文件直接删除就行了。
-     下列内容均基于 WPF 框架。你可以在继续之前先尝试自学 XAML 与 WPF 的基础，这能让你更轻松地理解下列内容。
-     你也可以使用 Ctrl + F 快速查找。例如，若需要改变文本颜色，则搜索 “颜色” 即可。 -->
+﻿
+
+
+
 
 <local:MyCard Title="纯文本" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
@@ -116,7 +116,7 @@
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,10"
                     Text="你需要使用 StackPanel 在一行里塞下多个按钮。你可以仅在这个教学卡片的基础上稍作调整，来实现自己的按钮布局。" />
-        <!-- 这是第一行 -->
+        
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
             <local:MyButton Margin="0,0,10,0" Width="140" Height="35" HorizontalAlignment="Left" Padding="13,0,13,0" ColorType="Highlight"
                         Text="打开 B 站" EventType="打开网页" EventData="https://www.bilibili.com/" />
@@ -125,7 +125,7 @@
             <local:MyButton Margin="0,0,10,0" Width="140" Height="35" HorizontalAlignment="Left" Padding="13,0,13,0"
                         Text="打开记事本" EventType="打开文件" EventData="notepad" />
         </StackPanel>
-        <!-- 这是第二行 -->
+        
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
             <local:MyButton Margin="0,0,10,0" Width="140" Height="35" HorizontalAlignment="Left" Padding="13,0,13,0" ColorType="Red"
                         Text="复制召唤命令" EventType="复制文本" EventData="/execute as @a at @s run summon Creeper ~ ~2 ~" ToolTip="这条 Minecraft 命令会在每个玩家头顶召唤一只苦力怕！" />
@@ -159,29 +159,29 @@
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="PCL 内置了一些 Minecraft 方块与物品图片，可以直接使用。"/>
         <StackPanel Orientation="Horizontal" Margin="10,8,0,15" Height="30">
-            <!-- 命令方块 -->
+            
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/CommandBlock.png"/>
-            <!-- 圆石 -->
+            
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/Cobblestone.png"/>
-            <!-- 金块 -->
+            
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/GoldBlock.png"/>
-            <!-- 草方块 -->
+            
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/Grass.png"/>
-            <!-- 土径 -->
+            
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/GrassPath.png"/>
-            <!-- 铁砧 -->
+            
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/Anvil.png"/>
-            <!-- 红石块 -->
+            
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/RedstoneBlock.png"/>
-            <!-- 红石灯（亮） -->
+            
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/RedstoneLampOn.png"/>
-            <!-- 红石灯（灭） -->
+            
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/RedstoneLampOff.png"/>
-            <!-- 鸡蛋 -->
+            
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/Egg.png"/>
-            <!-- 布料（Fabric 图标） -->
+            
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/Fabric.png"/>
-            <!-- 狐狸（NeoForge 图标） -->
+            
             <local:MyImage Width="30" Margin="5,0,0,0" Source="pack://application:,,,/images/Blocks/NeoForge.png"/>
         </StackPanel>
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
@@ -222,10 +222,10 @@
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*" />
-                <ColumnDefinition Width="1.6*" MinWidth="200" /> <!-- 第二个按钮的宽度是第一个按钮的 1.6 倍，且至少为 200 -->
-                <ColumnDefinition Width="150" /> <!-- 如果不打 *，则会占用固定的宽度，也可以写 Auto 来自适应 -->
+                <ColumnDefinition Width="1.6*" MinWidth="200" /> 
+                <ColumnDefinition Width="150" /> 
             </Grid.ColumnDefinitions>
-            <!-- 为按钮添加 Grid.Column 属性指定它所在的列，不要添加 Width 与 HorizontalAlignment 属性 -->
+            
             <local:MyButton Grid.Column="0" Margin="0,0,10,0" Height="35" ColorType="Highlight"
                         Text="打开 B 站" EventType="打开网页" EventData="https://www.bilibili.com/" />
             <local:MyButton Grid.Column="1" Margin="0,0,10,0" Height="35"
@@ -270,76 +270,76 @@
     </StackPanel>
 </local:MyCard>
 
-<!-- 
 
-全部通用的属性：
- - Width、Height：设置宽度与高度
- - ToolTip：设置鼠标指向时的提示文本
- - Margin：调整外边距（格式为 左,上,右,下。例如 Margin="0,0,0,2" 即为 2 单位的下边距）
- - HorizontalAlignment：设置横向对齐方式；居左：Left、居中：Center、居右：Right、拉伸（默认）：Stretch
- - VerticalAlignment：设置纵向对齐方式；居上：Top、居中：Center、居下：Bottom、拉伸（默认）：Stretch
- - IsHitTestVisible：该控件是否响应交互（点击、指向动画等）；True 为是（默认），False 为否
 
-TextBlock（纯文本）：
- - Text：设置显示的文本（如果要使用引号等特殊字符，自行百度 XAML 转义）
- - TextWrapping：开启自动换行
- - FontSize：设置字号
- - FontWeight：设置为 Bold 时，文字加粗
- - Foreground：调整前景颜色（十六进制字符串，例如 #FF010203 代表 ARGB 中的 255,1,2,3。前两位代表不透明度，FF 为全不透明，00 为全透明）
 
-local:MyImage（图片）：
- - Source：要显示的图片的网址，或 PCL 内置图片位置
- - FallbackSource：当 Source 首次下载失败时，会从该备用地址加载图片
- - LoadingSource：正在下载网络图片时显示的本地图片（不支持联网下载）；默认为 pack://application:,,,/images/Icons/NoIcon.png
- - EnableCache：若图片是联网获取的，是否将图片保存到本地缓存，在 7 天内不再重新下载；True 为是（默认），False 为否
 
-local:MyCard（卡片）：
- - Title：设置显示的标题文本
- - CanSwap：卡片是否可以折叠，True 为是，False 为否
- - IsSwapped：卡片是否默认折叠，要求 CanSwap 必须为 True
- - HorizontalAlignment：若使用，要求 CanSwap 必须为 False
- - UseAnimation：是否在展开等高度改变时触发动画；True 为是（默认），False 为否
- - SwapLogoRight：卡片折叠时的箭头是朝下还是朝右；True 为朝右，False 为朝下（默认）
- - HasMouseAnimation：是否在鼠标指向时改变卡片颜色；True 为是（默认），False 为否
 
-local:MyHint（提示条）：
- - Text：设置显示的文本（&#xA; 代表换行）
- - Theme：设置颜色主题（Blue、Yellow 或 Red）
 
-local:MyButton（按钮）：
- - Text：设置显示的文本
- - Padding：设置内边距，格式与 Margin 一致
- - ColorType：设置颜色主题（Highlight 为当前启动器的主题颜色，Red 为红色，默认为黑色）
- - EventType、EventData：触发特定事件
 
-local:MyTextButton（文本按钮）：
- - Text：设置显示的文本
- - EventType、EventData：触发特定事件
 
-local:MyListItem（列表项）：
- - Logo：列表项的图标（所指定的可以是链接也可以是文件路径）
- - Title：列表项的大标题
- - Info：列表项的详细信息，它将会以灰色显示在大标题下方
- - Type：若留空仅单纯展示信息，设置为 Clickable 触发相应活动
 
-local:MyIconTextButton（带图标的按钮）：
- - Text：设置显示的文本
- - Logo：设置显示的图标
- - LogoScale：设置图标的缩放，默认为 1
- - ColorType：设置颜色主题（Highlight 为当前启动器的主题颜色，默认为黑色）
- - EventType、EventData：触发特定事件
 
-local:MyIconButton（图标按钮）：
- - Logo：设置显示的图标
- - LogoScale：设置图标的缩放，默认为 1
- - Theme：设置颜色主题，Color（默认）为当前启动器的主题颜色，也可设置为 White、Black、Red
- - EventType、EventData：触发特定事件
 
-默认会声明以下命名空间：
- - xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
- - xmlns:sys="clr-namespace:System;assembly=mscorlib"
- - xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
- - xmlns:local="clr-namespace:PCL;assembly=Plain Craft Launcher Fork Enhanced"
-除此之外，不能声明其他命名空间。
 
--->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

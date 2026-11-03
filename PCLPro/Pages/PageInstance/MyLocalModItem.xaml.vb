@@ -5,7 +5,7 @@ Public Class MyLocalModItem
 #Region "基础属性"
     Public Uuid As Integer = GetUuid()
 
-    '标题
+    
     Private _Title As String
     Public Property Title As String
         Get
@@ -20,7 +20,7 @@ Public Class MyLocalModItem
         End Set
     End Property
 
-    '副标题
+    
     Public Property SubTitle As String
         Get
             Return If(LabSubtitle?.Text, "")
@@ -32,7 +32,7 @@ Public Class MyLocalModItem
         End Set
     End Property
 
-    '描述
+    
     Public Property Description As String
         Get
             Return LabInfo.Text
@@ -43,7 +43,7 @@ Public Class MyLocalModItem
         End Set
     End Property
 
-    'Tag
+    
     Public WriteOnly Property Tags As List(Of String)
         Set(Tags As List(Of String))
             PanTags.Children.Clear()
@@ -60,7 +60,7 @@ Public Class MyLocalModItem
         End Set
     End Property
 
-    '相关联的 Mod
+    
     Public Property Entry As LocalResourceFile
         Get
             Return Tag
@@ -74,7 +74,7 @@ Public Class MyLocalModItem
 
 #Region "点击与勾选"
 
-    '触发点击事件
+    
     Public Event Click(sender As Object, e As MouseButtonEventArgs)
     Private Sub Button_MouseUp(sender As Object, e As MouseButtonEventArgs) Handles Me.PreviewMouseLeftButtonUp
         If IsMouseDown Then
@@ -84,7 +84,7 @@ Public Class MyLocalModItem
         End If
     End Sub
 
-    '鼠标点击判定
+    
     Private IsMouseDown As Boolean = False
     Private Sub Button_MouseDown(sender As Object, e As MouseButtonEventArgs) Handles Me.PreviewMouseLeftButtonDown
         If Not IsMouseDirectlyOver Then Return
@@ -96,7 +96,7 @@ Public Class MyLocalModItem
         If ButtonStack IsNot Nothing Then ButtonStack.IsHitTestVisible = True
     End Sub
 
-    '滑动选中
+    
     Private Shared SwipeStart As Integer, SwipeEnd As Integer
     Private Shared _Swiping As Boolean = False
     Private Shared Property Swiping As Boolean
@@ -108,10 +108,10 @@ Public Class MyLocalModItem
             FrmInstanceMod.CardSelect.IsHitTestVisible = Not value
         End Set
     End Property
-    Private Shared SwipToState As Boolean '被滑动到的目标应将 Checked 改为此值
+    Private Shared SwipToState As Boolean 
     Private Sub Button_MouseSwipeStart(sender As Object, e As Object) Handles Me.MouseLeftButtonDown
-        If Parent Is Nothing Then Return 'Mod 可能已被删除（#3824）
-        '开始滑动
+        If Parent Is Nothing Then Return 
+        
         Dim Index = CType(Parent, StackPanel).Children.IndexOf(Me)
         SwipeStart = Index
         SwipeEnd = Index
@@ -119,19 +119,19 @@ Public Class MyLocalModItem
         SwipToState = Not Checked
     End Sub
     Private Sub Button_MouseSwipe(sender As Object, e As Object) Handles Me.MouseEnter, Me.MouseLeave, Me.MouseLeftButtonUp
-        If Parent Is Nothing Then Return 'Mod 可能已被删除（#3824）
-        '结束滑动
+        If Parent Is Nothing Then Return 
+        
         If Mouse.LeftButton <> MouseButtonState.Pressed OrElse
-           TypeOf Mouse.DirectlyOver IsNot MyLocalModItem Then '#5771
+           TypeOf Mouse.DirectlyOver IsNot MyLocalModItem Then 
             Swiping = False
             Return
         End If
-        '计算滑动范围
+        
         Dim Elements = CType(Parent, StackPanel).Children
         Dim Index As Integer = Elements.IndexOf(Me)
         SwipeStart = Math.Min(SwipeStart, Index).Clamp(0, Elements.Count - 1)
         SwipeEnd = Math.Max(SwipeEnd, Index).Clamp(0, Elements.Count - 1)
-        '勾选所有范围中的项
+        
         If SwipeStart = SwipeEnd Then Return
         For i = SwipeStart To SwipeEnd
             Dim Item As MyLocalModItem = Elements(i)
@@ -140,7 +140,7 @@ Public Class MyLocalModItem
         Next
     End Sub
 
-    '勾选状态
+    
     Public Event Check(sender As Object, e As RouteEventArgs)
     Public Event Changed(sender As Object, e As RouteEventArgs)
     Private _Checked As Boolean = False
@@ -150,7 +150,7 @@ Public Class MyLocalModItem
         End Get
         Set(value As Boolean)
             Try
-                '触发属性值修改
+                
                 Dim RawValue = _Checked
                 If value = _Checked Then Return
                 _Checked = value
@@ -167,11 +167,11 @@ Public Class MyLocalModItem
                     RaiseEvent Check(Me, CheckEventArgs)
                     If CheckEventArgs.Handled Then Return
                 End If
-                '更改动画
+                
                 If IsVisibleInForm() Then
                     Dim Anim As New List(Of AniData)
                     If Checked Then
-                        '由无变有
+                        
                         Dim Delta = 32 - RectCheck.ActualHeight
                         Anim.Add(AaHeight(RectCheck, Delta * 0.4, 200,, New AniEaseOutFluent(AniEasePower.Weak)))
                         Anim.Add(AaHeight(RectCheck, Delta * 0.6, 300,, New AniEaseOutBack(AniEasePower.Weak)))
@@ -180,7 +180,7 @@ Public Class MyLocalModItem
                         RectCheck.Margin = New Thickness(-3, 0, 0, 0)
                         Anim.Add(AaColor(LabTitle, TextBlock.ForegroundProperty, If(Entry.IsEnabled, "ColorBrush2", "ColorBrush5"), 200))
                     Else
-                        '由有变无
+                        
                         Anim.Add(AaHeight(RectCheck, -RectCheck.ActualHeight, 120,, New AniEaseInFluent(AniEasePower.Weak)))
                         Anim.Add(AaOpacity(RectCheck, -RectCheck.Opacity, 70, 40))
                         RectCheck.VerticalAlignment = VerticalAlignment.Center
@@ -188,7 +188,7 @@ Public Class MyLocalModItem
                     End If
                     AniStart(Anim, "MyLocalModItem Checked " & Uuid)
                 Else
-                    '不在窗口上时直接设置
+                    
                     RectCheck.VerticalAlignment = VerticalAlignment.Center
                     RectCheck.Margin = New Thickness(-3, 0, 0, 0)
                     If Checked Then
@@ -213,10 +213,10 @@ Public Class MyLocalModItem
 
 #Region "后加载内容"
 
-    '右下角状态指示图标
+    
     Private ImgState As Image
 
-    '指向背景
+    
     Private _RectBack As Border = Nothing
     Public ReadOnly Property RectBack As Border
         Get
@@ -237,15 +237,15 @@ Public Class MyLocalModItem
                 SetRowSpan(Rect, 999)
                 Children.Insert(0, Rect)
                 _RectBack = Rect
-                '<!--<Border x:Name = "RectBack" CornerRadius="3" RenderTransformOrigin="0.5,0.5" SnapsToDevicePixels="True" 
-                'IsHitTestVisible = "False" Opacity="0" BorderThickness="1" 
-                'Grid.ColumnSpan = "4" Background="{DynamicResource ColorBrush7}" BorderBrush="{DynamicResource ColorBrush6}"/>-->
+                
+                
+                
             End If
             Return _RectBack
         End Get
     End Property
 
-    '按钮
+    
     Public ButtonHandler As Action(Of MyLocalModItem, EventArgs)
     Public ButtonStack As FrameworkElement
     Private _Buttons As IEnumerable(Of MyIconButton)
@@ -255,17 +255,17 @@ Public Class MyLocalModItem
         End Get
         Set(value As IEnumerable(Of MyIconButton))
             _Buttons = value
-            '移除原 Stack
+            
             If ButtonStack IsNot Nothing Then
                 Children.Remove(ButtonStack)
                 ButtonStack = Nothing
             End If
             If Not value.Any() Then Return
-            '添加新 Stack
+            
             ButtonStack = New StackPanel With {.Opacity = 0, .Margin = New Thickness(0, 0, 5, 0), .SnapsToDevicePixels = False, .Orientation = Orientation.Horizontal,
                 .HorizontalAlignment = HorizontalAlignment.Right, .VerticalAlignment = VerticalAlignment.Center, .UseLayoutRounding = False}
             SetColumnSpan(ButtonStack, 10) : SetRowSpan(ButtonStack, 10)
-            '构造按钮
+            
             For Each Btn As MyIconButton In value
                 If Btn.Height.Equals(Double.NaN) Then Btn.Height = 25
                 If Btn.Width.Equals(Double.NaN) Then Btn.Width = 25
@@ -275,7 +275,7 @@ Public Class MyLocalModItem
         End Set
     End Property
 
-    '勾选条
+    
     Private _RectCheck As Border
     Public ReadOnly Property RectCheck As Border
         Get
@@ -297,7 +297,7 @@ Public Class MyLocalModItem
     Private Function GetUpdateCompareDescription() As String
         Dim CurrentName = If(Entry.ProjectVersion.Version, Entry.ProjectVersion.Display).Replace(".jar", "")
         Dim NewestName = If(Entry.UpdateFile.Version, Entry.UpdateFile.Display).Replace(".jar", "")
-        '简化名称对比
+        
         Dim CurrentSegs = CurrentName.Split("-_+ ".ToCharArray).ToList()
         Dim NewestSegs = NewestName.Split("-_+ ".ToCharArray).ToList()
         Dim Shortened As Boolean = False
@@ -310,12 +310,12 @@ Public Class MyLocalModItem
         If Shortened AndAlso CurrentSegs.Any() AndAlso NewestSegs.Any() Then
             CurrentName = CurrentSegs.Join("-")
             NewestName = NewestSegs.Join("-")
-            Entry._Version = CurrentName '使用网络信息作为显示的版本号
+            Entry._Version = CurrentName 
         End If
         Return $"当前版本：{CurrentName}（{StringUtils.FormatTimeSpan(Entry.ProjectVersion.ReleaseDate - Date.Now, False)}）{vbCrLf}最新版本：{NewestName}（{StringUtils.FormatTimeSpan(Entry.UpdateFile.ReleaseDate - Date.Now, False)}）"
     End Function
 
-    '懒加载
+    
     Public Sub New()
         InitializeComponent()
         LazyLoadBehavior.OnFirstEnterScrollViewerViewport(Me, AddressOf FirstEnterScrollViewerViewport)
@@ -326,23 +326,23 @@ Public Class MyLocalModItem
         Refresh()
     End Sub
     Public Sub Refresh()
-        If Not HasEnteredViewport Then Return '避免在未显示时因为资源更新而加载内容
-        '更新
+        If Not HasEnteredViewport Then Return 
+        
         If Entry.HasUpdate Then
             BtnUpdate.Visibility = Visibility.Visible
             BtnUpdate.ToolTip = $"{GetUpdateCompareDescription()}{vbCrLf}点击以更新，右键查看更新日志。"
         Else
             BtnUpdate.Visibility = Visibility.Collapsed
         End If
-        '标题与描述
+        
         Dim DescFileName As String = PathUtils.GetFileNameWithoutExtension(Entry.EnabledName)
         Dim NewDescription As String
         If Settings.Get(Of Integer)("ToolModLocalNameStyle") = 1 Then
-            '标题显示文件名，详情显示译名
-            '标题
+            
+            
             Title = DescFileName
             SubTitle = ""
-            '描述
+            
             If Entry.Project Is Nothing Then
                 NewDescription = Entry.Display
             Else
@@ -352,8 +352,8 @@ Public Class MyLocalModItem
             NewDescription = NewDescription.Replace("  |  ", " / ")
             If Entry.Version IsNot Nothing Then NewDescription &= $" ({Entry.Version})"
         Else
-            '标题显示译名，详情显示文件名
-            '标题
+            
+            
             If Entry.Project Is Nothing Then
                 Title = Entry.Display
                 SubTitle = If(Entry.Version Is Nothing, "", "  |  " & Entry.Version)
@@ -362,7 +362,7 @@ Public Class MyLocalModItem
                 Title = Titles.Title
                 SubTitle = Titles.SubTitle & If(Entry.Version Is Nothing, "", "  |  " & Entry.Version)
             End If
-            '描述
+            
             NewDescription = DescFileName
         End If
         If Entry.Project IsNot Nothing Then
@@ -376,13 +376,13 @@ Public Class MyLocalModItem
         Else
             LabTitle.SetResourceReference(TextBlock.ForegroundProperty, If(Entry.IsEnabled, "ColorBrush1", "ColorBrushGray4"))
         End If
-        '主 Logo
+        
         If Entry.Project IsNot Nothing Then
             Entry.Project.ApplyLogoToMyImage(PathLogo)
         Else
             PathLogo.Source = PathImage & "Icons/NoIcon.png"
         End If
-        '图标右下角的 Logo
+        
         If Entry.IsEnabled Then
             If ImgState IsNot Nothing Then
                 Children.Remove(ImgState)
@@ -397,23 +397,23 @@ Public Class MyLocalModItem
                 RenderOptions.SetBitmapScalingMode(ImgState, BitmapScalingMode.HighQuality)
                 SetColumn(ImgState, 1) : SetRow(ImgState, 1) : SetRowSpan(ImgState, 2)
                 Children.Add(ImgState)
-                '<Image x:Name="ImgState" RenderOptions.BitmapScalingMode="HighQuality" Width="16" Height="16" Margin="0,0,-3,-1"
-                '       Grid.Column="1" Grid.Row="1" Grid.RowSpan="2" IsHitTestVisible="False"
-                '       HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                '       Source="/Images/Icons/Unavailable.png" />
+                
+                
+                
+                
             End If
             ImgState.Source = New MyBitmap(PathImage & $"Icons/Disabled.png")
         End If
-        '标签
+        
         If Entry.Project IsNot Nothing Then Tags = Entry.Project.Tags
     End Sub
 
     Public Sub RefreshColor(sender As Object, e As EventArgs) Handles Me.MouseEnter, Me.MouseLeave, Me.MouseLeftButtonDown, Me.MouseLeftButtonUp, Me.Changed
         InitLate(sender, e)
-        '触发颜色动画
+        
         Dim Time As Integer = If(IsMouseOver, 120, 180)
         Dim Ani As New List(Of AniData)
-        'ButtonStack
+        
         If ButtonStack IsNot Nothing Then
             If IsMouseOver Then
                 Ani.Add(AaOpacity(ButtonStack, 1 - ButtonStack.Opacity, Time * 0.7, Time * 0.3))
@@ -425,7 +425,7 @@ Public Class MyLocalModItem
                     4 - ColumnPaddingRight.Width.Value, Time * 0.4))
             End If
         End If
-        'RectBack
+        
         If IsMouseOver OrElse Checked Then
             Ani.AddRange({
                 AaColor(RectBack, Border.BackgroundProperty, If(IsMouseDown, "ColorBrush6", "ColorBrushBg1"), Time),
@@ -446,7 +446,7 @@ Public Class MyLocalModItem
         AniStart(Ani, "LocalModItem Color " & Uuid)
     End Sub
 
-    '触发虚拟化内容
+    
     Private Sub InitLate(sender As Object, e As EventArgs)
         If ButtonHandler IsNot Nothing Then
             ButtonHandler(sender, e)
@@ -454,7 +454,7 @@ Public Class MyLocalModItem
         End If
     End Sub
 
-    '显示更新日志
+    
     Private Sub BtnUpdate_PreviewMouseRightButtonUp(sender As Object, e As MouseButtonEventArgs) Handles BtnUpdate.PreviewMouseRightButtonUp
         e.Handled = True
         ShowUpdateLog()
@@ -474,24 +474,24 @@ Public Class MyLocalModItem
         End If
     End Sub
 
-    '触发更新
+    
     Private Sub BtnUpdate_Click(sender As Object, e As EventArgs) Handles BtnUpdate.Click
         Select Case MyMsgBox($"是否要更新 {Entry.Display}？{vbCrLf}{vbCrLf}{GetUpdateCompareDescription()}", "Mod 更新确认", "更新", "查看更新日志", "取消")
-            Case 1 '更新
+            Case 1 
                 FrmInstanceMod.UpdateMods({Entry})
-            Case 2 '查看更新日志
+            Case 2 
                 ShowUpdateLog()
-            Case 3 '取消
+            Case 3 
         End Select
     End Sub
 
-    '自适应（#4465）
+    
     Private Sub PanTitle_SizeChanged() Handles PanTitle.SizeChanged
-        '0：全部舒展：Auto - Auto - (Auto) - 1*
-        '1：压缩 Subtitle：Auto - 1* - (Auto) - 0
-        '2：继续压缩 Title：1* - 0 - (Auto) - 0
+        
+        
+        
         Dim CurrentCompressLevel As Integer =
-            If(ColumnExtend.Width.IsStar, 0, If(ColumnTitle.Width.IsStar, 2, 1)) 'Subtitle 可能是 Collapsed
+            If(ColumnExtend.Width.IsStar, 0, If(ColumnTitle.Width.IsStar, 2, 1)) 
         Dim NewCompressLevel As Integer
         Select Case CurrentCompressLevel
             Case 0
@@ -517,17 +517,17 @@ Public Class MyLocalModItem
         End Select
         Select Case NewCompressLevel
             Case 0
-                '全部舒展：Auto - Auto - (Auto) - 1*
+                
                 ColumnTitle.Width = GridLength.Auto
                 ColumnSubtitle.Width = GridLength.Auto
                 ColumnExtend.Width = New GridLength(1, GridUnitType.Star)
             Case 1
-                '压缩 Subtitle：Auto - 1* - (Auto) - 0
+                
                 ColumnTitle.Width = GridLength.Auto
                 ColumnSubtitle.Width = New GridLength(1, GridUnitType.Star)
                 ColumnExtend.Width = New GridLength(0, GridUnitType.Pixel)
             Case 2
-                '继续压缩 Title：1* - 0 - (Auto) - 0
+                
                 ColumnTitle.Width = New GridLength(1, GridUnitType.Star)
                 ColumnSubtitle.Width = New GridLength(0, GridUnitType.Pixel)
                 ColumnExtend.Width = New GridLength(0, GridUnitType.Pixel)

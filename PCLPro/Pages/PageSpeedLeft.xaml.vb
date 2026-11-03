@@ -1,25 +1,25 @@
 ﻿Public Class PageSpeedLeft
     Private Const WatcherInterval As Integer = 300
 
-    '初始化
+    
     Private IsLoad As Boolean = False
     Private Sub Page_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
 
-        '进入时就刷新一次显示
+        
         Watcher()
 
-        '如果在页面切换动画的 “上一页消失” 部分已经完成了下载，就直接尝试返回
+        
         TryReturnToHome()
 
         If IsLoad Then Return
         IsLoad = True
 
-        '监控定时器
+        
         Dim timer As New Threading.DispatcherTimer With {.Interval = New TimeSpan(0, 0, 0, 0, WatcherInterval)}
         AddHandler timer.Tick, AddressOf Watcher
         timer.Start()
 
-        '非调试模式隐藏线程数
+        
         If Not ModeDebug Then
             RowDefinitions(12).Height = New GridLength(0)
             RowDefinitions(13).Height = New GridLength(0)
@@ -29,7 +29,7 @@
 
     End Sub
 
-    '定时器任务
+    
     Private ReadOnly RightCards As New Dictionary(Of String, MyCard)
     Private Sub Watcher()
         If Not FrmMain.PageCurrent = FormMain.PageType.TaskManager Then Return
@@ -37,14 +37,14 @@
 
 #Region "更新左边栏"
             If Not LoaderTaskbar.Any() Then
-                '无任务
+                
                 LabProgress.Text = "100 %"
                 LabSpeed.Text = "0 B/s"
                 LabFile.Text = "0"
                 LabThread.Text = "0 / " & NetTaskThreadLimit
             Else
-                '有任务，输出基本信息
-                Dim Tasks = LoaderTaskbar.Where(Function(l) l.Show).ToList() '筛选掉启动 MC 的任务（#6270）
+                
+                Dim Tasks = LoaderTaskbar.Where(Function(l) l.Show).ToList() 
                 Dim RawPercent As Double = If(Tasks.Any, Tasks.Select(Function(l) l.Progress).Average().Clamp(0, 1), 1)
                 Dim PredictText As String = Math.Floor(RawPercent * 100) & "." & Math.Floor((RawPercent * 100 - Math.Floor(RawPercent * 100)) * 100).ToString.EnsureLength("0", 2) & " %"
                 LabProgress.Text = If(RawPercent > 0.999999, "100 %", PredictText)
@@ -69,10 +69,10 @@
     Public Sub TaskRefresh(Loader As LoaderBase)
         If Loader Is Nothing OrElse Not Loader.Show Then Return
         Try
-            '获取实际加载器列表
+            
             Dim LoaderList As List(Of LoaderBase) = CType(Loader, Object).GetLoaderList()
             If RightCards.ContainsKey(Loader.Name) Then
-                '已有此卡片
+                
                 Dim Card As Grid = RightCards(Loader.Name)
                 Dim NewValue As Double = Loader.Progress + Loader.State
                 If Val(Card.Tag) = NewValue Then Return
@@ -172,7 +172,7 @@
                         Row += 1
                     Next
                     CardXAML += "</Grid></local:MyCard>"
-                    '实例化控件
+                    
                     Dim Card As MyCard
                     Try
                         Card = GetObjectFromXML(CardXAML)
@@ -184,7 +184,7 @@
                     FrmSpeedRight.PanMain.Children.Insert(0, Card)
                     RightCards.Add(Loader.Name, Card)
                     Logger.Info($"新建任务管理卡片：{Loader.Name}")
-                    '添加取消按钮
+                    
                     Dim Cancel As New MyIconButton With {.Name = "BtnCancel", .Logo = "F1 M2,0 L0,2 8,10 0,18 2,20 10,12 18,20 20,18 12,10 20,2 18,0 10,8 2,0Z", .Height = 20, .Margin = New Thickness(0, 10, 10, 0), .LogoScale = 1.1, .HorizontalAlignment = HorizontalAlignment.Right, .VerticalAlignment = VerticalAlignment.Top}
                     Card.Children.Add(Cancel)
                     AddHandler Cancel.Click,
@@ -196,9 +196,9 @@
                         Logger.Info($"关闭任务管理卡片：{Loader.Name}，且移出任务列表")
                         RunInThread(Sub() Loader.Cancel())
                     End Sub
-                    '如果已经失败，再刷新一次，修改成失败的控件
+                    
                     If Loader.State = LoadState.Failed Then
-                        Card.Tag = Nothing '避免重复导致刷新无效
+                        Card.Tag = Nothing 
                         TaskRefresh(Loader)
                     End If
 #End Region
@@ -214,7 +214,7 @@
         If RightCards.ContainsKey(Loader.Name) Then
             RunInUiWait(
             Sub()
-                '移除已有的卡片
+                
                 Dim Card As Grid = RightCards(Loader.Name)
                 FrmSpeedRight.PanMain.Children.Remove(Card)
                 RightCards.Remove(Loader.Name)
@@ -223,9 +223,9 @@
         End If
     End Sub
 
-    ''' <summary>
-    ''' 若没有任务，尝试返回主页。
-    ''' </summary>
+    
+    
+    
     Private Sub TryReturnToHome()
         If FrmSpeedRight.PanMain.Children.Count = 0 AndAlso FrmMain.PageCurrent = FormMain.PageType.TaskManager Then
             FrmMain.PageBack()

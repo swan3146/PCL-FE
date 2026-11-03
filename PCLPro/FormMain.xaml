@@ -97,7 +97,7 @@
                 </Grid.RowDefinitions>
                 <Canvas x:Name="ImgBack" IsHitTestVisible="False" Grid.Row="1" RenderOptions.BitmapScalingMode="LowQuality"
                         HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
-                <!-- 视频背景：外层负责裁剪，缩放后的画面不会溢出内容区或留下残影；音量固定为 0 -->
+                
                 <Grid x:Name="PanVideoBack" Grid.Row="1" ClipToBounds="True" IsHitTestVisible="False">
                     <MediaElement x:Name="VideoBack" IsHitTestVisible="False" LoadedBehavior="Manual" UnloadedBehavior="Manual"
                                   Stretch="UniformToFill" ScrubbingEnabled="False" Volume="0" Opacity="0" SnapsToDevicePixels="True"

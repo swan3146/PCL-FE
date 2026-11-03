@@ -1,24 +1,24 @@
 ﻿Imports System.IO
 Imports System.Text
 
-''' <summary>
-''' 陶瓦联机前置检查：确认 Windows 防火墙是否已放行陶瓦、EasyTier 子进程与 Java。
-''' 首次启动时会给出一次说明；用户明确点击「一键放行」后才会添加规则。
-''' </summary>
+
+
+
+
 Public Module ModFirewall
 
-    ''' <summary>本次运行是否已经做过联机前检查。</summary>
+    
     Private HasChecked As Boolean = False
 
-    ''' <summary>
-    ''' 首次启动时弹出一次防火墙说明（每个安装只弹一次）。
-    ''' 由主窗体加载完成后调用，不会阻塞启动。
-    ''' </summary>
+    
+    
+    
+    
     Public Sub CheckAtStartup()
         If Settings.Get(Of Boolean)("UiFirewallGuideShown") Then Return
         RunInNewThread(
             Sub()
-                Thread.Sleep(3000) '等启动动画与首页加载跑完
+                Thread.Sleep(3000) 
                 RunInUi(
                 Sub()
                     Try
@@ -42,10 +42,10 @@ Public Module ModFirewall
             End Sub, "防火墙引导")
     End Sub
 
-    ''' <summary>
-    ''' 创建 / 加入陶瓦房间前的兜底检查。
-    ''' 首次启动引导已经弹过的话只记录日志，不再重复打扰。
-    ''' </summary>
+    
+    
+    
+    
     Public Sub CheckTerracottaFirewall()
         If HasChecked Then Return
         HasChecked = True
@@ -61,7 +61,7 @@ Public Module ModFirewall
                 Return
             End If
             Logger.Warn("防火墙检查：以下程序可能被拦截：" & String.Join("、", Missing))
-            If Settings.Get(Of Boolean)("UiFirewallGuideShown") Then Return '已经给过引导，不再重复弹窗
+            If Settings.Get(Of Boolean)("UiFirewallGuideShown") Then Return 
             Settings.Set("UiFirewallGuideShown", True)
             ShowFirewallGuide(Missing)
         Catch ex As Exception
@@ -69,16 +69,16 @@ Public Module ModFirewall
         End Try
     End Sub
 
-    ''' <summary>
-    ''' 收集陶瓦联机需要放行的程序。
-    ''' 只收集真实存在的程序：还没下载的陶瓦预期路径不参与检查，否则每次都会把它报成「被拦截」。
-    ''' </summary>
+    
+    
+    
+    
     Private Function GetTerracottaApps() As List(Of String)
         Dim Result As New List(Of String)
         Dim TcFolders As String() = {Paths.AppDataThenName & "Terracotta\", Paths.Base & "Terracotta\"}
         For Each Folder As String In TcFolders
             AddIfExists(Result, Folder & "terracotta.exe")
-            '部分版本的陶瓦会把 EasyTier 作为独立子进程释放到同目录
+            
             Try
                 If Directory.Exists(Folder) Then
                     For Each File As String In Directory.GetFiles(Folder, "easytier*.exe")
@@ -89,7 +89,7 @@ Public Module ModFirewall
                 Logger.Warn(ex, $"枚举 EasyTier 程序失败：{Folder}")
             End Try
         Next
-        '当前游戏使用的 Java（未选择版本时可能为空）
+        
         Try
             Dim JavaPath As String = McLaunchJavaSelected?.JavaExePath
             AddIfExists(Result, JavaPath)
@@ -112,23 +112,23 @@ Public Module ModFirewall
         List.Add(Path)
     End Sub
 
-    ''' <summary>
-    ''' 检查防火墙中是否存在允许该程序入站的规则。
-    ''' 读取失败（例如系统策略不可用）时按“已放行”处理，避免误报。
-    ''' </summary>
+    
+    
+    
+    
     Private Function IsAllowedByFirewall(AppPath As String) As Boolean
         Try
             Dim Policy As Object = CreateObject("HNetCfg.FwPolicy2")
             For Each Rule As Object In Policy.Rules
                 Try
                     If CBool(Rule.Enabled) = False Then Continue For
-                    'NET_FW_RULE_DIR_IN = 1，NET_FW_ACTION_ALLOW = 1
+                    
                     If CInt(Rule.Direction) <> 1 Then Continue For
                     If CInt(Rule.Action) <> 1 Then Continue For
                     Dim Name As String = If(Rule.ApplicationName, "")
                     If Name = "" Then Continue For
                     If Not String.Equals(Name, AppPath, StringComparison.OrdinalIgnoreCase) Then Continue For
-                    '只要覆盖“专用”或“所有”配置就算可用
+                    
                     Dim Profiles As Integer = CInt(Rule.Profiles)
                     If Profiles = Integer.MaxValue OrElse (Profiles And 2) <> 0 Then Return True
                 Catch
@@ -141,7 +141,7 @@ Public Module ModFirewall
         Return False
     End Function
 
-    ''' <summary>自动识别当前 Windows 版本，用于给出对应版本的防火墙操作路径。</summary>
+    
     Private Function WindowsVersion() As String
         Dim V As System.Version = Environment.OSVersion.Version
         Dim IsServer As Boolean = False
@@ -167,7 +167,7 @@ Public Module ModFirewall
         Return "Windows 10"
     End Function
 
-    ''' <summary>按系统版本生成对应的图文步骤。</summary>
+    
     Private Function BuildSteps(VersionName As String) As String
         Select Case VersionName
             Case "Windows 10", "Windows 11"
@@ -196,7 +196,7 @@ Public Module ModFirewall
         End Select
     End Function
 
-    ''' <summary>弹出防火墙说明与放行引导。</summary>
+    
     Private Sub ShowFirewallGuide(Missing As List(Of String))
         Dim Names As New List(Of String)
         For Each App As String In Missing
@@ -228,9 +228,9 @@ Public Module ModFirewall
         End If
     End Sub
 
-    ''' <summary>
-    ''' 通过 netsh 为程序添加入站放行规则（仅专用网络，覆盖 Windows 7 及以上）。
-    ''' </summary>
+    
+    
+    
     Private Function TryAddRules(Apps As List(Of String)) As Boolean
         Dim AllOk As Boolean = True
         For Each App As String In Apps
@@ -238,7 +238,7 @@ Public Module ModFirewall
             Dim Args As String = $"advfirewall firewall add rule name=""{RuleName}"" dir=in action=allow program=""{App}"" enable=yes profile=private"
             If Not RunNetsh(Args) Then AllOk = False
         Next
-        '再读一遍规则，确认真的生效
+        
         Dim StillMissing As Boolean = False
         For Each App As String In Apps
             If Not IsAllowedByFirewall(App) Then StillMissing = True
@@ -267,20 +267,20 @@ Public Module ModFirewall
         End Try
     End Function
 
-    ''' <summary>
-    ''' 按系统版本打开「允许应用通过防火墙」页面。
-    ''' Win10 1709+ / Win11 可直接定位「允许的应用」；更旧的系统打开防火墙面板由用户点击入口。
-    ''' </summary>
+    
+    
+    
+    
     Private Function OpenFirewallAllowPage() As Boolean
         Dim V As System.Version = Environment.OSVersion.Version
         Try
             If V.Major >= 10 AndAlso V.Build >= 16299 Then
-                'Windows 10 1709+ / Windows 11 的「Windows Defender 防火墙 - 允许的应用」
+                
                 StartProcess("explorer.exe", "shell:::{4026492F-2F69-46B8-B9BF-5654FC07E423} -Microsoft.WindowsFirewall\pageConfigureApps")
                 Logger.Info("已打开「Windows Defender 防火墙 - 允许的应用」")
                 Return True
             End If
-            'Windows 7 / 8 / 8.1 / Server 以及更早的 Win10：打开经典防火墙面板
+            
             StartProcess("control.exe", "/name Microsoft.WindowsFirewall")
             Logger.Info("已打开经典 Windows 防火墙面板")
             Return True

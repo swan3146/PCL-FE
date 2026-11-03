@@ -1,6 +1,6 @@
 Public Class MyCard
 
-    '控件
+    
     Inherits Grid
     Implements IGlassPanel
     Private ReadOnly MainGrid As Grid
@@ -17,7 +17,7 @@ Public Class MyCard
     Private _MainTextBlock As TextBlock
     Public Property MainTextBlock As TextBlock
         Get
-            Init() '当父级触发 Loaded 时，本卡片可能尚未触发 Loaded（该事件从父级向子级调用），因此这会是 null。手动触发以确保控件已加载。
+            Init() 
             Return _MainTextBlock
         End Get
         Set(value As TextBlock)
@@ -35,7 +35,7 @@ Public Class MyCard
         End Set
     End Property
 
-    '属性
+    
     Public Uuid As Integer = GetUuid()
     Public ReadOnly Property Inlines As InlineCollection
         Get
@@ -62,7 +62,7 @@ Public Class MyCard
     End Property
     Public Shared ReadOnly TitleProperty As DependencyProperty = DependencyProperty.Register("Title", GetType(String), GetType(MyCard), New PropertyMetadata(""))
 
-    'UI 建立
+    
     Public Sub New()
         MainChrome = New MyDropShadow With {.Opacity = DropShadowIdleOpacity}
         MainChrome.SetResourceReference(MyDropShadow.ColorProperty, "ColorObject1")
@@ -73,20 +73,20 @@ Public Class MyCard
         MainGrid = New Grid
         Children.Add(MainGrid)
     End Sub
-    '毛玻璃版的磨砂罩层：盖在「模糊壁纸」之上，卡片范围内才看得到模糊
+    
     Private FrostLayer As Border
     Private IsGlassStyle As Boolean = False
-    ''' <summary>卡片自己的玻璃底图笔刷：复用同一个对象，滚动时只改 Viewport，不再每帧新建笔刷。</summary>
+    
     Private GlassBrush As ImageBrush = Nothing
-    ''' <summary>
-    ''' 按当前界面样式（简洁 / 毛玻璃）重新套用卡片外观。
-    ''' </summary>
+    
+    
+    
     Public Sub ApplyStyle()
-        '简洁版必须完全是 PCL 原版的实心白卡，一个玻璃属性都不能碰；
-        '只有毛玻璃版才走玻璃引擎。
+        
+        
         IsGlassStyle = Settings.Get(Of Integer)("UiUiStyle") = 1
         If IsGlassStyle Then
-            '毛玻璃版：卡片底下透出被模糊的壁纸，卡片之外仍是清晰壁纸
+            
             MainChrome.Margin = New Thickness(-9, -4, -9, -11)
             MainChrome.ShadowRadius = 14
             MainChrome.CornerRadius = New CornerRadius(GlassCornerRadius)
@@ -99,11 +99,11 @@ Public Class MyCard
             End If
             FrostLayer.CornerRadius = New CornerRadius(Math.Max(0, GlassCornerRadius - 1))
             FrostLayer.Visibility = Visibility.Visible
-            '底图：与弹窗、侧栏共用同一张缓存壁纸快照，按卡片自己的位置对齐
-            '构造阶段取不到位置时只显示磨砂底色，等布局完成后由 LayoutUpdated 补齐
+            
+            
             GlassApplyBackdrop()
         Else
-            '简洁版：PCL 原版外观，不动
+            
             MainChrome.Margin = New Thickness(-3, -3, -3, -3 - GetWPFSize(1))
             MainChrome.ShadowRadius = 3
             MainChrome.CornerRadius = New CornerRadius(5)
@@ -115,23 +115,23 @@ Public Class MyCard
         End If
         LastGlassRect = Rect.Empty
     End Sub
-    ''' <summary>
-    ''' 卡片在窗口里滚动或移动后，重新把「模糊壁纸」对齐到它自己的位置。
-    ''' 滚动时这个事件每帧都会触发，所以只登记请求，真正重算合并到布局安静下来之后。
-    ''' </summary>
+    
+    
+    
+    
     Private Sub MyCard_LayoutUpdated(sender As Object, e As EventArgs) Handles Me.LayoutUpdated
         If Not IsGlassStyle OrElse FrmMain Is Nothing OrElse FrmMain.ImgBack Is Nothing Then Return
         Try
-            '还没布局完的卡片尺寸为 0，此时 TranslatePoint 会给出 (0,0)，
-            '照着对齐会把底图钉到窗口左上角，等真正布局好再算。
+            
+            
             If ActualWidth < 1 OrElse ActualHeight < 1 Then Return
             Dim Offset As Point = TranslatePoint(New Point(0, 0), FrmMain.ImgBack)
             If Double.IsNaN(Offset.X) OrElse Double.IsNaN(Offset.Y) Then Return
             Dim Now As New Rect(Offset.X, Offset.Y, ActualWidth, ActualHeight)
-            If Now = LastGlassRect Then Return '位置和尺寸都没变，不必重算
+            If Now = LastGlassRect Then Return 
             LastGlassRect = Now
-            '必须逐帧跟随：以前走 90 ms 去抖队列，滚动时底图会粘在卡片上一起移动，
-            '看起来就是「界面滑动时壁纸跟着偏移」。这里只改画笔的 Viewport，不重建位图，开销很小。
+            
+            
             GlassRefreshBackdrop()
         Catch
         End Try
@@ -142,28 +142,28 @@ Public Class MyCard
         If Not IsGlassStyle Then Return
         GlassApplyBackdrop()
     End Sub
-    ''' <summary>
-    ''' 把卡片底图铺成「按当前壁纸位置对齐」的玻璃层。
-    ''' 笔刷对象复用（只改 ImageSource / Viewport），拿不到底图时退回磨砂或视频深色。
-    ''' </summary>
+    
+    
+    
+    
     Private Sub GlassApplyBackdrop()
         Try
             If GlassBrush Is Nothing Then GlassBrush = ModGlass.CreateSurfaceBrush()
-            '必须无条件挂回去：切到简洁版时 Background 被换成了实心白刷子（不是 Nothing），
-            '只判断「笔刷为 Nothing」的话，从简洁版切回毛玻璃就永远是一张白卡。
+            
+            
             If Not Object.ReferenceEquals(MainBorder.Background, GlassBrush) AndAlso Not ModGlass.IsVideoBackdrop Then
                 MainBorder.Background = GlassBrush
             End If
-            '传 MainBorder（笔刷实际铺的地方）而不是卡片本身：AlignSurfaceBrush 要按它的 BorderThickness 补偿坐标
+            
             If ModGlass.AlignSurfaceBrush(GlassBrush, MainBorder, False, True) Then
                 If FrostLayer IsNot Nothing Then FrostLayer.Background = ModGlass.GlassCardTint()
             ElseIf ModGlass.IsVideoBackdrop Then
-                '视频背景抓不到帧：只铺一层极淡的雾，且只铺在卡片底色上。
-                '旧实现同时给 MainBorder 和 FrostLayer 各铺一层深色，两层叠起来就是用户看到的「黑蒙版」。
+                
+                
                 GlassBrush.ImageSource = Nothing
                 MainBorder.Background = ModGlass.GlassVideoTint()
                 If FrostLayer IsNot Nothing Then FrostLayer.Background = Nothing
-                GlassBrush = Nothing '换回壁纸时重建笔刷，避免残留旧 ImageSource
+                GlassBrush = Nothing 
             Else
                 GlassBrush.ImageSource = Nothing
                 If FrostLayer IsNot Nothing Then FrostLayer.Background = ModGlass.GlassCardTint()
@@ -175,7 +175,7 @@ Public Class MyCard
     Private Sub Init() Handles Me.Loaded
         If IsLoad Then Return
         IsLoad = True
-        '初次加载限定
+        
         If MainTextBlock Is Nothing Then
             MainTextBlock = New TextBlock With {.HorizontalAlignment = HorizontalAlignment.Left, .VerticalAlignment = VerticalAlignment.Top, .Margin = New Thickness(15, 12, 0, 0), .FontWeight = FontWeights.Bold, .FontSize = 13, .IsHitTestVisible = False}
             MainTextBlock.SetResourceReference(TextBlock.ForegroundProperty, "ColorBrush1")
@@ -183,9 +183,9 @@ Public Class MyCard
             MainGrid.Children.Add(MainTextBlock)
         End If
         If CanSwap OrElse SwapControl IsNot Nothing Then
-            '不能再用 Children(3) 硬编码索引：毛玻璃版会在 Children 里插 FrostLayer，
-            '内部元素一多，Children(3) 就指到 MainGrid 上，折叠时会把标题和内容一起藏掉。
-            '改成「第一个不属于内部结构的子元素」，即 XAML 里写的那块内容。
+            
+            
+            
             If SwapControl Is Nothing Then
                 For Each Child As UIElement In Children
                     If Child Is MainChrome OrElse Child Is MainBorder OrElse Child Is MainGrid OrElse Child Is FrostLayer Then Continue For
@@ -197,11 +197,11 @@ Public Class MyCard
             MainSwap.SetResourceReference(Shapes.Path.FillProperty, "ColorBrush1")
             MainGrid.Children.Add(MainSwap)
         End If
-        '改变默认的折叠
+        
         If IsSwapped AndAlso SwapControl IsNot Nothing Then
             MainSwap.RenderTransform = New RotateTransform(If(SwapLogoRight, 270, 0))
             SwapControl.Visibility = Visibility.Collapsed
-            '取消由于高度变化被迫触发的高度动画
+            
             Dim RawUseAnimation As Boolean = UseAnimation
             UseAnimation = False
             Height = SwapedHeight
@@ -211,7 +211,7 @@ Public Class MyCard
         End If
     End Sub
 
-    '填充
+    
     Private ContentBuilder As Action(Of Panel)
     Public Sub SetContentBuilder(Builder As Action(Of Panel))
         ContentBuilder = Builder
@@ -225,9 +225,9 @@ Public Class MyCard
             Stack.Children.Add(New FrameworkElement With {.Height = 18})
         End Sub)
     End Sub
-    ''' <summary>
-    ''' 使用 ContentBuilder 生成卡片内容。
-    ''' </summary>
+    
+    
+    
     Public Sub BuildContent()
         If ContentBuilder Is Nothing Then Return
         Dim Stack = TryCast(SwapControl, Panel)
@@ -242,7 +242,7 @@ Public Class MyCard
         TriggerForceResize()
     End Sub
 
-    '动画
+    
     Private Const DropShadowIdleOpacity As Double = 0.07
     Private Const DropShadowHoverOpacity As Double = 0.4
     Public Property HasMouseAnimation As Boolean = True
@@ -271,51 +271,51 @@ Public Class MyCard
 
 #Region "高度改变动画"
 
-    ''' <summary>
-    ''' 是否启用高度改变动画。
-    ''' </summary>
+    
+    
+    
     Public Property UseAnimation As Boolean = True
     Private IsHeightAnimating As Boolean = False
-    Private ActualUsedHeight As Double '回滚实际高度（例如 NaN）
+    Private ActualUsedHeight As Double 
     Private Sub MySizeChanged(sender As Object, e As SizeChangedEventArgs) Handles Me.SizeChanged
         If Not UseAnimation Then Return
         Dim DeltaHeight As Double = If(IsSwapped, SwapedHeight, e.NewSize.Height) - e.PreviousSize.Height
-        '卡片的进入时动画已被页面通用切换动画替代
+        
         If e.PreviousSize.Height = 0 OrElse IsHeightAnimating OrElse Math.Abs(DeltaHeight) < 1 OrElse ActualHeight = 0 Then Return
         StartHeightAnimation(DeltaHeight, e.PreviousSize.Height, False)
     End Sub
     Private Sub StartHeightAnimation(Delta As Double, PreviousHeight As Double, IsLoadAnimation As Boolean)
-        If IsHeightAnimating OrElse FrmMain Is Nothing Then Return '避免 XAML 设计器出错
+        If IsHeightAnimating OrElse FrmMain Is Nothing Then Return 
 
         Dim AnimList As New List(Of AniData)
         Dim AbsDelta = Math.Abs(Delta)
 
         If AbsDelta <= 800 Then
-            '短距离，直接使用 150ms 的缓动动画
+            
             AnimList.Add(AaHeight(Me, Delta, 150,, New AniEaseOutFluent(AniEasePower.ExtraStrong)))
         Else
             Dim EaseLength As Integer, EaseTime As Integer
-            Dim InitSpeed As Integer '到达缓动区前的初速度
+            Dim InitSpeed As Integer 
             If Delta < 0 AndAlso AbsDelta - EaseLength > 5000 * 0.1 Then
-                '收回距离过长 (>0.1s)，强制以 100ms 完成匀速段，然后让减速段更长
+                
                 EaseLength = 200
                 EaseTime = 150
                 InitSpeed = (AbsDelta - EaseLength) / 0.1
             ElseIf Delta > 0 AndAlso AbsDelta - EaseLength > 5000 * 0.6 Then
-                '展开距离过长 (>0.6s)，以 5000 速度展示 300ms 匀速段，剩下的距离全部归入减速段
+                
                 InitSpeed = 5000
                 EaseLength = AbsDelta - InitSpeed * 0.3
                 EaseTime = 400
             Else
-                '中程，匀速地快速展开（或收回）
+                
                 EaseLength = 150
                 EaseTime = 200
                 InitSpeed = 4000
             End If
-            '匀速段
+            
             AnimList.Add(AaHeight(Me, (AbsDelta - EaseLength) * Math.Sign(Delta),
                 (AbsDelta - EaseLength) / InitSpeed * 1000))
-            '减速段
+            
             AnimList.Add(AaHeight(Me, EaseLength * Math.Sign(Delta),
                 EaseTime,, New AniEaseOutFluentWithInitial(InitSpeed, EaseTime / 1000, EaseLength), True))
         End If
@@ -331,9 +331,9 @@ Public Class MyCard
         ActualUsedHeight = If(IsSwapped, SwapedHeight, Height)
         Height = PreviousHeight
     End Sub
-    ''' <summary>
-    ''' 通知 MyCard，控件内容已改变，需要中断动画并瞬间更新高度。
-    ''' </summary>
+    
+    
+    
     Public Sub TriggerForceResize()
         Height = If(IsSwapped, SwapedHeight, Double.NaN)
         AniStop("MyCard Height " & Uuid)
@@ -344,13 +344,13 @@ Public Class MyCard
 
 #Region "折叠"
 
-    '若设置了 CanSwap，或 SwapControl 不为空，则判定为会进行折叠
-    '这是因为不能直接在 XAML 中设置 SwapControl
+    
+    
     Public SwapControl As FrameworkElement
     Public Property CanSwap As Boolean = False
-    ''' <summary>
-    ''' 是否已被折叠。
-    ''' </summary>
+    
+    
+    
     Public Property IsSwapped As Boolean
         Get
             Return _IsSwapped
@@ -359,15 +359,15 @@ Public Class MyCard
             If _IsSwapped = value Then Return
             _IsSwapped = value
             If SwapControl Is Nothing Then Return
-            '展开
+            
             If Not IsSwapped Then BuildContent()
-            '若尚未加载，会在 Loaded 事件中触发无动画的折叠，不需要在这里进行
+            
             If Not IsLoaded Then Return
-            '更新样式
+            
             SwapControl.Visibility = Visibility.Visible
             TriggerForceResize()
             UpdateCursorStyle()
-            '改变箭头
+            
             AniStart(AaRotateTransform(MainSwap, If(_IsSwapped, If(SwapLogoRight, 270, 0), 180) - CType(MainSwap.RenderTransform, RotateTransform).Angle, 250,, New AniEaseOutFluent(AniEasePower.ExtraStrong)), "MyCard Swap " & Uuid, True)
         End Set
     End Property
@@ -385,8 +385,8 @@ Public Class MyCard
     Sub(sender, e) If sender IsNot Nothing AndAlso TypeOf sender Is MyCard Then CType(sender, MyCard).IsSwapped = CType(e.NewValue, Boolean)))
 
     Public Property SwapLogoRight As Boolean = False
-    Private IsSwapMouseDown As Boolean = False '用于触发卡片展开/折叠的 MouseDown
-    Private IsCustomMouseDown As Boolean = False '用于触发自定义事件的 MouseDown
+    Private IsSwapMouseDown As Boolean = False 
+    Private IsCustomMouseDown As Boolean = False 
     Public Event PreviewSwap(sender As Object, e As RouteEventArgs)
     Public Event Swap(sender As Object, e As RouteEventArgs)
     Public Const SwapedHeight As Integer = 40
@@ -396,20 +396,20 @@ Public Class MyCard
             (Pos > If(IsSwapped, SwapedHeight, SwapedHeight - 6) OrElse (Pos = 0 AndAlso Not IsMouseDirectlyOver)) Then Return
         IsCustomMouseDown = True
         If Not IsSwapped AndAlso
-            (SwapControl Is Nothing OrElse Pos > If(IsSwapped, SwapedHeight, SwapedHeight - 6) OrElse (Pos = 0 AndAlso Not IsMouseDirectlyOver)) Then Return '检测点击位置；或已经不在可视树上的误判
+            (SwapControl Is Nothing OrElse Pos > If(IsSwapped, SwapedHeight, SwapedHeight - 6) OrElse (Pos = 0 AndAlso Not IsMouseDirectlyOver)) Then Return 
         IsSwapMouseDown = True
     End Sub
     Private Sub MyCard_MouseLeftButtonUp() Handles Me.MouseLeftButtonUp
         If Not IsCustomMouseDown Then Return
         IsCustomMouseDown = False
-        RaiseCustomEvent() '触发自定义事件
+        RaiseCustomEvent() 
 
         If Not IsSwapMouseDown Then Return
         IsSwapMouseDown = False
 
         Dim Pos As Double = Mouse.GetPosition(Me).Y
         If Not IsSwapped AndAlso
-            (SwapControl Is Nothing OrElse Pos > If(IsSwapped, SwapedHeight, SwapedHeight - 6) OrElse (Pos = 0 AndAlso Not IsMouseDirectlyOver)) Then Return '检测点击位置；或已经不在可视树上的误判
+            (SwapControl Is Nothing OrElse Pos > If(IsSwapped, SwapedHeight, SwapedHeight - 6) OrElse (Pos = 0 AndAlso Not IsMouseDirectlyOver)) Then Return 
 
         Dim e = New RouteEventArgs(True)
         RaiseEvent PreviewSwap(Me, e)

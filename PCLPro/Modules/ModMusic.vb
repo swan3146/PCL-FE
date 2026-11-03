@@ -4,36 +4,36 @@ Public Module ModMusic
 
 #Region "播放列表"
 
-    ''' <summary>
-    ''' 接下来要播放的音乐文件路径。未初始化时为 Nothing。
-    ''' </summary>
+    
+    
+    
     Public MusicWaitingList As List(Of String) = Nothing
-    ''' <summary>
-    ''' 全部音乐文件路径。未初始化时为 Nothing。
-    ''' </summary>
+    
+    
+    
     Public MusicAllList As List(Of String) = Nothing
-    ''' <summary>
-    ''' 初始化音乐播放列表。
-    ''' </summary>
-    ''' <param name="ForceReload">强制全部重新载入列表。</param>
-    ''' <param name="PreventFirst">在重载列表时避免让某项成为第一项。</param>
+    
+    
+    
+    
+    
     Private Sub MusicListInit(ForceReload As Boolean, Optional PreventFirst As String = Nothing)
         If ForceReload Then MusicAllList = Nothing
         Try
-            '初始化全部可用音乐列表
+            
             If MusicAllList Is Nothing Then
                 MusicAllList = New List(Of String)
                 DirectoryUtils.Create(Paths.Base & "PCL\Musics\")
                 For Each File In DirectoryUtils.EnumerateFiles(Paths.Base & "PCL\Musics\", True)
-                    '文件夹可能会被加入 .ini 文件夹配置文件、一些乱七八糟的 .jpg 文件啥的
+                    
                     If {"ini", "jpg", "txt", "cfg", "lrc", "db", "png"}.Contains(PathUtils.GetExtension(File)) Then Continue For
                     MusicAllList.Add(File)
                 Next
             End If
-            '打乱顺序播放
+            
             MusicWaitingList = If(Settings.Get(Of Boolean)("UiMusicRandom"), New List(Of String)(MusicAllList).Shuffle().ToList, New List(Of String)(MusicAllList))
             If PreventFirst IsNot Nothing AndAlso MusicWaitingList.FirstOrDefault = PreventFirst Then
-                '若需要避免成为第一项的为第一项，则将它放在最后
+                
                 MusicWaitingList.RemoveAt(0)
                 MusicWaitingList.Add(PreventFirst)
             End If
@@ -41,15 +41,15 @@ Public Module ModMusic
             Logger.Error(ex, "初始化音乐列表失败")
         End Try
     End Sub
-    ''' <summary>
-    ''' 获取下一首播放的音乐路径并将其从列表中移除。
-    ''' 如果没有，可能会返回 Nothing。
-    ''' </summary>
+    
+    
+    
+    
     Private Function DequeueNextMusicAddress() As String
         Dim Result As String
-        '初始化，确保存在音乐
+        
         If MusicAllList Is Nothing OrElse Not MusicAllList.Any() OrElse Not MusicWaitingList.Any() Then MusicListInit(False)
-        '出列下一个音乐，如果出列结束则生成新列表
+        
         If MusicWaitingList.Any() Then
             Result = MusicWaitingList(0)
             MusicWaitingList.RemoveAt(0)
@@ -64,19 +64,19 @@ Public Module ModMusic
 
 #Region "UI 控制"
 
-    ''' <summary>
-    ''' 刷新背景音乐按钮 UI 与设置页 UI。
-    ''' </summary>
+    
+    
+    
     Private Sub MusicRefreshUI()
         RunInUi(
         Sub()
             Try
 
                 If Not MusicAllList.Any() Then
-                    '无背景音乐
+                    
                     FrmMain.BtnExtraMusic.Show = False
                 Else
-                    '有背景音乐
+                    
                     FrmMain.BtnExtraMusic.Show = True
                     Dim ToolTipText As String
                     If MusicState = MusicStates.Pause Then
@@ -108,9 +108,9 @@ Public Module ModMusic
         End Sub)
     End Sub
 
-    ''' <summary>
-    ''' 让音乐在暂停、播放间切换，并显示提示文本。
-    ''' </summary>
+    
+    
+    
     Public Sub MusicControlPause()
         If MusicNAudio Is Nothing Then
             Hint("音乐播放尚未开始！", HintType.Red)
@@ -127,9 +127,9 @@ Public Module ModMusic
         End If
     End Sub
 
-    ''' <summary>
-    ''' 播放下一曲，并显示提示文本。
-    ''' </summary>
+    
+    
+    
     Public Sub MusicControlNext()
         If MusicAllList.IsSingle Then
             MusicStartPlay(MusicCurrent)
@@ -150,16 +150,16 @@ Public Module ModMusic
 
 #Region "主状态控制"
 
-    ''' <summary>
-    ''' 获取当前的音乐播放状态。
-    ''' </summary>
+    
+    
+    
     Public ReadOnly Property MusicState As MusicStates
         Get
             If MusicNAudio Is Nothing Then Return MusicStates.Stop
             Select Case MusicNAudio.PlaybackState
-                Case 0 'PlaybackState.Stopped
+                Case 0 
                     Return MusicStates.Stop
-                Case 2 'PlaybackState.Paused
+                Case 2 
                     Return MusicStates.Pause
                 Case Else
                     Return MusicStates.Play
@@ -172,12 +172,12 @@ Public Module ModMusic
         Pause
     End Enum
 
-    '重载与开始
+    
 
-    ''' <summary>
-    ''' 重载播放列表并尝试开始播放背景音乐。
-    ''' </summary>
-    ''' <param name="ShowHint">是否显示刷新提示。</param>
+    
+    
+    
+    
     Public Sub MusicRefreshPlay(ShowHint As Boolean, Optional IsFirstLoad As Boolean = False)
         Try
 
@@ -207,9 +207,9 @@ Public Module ModMusic
             Logger.Error(ex, "刷新背景音乐播放失败")
         End Try
     End Sub
-    ''' <summary>
-    ''' 开始播放音乐。
-    ''' </summary>
+    
+    
+    
     Private Sub MusicStartPlay(Address As String, Optional IsFirstLoad As Boolean = False)
         If Address Is Nothing Then Return
         Logger.Info($"播放开始：{Address}")
@@ -217,11 +217,11 @@ Public Module ModMusic
         RunInNewThread(Sub() MusicLoop(IsFirstLoad), "Music", ThreadPriority.BelowNormal)
     End Sub
 
-    '播放与暂停
+    
 
-    ''' <summary>
-    ''' 暂停音乐播放，返回是否成功切换了状态。
-    ''' </summary>
+    
+    
+    
     Public Function MusicPause() As Boolean
         If MusicState = MusicStates.Play Then
             RunInThread(
@@ -236,9 +236,9 @@ Public Module ModMusic
             Return False
         End If
     End Function
-    ''' <summary>
-    ''' 继续音乐播放，返回是否成功切换了状态。
-    ''' </summary>
+    
+    
+    
     Public Function MusicResume() As Boolean
         If MusicState = MusicStates.Play OrElse Not MusicAllList.Any() Then
             Logger.Info($"无需继续播放，当前状态为 {MusicState}")
@@ -249,7 +249,7 @@ Public Module ModMusic
                 Logger.Info("已恢复播放")
                 Try
                     MusicNAudio?.Play()
-                Catch 'https://github.com/Meloong-Git/PCL/pull/5415#issuecomment-2751135223
+                Catch 
                     MusicNAudio?.Stop()
                     MusicNAudio?.Play()
                 End Try
@@ -261,24 +261,24 @@ Public Module ModMusic
 
 #End Region
 
-    ''' <summary>
-    ''' 当前正在播放的 WaveOutEvent。
-    ''' 如果为它赋了类别，则会没有必要地加载 NAudio.dll。
-    ''' </summary>
+    
+    
+    
+    
     Public MusicNAudio = Nothing
-    ''' <summary>
-    ''' 当前播放的音乐地址。
-    ''' </summary>
+    
+    
+    
     Private MusicCurrent As String = ""
 
-    ''' <summary>
-    ''' 在 MusicUuid 不变的前提下，持续播放某地址的音乐，且在播放结束后随机播放下一曲。
-    ''' </summary>
+    
+    
+    
     Private Sub MusicLoop(Optional IsFirstLoad As Boolean = False)
         Dim CurrentWave As WaveOutEvent = Nothing
         Dim Reader As WaveStream = Nothing
         Try
-            '开始播放
+            
             CurrentWave = New WaveOutEvent()
             MusicNAudio = CurrentWave
             CurrentWave.DeviceNumber = -1
@@ -290,25 +290,25 @@ Public Module ModMusic
             End Try
             CurrentWave.Init(Reader)
             CurrentWave.Play()
-            '第一次打开的暂停
+            
             If IsFirstLoad AndAlso Not Settings.Get(Of Boolean)("UiMusicAuto") Then CurrentWave.Pause()
             MusicRefreshUI()
-            '停止条件：播放完毕或变化
+            
             Dim PreviousVolume = 0
             While CurrentWave.Equals(MusicNAudio) AndAlso Not CurrentWave.PlaybackState = PlaybackState.Stopped
                 If Settings.Get(Of Integer)("UiMusicVolume") <> PreviousVolume Then
-                    '更新音量
+                    
                     PreviousVolume = Settings.Get(Of Integer)("UiMusicVolume")
-#Disable Warning BC40008 '类型或成员已过时
+#Disable Warning BC40008 
                     CurrentWave.Volume = PreviousVolume / 1000
-#Enable Warning BC40008 '类型或成员已过时
+#Enable Warning BC40008 
                 End If
-                '更新进度条
+                
                 Dim Percent = Reader.CurrentTime.TotalMilliseconds / Reader.TotalTime.TotalMilliseconds
                 RunInUi(Sub() FrmMain.BtnExtraMusic.Progress = Percent)
                 Thread.Sleep(100)
             End While
-            '当前音乐已播放结束，继续下一曲
+            
             If CurrentWave.PlaybackState = PlaybackState.Stopped AndAlso MusicAllList.Any Then MusicStartPlay(DequeueNextMusicAddress)
         Catch ex As Exception
             Logger.Warn(ex, $"播放音乐出现内部错误（{MusicCurrent}）")
@@ -321,16 +321,16 @@ Public Module ModMusic
                 Thread.Sleep(1000000000)
             End If
             If Not ({"wav", "mp3", "flac"}.Contains(PathUtils.GetExtension(MusicCurrent))) OrElse
-                ex.Message.Contains("0xC00D36C4") Then '#5096：不支持给定的 URL 的字节流类型。 (异常来自 HRESULT:0xC00D36C4)
+                ex.Message.Contains("0xC00D36C4") Then 
                 Hint("播放音乐失败（" & PathUtils.GetLastPart(MusicCurrent) & "）：PCL 可能不支持此音乐格式，请将格式转换为 .wav、.mp3 或 .flac 后再试", HintType.Red)
             Else
                 Logger.Error(ex, $"播放音乐失败（{PathUtils.GetLastPart(MusicCurrent)}）", LogBehavior.Toast)
             End If
-            '将播放错误的音乐从列表中移除
+            
             MusicAllList.Remove(MusicCurrent)
             MusicWaitingList.Remove(MusicCurrent)
             MusicRefreshUI()
-            '等待 2 秒后继续播放
+            
             Thread.Sleep(2000)
             If TypeOf ex Is FileNotFoundException Then
                 MusicRefreshPlay(True, IsFirstLoad)

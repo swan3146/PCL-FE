@@ -11,14 +11,14 @@
     <Application.Resources>
         <ResourceDictionary>
             
-            <!-- Converter -->
+            
             <corewpf:AdditionConverter x:Key="AdditionConverter"/>
             <corewpf:MultiplicationConverter x:Key="MultiplicationConverter"/>
             <corewpf:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
             <corewpf:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
 
-            <!-- 颜色表 -->
+            
             <SolidColorBrush x:Key="ColorBrush1">#343d4a</SolidColorBrush>
             <SolidColorBrush x:Key="ColorBrush2">#0b5bcb</SolidColorBrush>
             <SolidColorBrush x:Key="ColorBrush3">#1370f3</SolidColorBrush>
@@ -65,7 +65,7 @@
             <SolidColorBrush x:Key="ColorBrushSemiTransparent">#01eaf2fe</SolidColorBrush>
             <SolidColorBrush x:Key="ColorBrushBackgroundTransparentSidebar" Color="#F1FFFFFF" />
 
-            <!-- Window -->
+            
             <Style TargetType="{x:Type Window}" x:Key="MyWindow">
                 <Setter Property="OverridesDefaultStyle" Value="True"/>
                 <Setter Property="Template">
@@ -77,7 +77,7 @@
                 </Setter>
             </Style>
 
-            <!-- Label -->
+            
             <Style TargetType="Label">
                 <Setter Property="OverridesDefaultStyle" Value="True"/>
                 <Setter Property="Padding" Value="0"/>
@@ -116,7 +116,7 @@
                 </Setter>
             </Style>
             
-            <!-- TextBlock -->
+            
             <Style TargetType="TextBlock">
                 <Setter Property="OverridesDefaultStyle" Value="True" />
                 <Setter Property="FontSize" Value="13" />
@@ -132,7 +132,7 @@
                 <Setter Property="FontFamily" Value="Resources/#PCL English, Microsoft YaHei UI" />
             </Style>
 
-            <!-- ScrollViewer -->
+            
             <Style x:Key="MyThumb" TargetType="Thumb">
                 <Setter Property="Stylus.IsPressAndHoldEnabled" Value="false"/>
                 <Setter Property="Template">
@@ -169,7 +169,7 @@
                                     </Track.DecreaseRepeatButton>
                                     <Track.IncreaseRepeatButton>
                                         <RepeatButton Command="{x:Static ScrollBar.PageDownCommand}" Opacity="0" />
-                                    </Track.IncreaseRepeatButton> <!-- 不能删，删了点击 Thumb 以外的部分就不能翻页了 -->
+                                    </Track.IncreaseRepeatButton> 
                                     <Track.Thumb>
                                         <Thumb Style="{StaticResource MyThumb}" Foreground="{TemplateBinding Foreground}" />
                                     </Track.Thumb>
@@ -237,7 +237,7 @@
                 </Setter>
             </Style>
 
-            <!-- TextBox -->
+            
             <Style TargetType="local:MyTextBox">
                 <Setter Property="BorderThickness" Value="1" />
                 <Setter Property="Background" Value="{StaticResource ColorBrushHalfWhite}" />
@@ -268,7 +268,7 @@
                                 <Border x:Name="border" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
                                     <ScrollViewer x:Name="PART_ContentHost" Style="{StaticResource ScrollViewerNoMargin}" RenderOptions.ClearTypeHint="Enabled" BorderThickness="0"
                                            Margin="5,0,0,0" Cursor="IBeam" />
-                                    <!-- 由于未知原因，TextView 会有 2,0 的 Margin -->
+                                    
                                 </Border>
                                 <Border Margin="{TemplateBinding Padding}" IsHitTestVisible="False" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" BorderThickness="0">
                                     <TextBlock x:Name="labHint" Foreground="{StaticResource ColorBrushGray4}" Margin="7,0,0,0" Padding="{TemplateBinding BorderThickness}" FontSize="{TemplateBinding FontSize}" FontFamily="Resources/#PCL English, Microsoft YaHei UI" />
@@ -323,7 +323,7 @@
                 <Setter Property="behaviors:ClipboardInterceptor.EnableSafeClipboard" Value="True" />
             </Style>
 
-            <!-- ComboBox -->
+            
             <DataTemplate x:Key="ComboBoxItemTemplateWithDelete">
                 <local:MyListItem Title="{Binding}" FontSize="13" MaxHeight="26" IsScaleAnimationEnabled="False" Margin="-3,0,0,0">
                     <local:MyListItem.Buttons>
@@ -492,7 +492,7 @@
                 </Setter>
             </Style>
 
-            <!-- ContextMenu -->
+            
             <Style TargetType="ContextMenu">
                 <Setter Property="SnapsToDevicePixels" Value="True"/>
                 <Setter Property="OverridesDefaultStyle" Value="True"/>
@@ -512,7 +512,7 @@
                     </Setter.Value>
                 </Setter>
             </Style>
-            <!-- MenuItem -->
+            
             <Style TargetType="local:MyMenuItem">
                 <Setter Property="Foreground" Value="{DynamicResource ColorBrush1}" />
                 <Setter Property="Template">
@@ -523,12 +523,12 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" SharedSizeGroup="Icon"/>
                                         <ColumnDefinition />
-                                        <!--  <ColumnDefinition Width="Auto" SharedSizeGroup="Shortcut"/>
-                                    <ColumnDefinition Width="13"/>  -->
+                                        
+
                                     </Grid.ColumnDefinitions>
                                     <Path Name="Icon" VerticalAlignment="Center" Stretch="Uniform" Margin="8,0" Fill="{TemplateBinding Foreground}" Height="12" Width="15" />
                                     <TextBlock Name="HeaderHost" Grid.Column="1" Text="{TemplateBinding Header}" Foreground="{TemplateBinding Foreground}" Margin="0,0,40,0" VerticalAlignment="Center" Height="16" />
-                                    <!--  <TextBlock x:Name="InputGestureText" Grid.Column="2" Text="{TemplateBinding InputGestureText}" Margin="5,2,0,2" DockPanel.Dock="Right" /> -->
+                                    
                                 </Grid>
                             </Border>
                             <ControlTemplate.Triggers>

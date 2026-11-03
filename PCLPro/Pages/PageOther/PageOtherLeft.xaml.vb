@@ -1,20 +1,20 @@
 ﻿Public Class PageOtherLeft
 
     Private IsLoad As Boolean = False
-    Private IsPageSwitched As Boolean = False '如果在 Loaded 前切换到其他页面，会导致触发 Loaded 时再次切换一次
+    Private IsPageSwitched As Boolean = False 
     Private Sub PageOtherLeft_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
-        '是否处于隐藏的子页面
+        
         Dim IsHiddenPage As Boolean = False
         If ItemAbout.Checked AndAlso Settings.Get(Of Boolean)("UiHiddenOtherAbout") Then IsHiddenPage = True
         If ItemTest.Checked AndAlso Settings.Get(Of Boolean)("UiHiddenOtherTest") Then IsHiddenPage = True
         If ItemFeedback.Checked AndAlso Settings.Get(Of Boolean)("UiHiddenOtherFeedback") Then IsHiddenPage = True
         If PageSetupUI.HiddenForceShow Then IsHiddenPage = False
-        '若页面错误，或尚未加载，则继续
+        
         If IsLoad AndAlso Not IsHiddenPage Then Return
         IsLoad = True
-        '刷新子页面隐藏情况
+        
         PageSetupUI.HiddenRefresh()
-        '选择第一个未被禁用的子页面
+        
         If IsPageSwitched Then Return
         If Not Settings.Get(Of Boolean)("UiHiddenOtherAbout") Then
             ItemAbout.SetChecked(True, False, False)
@@ -30,13 +30,13 @@
 
 #Region "页面切换"
 
-    ''' <summary>
-    ''' 当前页面的编号。从 0 开始计算。
-    ''' </summary>
+    
+    
+    
     Public PageID As FormMain.PageSubType
     Public Sub New()
         InitializeComponent()
-        '选择第一个未被禁用的子页面
+        
         If Not Settings.Get(Of Boolean)("UiHiddenOtherAbout") Then
             PageID = FormMain.PageSubType.OtherAbout
         ElseIf Not Settings.Get(Of Boolean)("UiHiddenOtherTest") Then
@@ -46,12 +46,12 @@
         End If
     End Sub
 
-    ''' <summary>
-    ''' 勾选事件改变页面。
-    ''' </summary>
+    
+    
+    
     Private Sub PageCheck(sender As FrameworkElement, e As RouteEventArgs) Handles ItemAbout.Check, ItemTest.Check, ItemFeedback.Check
-        '尚未初始化控件属性时，sender.Tag 为 Nothing，会导致切换到页面 0
-        '若使用 IsLoaded，则会导致模拟点击不被执行（模拟点击切换页面时，控件的 IsLoaded 为 False）
+        
+        
         If sender.Tag IsNot Nothing Then PageChange(Val(sender.Tag))
     End Sub
 
@@ -72,9 +72,9 @@
         End Select
     End Function
 
-    ''' <summary>
-    ''' 切换现有页面。
-    ''' </summary>
+    
+    
+    
     Public Sub PageChange(ID As FormMain.PageSubType)
         If PageID = ID Then Return
         AniControlEnabled += 1
@@ -89,7 +89,7 @@
         End Try
     End Sub
     Private Shared Sub PageChangeRun(Target As MyPageRight)
-        AniStop("FrmMain PageChangeRight") '停止主页面的右页面切换动画，防止它与本动画一起触发多次 PageOnEnter
+        AniStop("FrmMain PageChangeRight") 
         If Target.Parent IsNot Nothing Then Target.SetValue(ContentPresenter.ContentProperty, Nothing)
         FrmMain.PageRight = Target
         CType(FrmMain.PanMainRight.Child, MyPageRight).PageOnExit()
@@ -100,7 +100,7 @@
                                     FrmMain.PageRight.Opacity = 0
                                 End Sub, 130),
                          AaCode(Sub()
-                                    '延迟触发页面通用动画，以使得在 Loaded 事件中加载的控件得以处理
+                                    
                                     FrmMain.PageRight.Opacity = 1
                                     FrmMain.PageRight.PageOnEnter()
                                 End Sub, 30, True)
@@ -109,8 +109,8 @@
 
 #End Region
 
-    '强制刷新
-    Public Sub Refresh(sender As Object, e As EventArgs) '由边栏按钮匿名调用
+    
+    Public Sub Refresh(sender As Object, e As EventArgs) 
         Hint("正在刷新……", Log:=False)
     End Sub
 End Class

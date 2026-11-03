@@ -7,9 +7,9 @@ Public Class MyVirtualizingElement(Of T As FrameworkElement)
         LazyLoadBehavior.OnFirstEnterScrollViewerViewport(Me, AddressOf Init)
     End Sub
 
-    ''' <summary>
-    ''' 实例化此控件。
-    ''' </summary>
+    
+    
+    
     Public Function Init() As T
         Dim Element As T = Initializer()
         If Parent IsNot Nothing Then
@@ -27,7 +27,7 @@ Public Class MyVirtualizingElement(Of T As FrameworkElement)
 
 End Class
 
-'非泛型形式
+
 Public Class MyVirtualizingElement
     Inherits FrameworkElement
 
@@ -37,9 +37,9 @@ Public Class MyVirtualizingElement
         LazyLoadBehavior.OnFirstEnterScrollViewerViewport(Me, AddressOf Init)
     End Sub
 
-    ''' <summary>
-    ''' 实例化此控件。
-    ''' </summary>
+    
+    
+    
     Public Function Init() As FrameworkElement
         Dim Element As FrameworkElement = Initializer()
         If Parent IsNot Nothing Then
@@ -52,11 +52,11 @@ Public Class MyVirtualizingElement
         Return Element
     End Function
 
-    ''' <summary>
-    ''' 获取实例化后的控件。
-    ''' 如果该控件没有实例化，则会立即实例化。
-    ''' 如果类型错误，则返回原值。
-    ''' </summary>
+    
+    
+    
+    
+    
     Public Shared Function TryInit(Element As FrameworkElement) As FrameworkElement
         If GeneralUtils.IsGenericInstanceOf(Element, GetType(MyVirtualizingElement(Of ))) Then
             Return CType(Element, Object).Init()

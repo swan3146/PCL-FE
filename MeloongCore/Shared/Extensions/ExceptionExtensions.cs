@@ -3,36 +3,36 @@ using System.Net.Sockets;
 namespace MeloongCore.Extensions;
 public static class ExceptionExtensions {
 
-    /// <summary>
-    /// 返回该异常最底层的 <see cref="Exception.InnerException"/>。
-    /// </summary>
+    
+    
+    
     public static Exception RootException(this Exception ex) {
         while (ex.InnerException is { } inner) ex = inner;
         return ex;
     }
 
-    /// <summary>
-    /// 该异常或其子异常是否为 <see cref="OperationCanceledException"/>、<see cref="TaskCanceledException"/> 或 <see cref="ThreadInterruptedException"/>。
-    /// </summary>
+    
+    
+    
     public static bool IsCanceled(this Exception ex) {
         foreach (var inner in ex.Flatten()) {
             if (inner is OperationCanceledException or TaskCanceledException or ThreadInterruptedException) return true;
         }
         return false;
     }
-    /// <summary>
-    /// 当该异常或其子异常是 <see cref="OperationCanceledException"/>、<see cref="TaskCanceledException"/> 或 <see cref="ThreadInterruptedException"/> 时，抛出对应异常。
-    /// </summary>
+    
+    
+    
     public static void ThrowIfCanceled(this Exception ex) {
         foreach (var inner in ex.Flatten()) {
             if (inner is OperationCanceledException or TaskCanceledException or ThreadInterruptedException) throw inner;
         }
     }
 
-    /// <summary>
-    /// 将异常所有的 <see cref="Exception.InnerException"/> 展开。
-    /// 若为 <see cref="AggregateException"/>，也会展开其中所有的子异常。
-    /// </summary>
+    
+    
+    
+    
     public static IEnumerable<Exception> Flatten(this Exception ex) {
         var toFlatten = new Stack<Exception>();
         toFlatten.Push(ex);
@@ -47,14 +47,14 @@ public static class ExceptionExtensions {
         }
     }
 
-    /// <summary>
-    /// 获取 <paramref name="ex"/> 的用户友好描述。
-    /// 若 <paramref name="multiline"/> 为 true，则返回多行的详细描述与堆栈信息；否则不整理堆栈，仅将 <see cref="Exception.Message"/> 汇总到一行。
-    /// </summary>
+    
+    
+    
+    
     public static string GetDisplay(this Exception? ex, bool multiline) {
         if (ex is null) return "无可用错误信息！";
 
-        // 提取堆栈信息
+        
         var lines = new List<string>();
         bool isInnerException = false;
         static string getExceptionMessage(Exception e) => e.Message + (e switch {
@@ -76,7 +76,7 @@ public static class ExceptionExtensions {
             isInnerException = true;
         }
 
-        // 分析常见错误原因
+        
         string? commonReason = null;
         var rootException = ex.RootException();
         if (rootException is TypeLoadException or BadImageFormatException or MissingMethodException or NotImplementedException or TypeInitializationException)
@@ -90,7 +90,7 @@ public static class ExceptionExtensions {
         else if (ex.IsBadNetwork())
             commonReason = "你的网络环境不佳，请稍后再试，或使用 VPN 改善网络环境。";
 
-        // 输出
+        
         if (multiline) {
             if (commonReason is null) {
                 return lines.Join("\r\n");
@@ -108,9 +108,9 @@ public static class ExceptionExtensions {
         }
     }
 
-    /// <summary>
-    /// 判断该异常是否是由于网络连接不良导致。
-    /// </summary>
+    
+    
+    
     public static bool IsBadNetwork(this Exception ex) {
         foreach (var currentEx in ex.Flatten()) {
             if (currentEx is TimeoutException) {

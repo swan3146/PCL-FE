@@ -5,18 +5,18 @@ Public Class PageResource
 
 #Region "属性"
 
-    ''' <summary>
-    ''' 用于 XAML 快速设置的 Tag 下拉框列表。
-    ''' </summary>
+    
+    
+    
     Public ReadOnly Property SearchTags As ItemCollection
         Get
             Return ComboSearchTag.Items
         End Get
     End Property
 
-    ''' <summary>
-    ''' 英文前后不含空格的可读资源类型名，例如 "Mod"、"整合包"。
-    ''' </summary>
+    
+    
+    
     Public Property TypeName As String
         Get
             Return _TypeName
@@ -29,9 +29,9 @@ Public Class PageResource
     End Property
     Private _TypeName As String = ""
 
-    ''' <summary>
-    ''' 英文前后含一个空格的可读资源类型名，例如 " Mod "、"整合包"。
-    ''' </summary>
+    
+    
+    
     Public Property TypeNameSpaced As String
         Get
             Return _TypeNameSpaced
@@ -45,9 +45,9 @@ Public Class PageResource
     End Property
     Private _TypeNameSpaced As String = ""
 
-    ''' <summary>
-    ''' 该页面对应的资源类型。
-    ''' </summary>
+    
+    
+    
     Public Property PageType As ResourceTypes
         Get
             Return _Type
@@ -64,25 +64,25 @@ Public Class PageResource
 
 #Region "加载"
 
-    ''' <summary>
-    ''' 在切换到页面时，应自动将筛选项设置为与该目标 MC 版本和加载器相同。
-    ''' </summary>
+    
+    
+    
     Public Shared TargetInstance As McInstance = Nothing
-    ''' <summary>
-    ''' 在切换到该页面时自动设置的搜索框内的内容。
-    ''' </summary>
+    
+    
+    
     Public Shared TargetName As String = Nothing
 
-    '在点击 MyResourceItem 时会获取 Loader 的输入，以使资源详情页面可以应用相同的筛选项
+    
     Public Loader As LoaderTask(Of ResourceSearcher.SearchRequest, Integer) = ResourceSearcher.GetLoader(AddressOf LoaderInput)
 
     Private Sub PageResource_Loaded(sender As Object, e As EventArgs) Handles Me.Loaded
         Static IsFirstLoaded As Boolean = False
         ApplyCurseForgeOnly()
-        '不知道从 Initialized 改成 Loaded 会不会有问题，但用 Initialized 会导致初始的筛选器修改被覆盖回默认值
+        
         If TargetInstance IsNot Nothing Then
-            '设置目标
-            ResetFilter() '重置筛选器
+            
+            ResetFilter() 
             TextSearchVersion.Text = TargetInstance.Version.VanillaName
             Dim GetTargetItemByName =
             Function(Name As String) As MyComboBoxItem
@@ -103,18 +103,18 @@ Public Class PageResource
                 TextSearchName.Text = TargetName
                 TargetName = Nothing
             End If
-            '如果已经完成请求，则重新开始
+            
             If IsFirstLoaded Then StartNewSearch()
             ScrollToHome()
         End If
-        '加载器初始化
+        
         If IsFirstLoaded Then Return
         IsFirstLoaded = True
         CType(Parent, MyPageRight).PageLoaderInit(Load, PanLoad, PanContent, PanAlways, Loader, AddressOf Load_OnFinish, AddressOf LoaderInput)
-        '将最高 Drop 加入筛选
+        
         If AllDrops IsNot Nothing AndAlso AllDrops.First > 250 Then
             Dim HighestVersion As String = McVersion.DropToVersion(AllDrops.First)
-            If CType(TextSearchVersion.Items(1), MyComboBoxItem).Content.ToString <> HighestVersion Then '0 是全部
+            If CType(TextSearchVersion.Items(1), MyComboBoxItem).Content.ToString <> HighestVersion Then 
                 TextSearchVersion.Items.Insert(1, New MyComboBoxItem With {.Content = HighestVersion})
             End If
         End If
@@ -136,17 +136,17 @@ Public Class PageResource
 #End Region
 
     Public Storage As New ResourceSearcher.SearchResult
-    ''' <summary>
-    ''' 每页展示的结果数量。
-    ''' </summary>
+    
+    
+    
     Public Const PAGE_SIZE = 40
     Public Page As Integer = 0
 
-    '结果 UI 化
+    
     Private Sub Load_OnFinish()
         Try
             Logger.Info($"开始可视化{TypeNameSpaced}列表，已储藏 {Storage.Results.Count} 个结果，当前在第 {Page + 1} 页")
-            '列表项
+            
             PanProjects.Children.Clear()
             Dim Index As Integer = Math.Min(Page * PAGE_SIZE, Storage.Results.Count - 1)
             For Each Result In Storage.Results.GetRange(Index, Math.Min(Storage.Results.Count - Index, PAGE_SIZE))
@@ -154,7 +154,7 @@ Public Class PageResource
                     ShowMcVersionDesc:=Loader.Input.GameVersion Is Nothing,
                     ShowLoaderDesc:=Loader.Input.ModLoaders = ModLoaders.None AndAlso (PageType = ResourceTypes.Mod OrElse PageType = ResourceTypes.ModPack)))
             Next
-            '页码
+            
             CardPages.Visibility = If(Storage.Results.Count > 40 OrElse
                                       Storage.CurseForgeOffset < Storage.CurseForgeTotal OrElse Storage.ModrinthOffset < Storage.ModrinthTotal,
                                       Visibility.Visible, Visibility.Collapsed)
@@ -163,26 +163,26 @@ Public Class PageResource
             BtnPageFirst.Opacity = If(Page > 1, 1, 0.2)
             BtnPageLeft.IsEnabled = Page > 0
             BtnPageLeft.Opacity = If(Page > 0, 1, 0.2)
-            Dim IsRightEnabled As Boolean = '由于 WPF 的未知 bug，读取到的 IsEnabled 可能是错误的值（#3319）
+            Dim IsRightEnabled As Boolean = 
                 Storage.Results.Count > PAGE_SIZE * (Page + 1) OrElse
                 Storage.CurseForgeOffset < Storage.CurseForgeTotal OrElse Storage.ModrinthOffset < Storage.ModrinthTotal
             BtnPageRight.IsEnabled = IsRightEnabled
             BtnPageRight.Opacity = If(IsRightEnabled, 1, 0.2)
-            '错误信息
+            
             If Storage.ErrorMessage Is Nothing Then
                 HintError.Visibility = Visibility.Collapsed
             Else
                 HintError.Visibility = Visibility.Visible
                 HintError.Text = Storage.ErrorMessage
             End If
-            '强制返回顶部
+            
             ScrollToTop()
         Catch ex As Exception
             Logger.Error(ex, $"可视化{TypeNameSpaced}列表出错")
         End Try
     End Sub
 
-    '自动重试
+    
     Private Sub Load_State(sender As Object, state As MyLoading.MyLoadingState, oldState As MyLoading.MyLoadingState) Handles Load.StateChanged
         Select Case Loader.State
             Case LoadState.Failed
@@ -195,7 +195,7 @@ Public Class PageResource
         End Select
     End Sub
 
-    '切换页码
+    
     Private Sub BtnPageFirst_Click(sender As Object, e As RoutedEventArgs) Handles BtnPageFirst.Click
         ChangePage(0)
     End Sub
@@ -212,7 +212,7 @@ Public Class PageResource
         Logger.Info($"{TypeName}：切换到第 {Page + 1} 页")
         RunInThread(
         Sub()
-            Thread.Sleep(100) '等待向上滚的动画结束
+            Thread.Sleep(100) 
             RunInUi(Sub() CardPages.IsEnabled = True)
             Loader.Start()
         End Sub)
@@ -220,17 +220,17 @@ Public Class PageResource
 
 #Region "搜索"
 
-    '搜索按钮
+    
     Private Sub StartNewSearch() Handles BtnSearchRun.Click
         Page = 0
-        If Loader.ShouldStart(LoaderInput()) Then Storage = New ResourceSearcher.SearchResult '避免连续搜索两次导致 ProjectStorage 引用丢失（#1311）
+        If Loader.ShouldStart(LoaderInput()) Then Storage = New ResourceSearcher.SearchResult 
         Loader.Start()
     End Sub
     Private Sub EnterTrigger(sender As Object, e As KeyEventArgs) Handles TextSearchName.KeyDown, TextSearchVersion.KeyDown
         If e.Key = Key.Enter Then StartNewSearch()
     End Sub
 
-    '重置按钮
+    
     Private Sub ResetFilter() Handles BtnSearchReset.Click
         TextSearchName.Text = ""
         TextSearchVersion.Text = "全部 (也可自行输入)"
@@ -238,10 +238,10 @@ Public Class PageResource
         ComboSearchSource.SelectedIndex = If(PageType = ResourceTypes.Map, 1, 0)
         ComboSearchTag.SelectedIndex = 0
         ComboSearchLoader.SelectedIndex = 0
-        Loader.LastFinishedTime = 0 '要求强制重新开始
+        Loader.LastFinishedTime = 0 
     End Sub
 
-    '地图仅 CurseForge 提供，因此隐藏其余来源
+    
     Private Sub ApplyCurseForgeOnly()
         If PageType <> ResourceTypes.Map OrElse ComboSearchSource Is Nothing Then Return
         For Each Item In ComboSearchSource.Items
@@ -254,8 +254,8 @@ Public Class PageResource
         ComboSearchSource.SelectedIndex = 1
     End Sub
 
-    '版本选择
-    '#3067：当下拉菜单展开时，程序会被 WPF 挂起，因而无法更新 Grid 布局，所以必须延迟到下拉菜单收起后才能更新
+    
+    
     Private Sub TextSearchVersion_TextChanged() Handles TextSearchVersion.TextChanged
         If Not TextSearchVersion.IsDropDownOpen Then UpdateSearchLoaderVisibility()
     End Sub
@@ -272,7 +272,7 @@ Public Class PageResource
 
 #End Region
 
-    '安装已有整合包按钮
+    
     Private Sub BtnSearchInstallModPack_Click(sender As Object, e As EventArgs) Handles BtnSearchInstallModPack.Click
         ModpackInstall()
     End Sub

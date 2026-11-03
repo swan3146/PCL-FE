@@ -3,7 +3,7 @@ Public Class PageSetupSystem
 
     Private Sub PageSetupSystem_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
 
-        '重复加载部分
+        
         PanBack.ScrollToHome()
 
         If BuildType = BuildTypes.Release Then
@@ -13,7 +13,7 @@ Public Class PageSetupSystem
             ItemSystemUpdateDownload.Content = "在有新版本时自动下载（更新快照版前需要先输入土豆码）"
         End If
 
-        '非重复加载部分
+        
         Static IsLoaded As Boolean = False
         If IsLoaded Then Return
         IsLoaded = True
@@ -38,7 +38,7 @@ Public Class PageSetupSystem
         Reload()
     End Sub
 
-    '滑动条
+    
     Private Sub SliderLoad()
         SliderDownloadThread.GetHintText = Function(v) v + 1
         SliderDownloadSpeed.GetHintText =
@@ -65,7 +65,7 @@ Public Class PageSetupSystem
         End If
     End Sub
 
-    '识别码/土豆码替代入口
+    
     Private Sub BtnSystemIdentify_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnSystemIdentify.Click
         PageOtherAbout.CopyIdentify()
     End Sub
@@ -73,12 +73,12 @@ Public Class PageSetupSystem
         InputPotatoCode(False)
     End Sub
 
-    '调试模式
+    
     Private Sub CheckDebugMode_Change() Handles CheckDebugMode.Change
         If AniControlEnabled = 0 Then Hint("部分调试信息将在刷新或启动器重启后切换显示！",, False)
     End Sub
 
-    '自动更新
+    
     Private Sub ComboSystemActivity_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboSystemActivity.SelectionChanged
         If AniControlEnabled <> 0 Then Return
         If ComboSystemActivity.SelectedIndex <> 2 Then Return
@@ -102,16 +102,16 @@ Public Class PageSetupSystem
     Private Sub BtnSystemUpdate_Click(sender As Object, e As EventArgs) Handles BtnSystemUpdate.Click
         UpdateCheckByButton()
     End Sub
-    ''' <summary>
-    ''' 启动器是否已经是最新版？
-    ''' 若返回 Nothing，则代表无更新缓存文件或出错。
-    ''' </summary>
+    
+    
+    
+    
     Public Shared Function IsLauncherNewest() As Boolean?
         Try
-            '确认服务器公告是否正常
+            
             Dim ServerContent As String = If(FileUtils.TryReadAsString(PathTemp & "Cache\Notice.cfg"), "")
             If ServerContent.Split("|").Count < 3 Then Return Nothing
-            '确认是否为最新
+            
             Return ServerContent.Split("|")(If(BuildType = BuildTypes.Release, 2, 1)) <= VersionCode
         Catch ex As Exception
             Logger.Error(ex, "确认启动器更新失败")

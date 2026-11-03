@@ -1,19 +1,19 @@
-' Author: uye (owner of the MaaAssistantArknights team)
-' Original Source: MaaAssistantArknights project - https://github.com/MaaAssistantArknights/MaaAssistantArknights
-' License: Apache License 2.0 (this file only)
-'
-' This file is originally developed for MaaAssistantArknights and licensed under AGPL v3.0.
-' As the original author and copyright holder,
-' I hereby re-license this file under the Apache License 2.0 for use in the Plain Craft Launcher project.
-'
-' This file is contributed under the spirit of good faith and open cooperation.
-' It does not implement any core launcher functions of PCL.
-'
-' Description:
-' Provides a WPF clipboard handling fix to avoid OpenClipboard exceptions
-' in TextBox, RichTextBox, and DataGrid under Windows focus issues or clipboard hooks.
-'
-' Date: 2025-07-03
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Namespace Controls.Behaviors
     Public NotInheritable Class ClipboardInterceptor
@@ -59,10 +59,10 @@ Namespace Controls.Behaviors
         End Sub
 
         Private Shared Sub SetClipboardText(text As String)
-            Forms.Clipboard.SetDataObject(text, False, retryTimes:=10, retryDelay:=100) '实际的复制
+            Forms.Clipboard.SetDataObject(text, False, retryTimes:=10, retryDelay:=100) 
             Try
-                System.Windows.Clipboard.Flush() '将数据持久化到系统剪贴板，避免应用程序退出后数据丢失
-            Catch ex As Exception '持久化失败不抛出异常
+                System.Windows.Clipboard.Flush() 
+            Catch ex As Exception 
                 Logger.Warn(ex, $"剪贴板持久化失败（错误码：0x{ex.HResult:X8}）")
             End Try
         End Sub
@@ -114,7 +114,7 @@ Namespace Controls.Behaviors
                 End Function, maxAttempts:=10, delay:=Function() TimeSpan.FromMilliseconds(100))
                 If pasteText IsNot Nothing Then
 
-                    '将换行符替换为空格（#7825）
+                    
                     If Not tb.AcceptsReturn Then pasteText = pasteText.ReplaceLineEndings(" ", mergeMultiple:=True)
 
                     Dim start = tb.SelectionStart

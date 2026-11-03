@@ -1,23 +1,23 @@
 Imports System.IO
 
-''' <summary>
-''' 官方版 PCL2 / 官方启动器存档的自动检测与同步。
-''' 会把其它常见 .minecraft 目录中、当前游戏文件夹里还没有的存档复制过来，同名存档一律不覆盖。
-''' </summary>
+
+
+
+
 Public Module ModOfficialSaveSync
 
-    ''' <summary>本次运行是否已经做过自动检查。</summary>
+    
     Private HasAutoChecked As Boolean = False
 
-    ''' <summary>一个待同步的存档。</summary>
+    
     Public Class SaveItem
         Public Property Source As String
         Public Property Name As String
     End Class
 
-    ''' <summary>
-    ''' 启动后延迟检查一次官方存档。由主窗体加载完成后调用，不会阻塞界面。
-    ''' </summary>
+    
+    
+    
     Public Sub StartAutoCheck()
         If HasAutoChecked Then Return
         HasAutoChecked = True
@@ -25,7 +25,7 @@ Public Module ModOfficialSaveSync
         RunInNewThread(
             Sub()
                 Try
-                    Thread.Sleep(2500) '等启动动画与首页加载跑完，避免抢资源
+                    Thread.Sleep(2500) 
                     RunInUiWait(Sub() CheckAndSync(False))
                 Catch ex As Exception
                     Logger.Warn(ex, "自动检测官方存档失败")
@@ -33,14 +33,14 @@ Public Module ModOfficialSaveSync
             End Sub, "官方存档同步")
     End Sub
 
-    ''' <summary>当前游戏文件夹下的存档目录（以 \ 结尾），未选择游戏文件夹时返回 Nothing。</summary>
+    
     Public Function GetTargetSavesFolder() As String
         Dim Folder As String = McFolderSelected
         If String.IsNullOrWhiteSpace(Folder) Then Return Nothing
         Return Folder & "saves\"
     End Function
 
-    ''' <summary>可能包含官方版 PCL2 存档的候选 .minecraft 目录。</summary>
+    
     Public Function GetCandidateFolders() As List(Of String)
         Dim Raw As String() = {
             Paths.AppData & ".minecraft\",
@@ -60,12 +60,12 @@ Public Module ModOfficialSaveSync
         Return Result
     End Function
 
-    ''' <summary>扫描出当前游戏文件夹缺少的存档。</summary>
+    
     Public Function ScanPendingSaves() As List(Of SaveItem)
         Dim Result As New List(Of SaveItem)
         Dim Target As String = GetTargetSavesFolder()
         If Target Is Nothing Then Return Result
-        '记录目标文件夹中已有的存档名（不区分大小写），用于去重与防覆盖
+        
         Dim Known As New List(Of String)
         If Directory.Exists(Target) Then
             For Each Dir As String In Directory.GetDirectories(Target)
@@ -73,7 +73,7 @@ Public Module ModOfficialSaveSync
             Next
         End If
         For Each Folder As String In GetCandidateFolders()
-            If Target.StartsWith(Folder, StringComparison.OrdinalIgnoreCase) Then Continue For '就是自己
+            If Target.StartsWith(Folder, StringComparison.OrdinalIgnoreCase) Then Continue For 
             Dim Saves As String = Folder & "saves\"
             If Not Directory.Exists(Saves) Then Continue For
             Dim Dirs As String()
@@ -85,10 +85,10 @@ Public Module ModOfficialSaveSync
             End Try
             For Each Dir As String In Dirs
                 Try
-                    If Not File.Exists(Dir & "\level.dat") Then Continue For '不是有效存档
+                    If Not File.Exists(Dir & "\level.dat") Then Continue For 
                     Dim Name As String = IO.Path.GetFileName(Dir)
                     Dim Key As String = Name.ToLowerInvariant()
-                    If Known.Contains(Key) Then Continue For '已有同名存档，跳过
+                    If Known.Contains(Key) Then Continue For 
                     Known.Add(Key)
                     Result.Add(New SaveItem With {.Source = Dir, .Name = Name})
                 Catch ex As Exception
@@ -99,11 +99,11 @@ Public Module ModOfficialSaveSync
         Return Result
     End Function
 
-    ''' <summary>
-    ''' 检测并询问是否同步官方存档。
-    ''' </summary>
-    ''' <param name="IsManual">是否由用户手动点击触发（手动触发时无论有无结果都给出提示）。</param>
-    ''' <returns>实际同步的存档数量。</returns>
+    
+    
+    
+    
+    
     Public Function CheckAndSync(IsManual As Boolean) As Integer
         If Not IsManual AndAlso Not Settings.Get(Of Boolean)("UiAutoSyncOfficialSaves") Then Return 0
         Dim Target As String = GetTargetSavesFolder()
@@ -123,7 +123,7 @@ Public Module ModOfficialSaveSync
             If IsManual Then Hint("没有发现需要同步的官方存档。", HintType.Green)
             Return 0
         End If
-        '列出前几个存档名，避免弹窗过长
+        
         Dim Names As New List(Of String)
         For i As Integer = 0 To Math.Min(Pending.Count, 6) - 1
             Names.Add("· " & Pending(i).Name)
@@ -144,7 +144,7 @@ Public Module ModOfficialSaveSync
         For Each Item As SaveItem In Pending
             Try
                 Dim Dest As String = Target & Item.Name
-                If Directory.Exists(Dest) Then Continue For '二次确认，始终不覆盖
+                If Directory.Exists(Dest) Then Continue For 
                 DirectoryUtils.Copy(Item.Source, Dest)
                 Copied += 1
                 Logger.Info($"已同步存档：{Item.Source} → {Dest}")

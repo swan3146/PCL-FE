@@ -62,9 +62,9 @@ Public Class MyLoading
             RefreshText()
         End Set
     End Property
-    ''' <summary>
-    ''' 是否在使用 Loader 时使用 Loader 的错误输出来替换默认的错误文本显示。
-    ''' </summary>
+    
+    
+    
     Public Property TextErrorInherit As Boolean = True
 
     Private Sub RefreshText() Handles Me.IsErrorChanged, Me.Loaded, _State.ProgressChanged
@@ -95,7 +95,7 @@ Public Class MyLoading
 
 #Region "状态改变"
 
-    '状态枚举
+    
     Public Enum MyLoadingState
         Unloaded = -1
         Run = 0
@@ -103,7 +103,7 @@ Public Class MyLoading
         [Error] = 2
     End Enum
 
-    '用于外部改变的公开状态
+    
     Private WithEvents _State As ILoadingTrigger
     Public Property State As ILoadingTrigger
         Get
@@ -128,7 +128,7 @@ Public Class MyLoading
         AniLoop()
     End Sub
 
-    '用于引发外部事件的状态
+    
     Private Property _OuterState As MyLoadingState = MyLoadingState.Unloaded
     Private Property OuterState As MyLoadingState
         Get
@@ -138,14 +138,14 @@ Public Class MyLoading
             If _OuterState = value Then Return
             Dim OldValue = _OuterState
             _OuterState = value
-            '引发事件
+            
             RaiseEvent StateChanged(Me, value, OldValue)
             If (OldValue = MyLoadingState.Error) <> (value = MyLoadingState.Error) Then RaiseEvent IsErrorChanged(Me, value = MyLoadingState.Error)
         End Set
     End Property
 
 
-    '用于引发内部动画事件的状态
+    
     Private Property _InnerState As MyLoadingState = MyLoadingState.Unloaded
     Private Property InnerState As MyLoadingState
         Get
@@ -155,7 +155,7 @@ Public Class MyLoading
             If _InnerState = value Then Return
             Dim OldValue = _InnerState
             _InnerState = value
-            '引发事件
+            
             AniLoop()
             If (OldValue = MyLoadingState.Error) <> (value = MyLoadingState.Error) Then ErrorAnimation(Me, value = MyLoadingState.Error)
         End Set
@@ -165,17 +165,17 @@ Public Class MyLoading
 
 #Region "动画"
 
-    ''' <summary>
-    ''' 是否需要动画。
-    ''' </summary>
+    
+    
+    
     Public Property HasAnimation As Boolean = True
 
-    ''' <summary>
-    ''' 主动画循环是否正在运行中。
-    ''' </summary>
+    
+    
+    
     Private IsLooping As Boolean = False
     Private Sub AniLoop()
-        '这坨循环代码也是老屎坑了，救救.jpg
+        
         If Not HasAnimation OrElse IsLooping OrElse Not InnerState = MyLoadingState.Run OrElse AniSpeed > 10 OrElse Not IsLoaded Then Return
         IsLooping = True
         ErrorAnimationWaiting = True
@@ -205,13 +205,13 @@ Public Class MyLoading
         }, "MyLoader Loop " & Uuid & "/" & GetUuid())
     End Sub
 
-    ''' <summary>
-    ''' 镐子是否还没挥下去，要求错误动画等待。
-    ''' </summary>
+    
+    
+    
     Private ErrorAnimationWaiting As Boolean = False
     Private Sub ErrorAnimation(sender As Object, isError As Boolean)
         If isError Then
-            '非错误变为错误
+            
             Dim Wait As Integer = If(ErrorAnimationWaiting, 400, 0)
             AniStart({
                 AaColor(PanBack, ForegroundProperty, "ColorBrushRedLight", 300),
@@ -219,7 +219,7 @@ Public Class MyLoading
                 AaScaleTransform(PathError, 1 - CType(PathError.RenderTransform, ScaleTransform).ScaleX, 400, 300 + Wait, New AniEaseOutBack)
             }, "MyLoader Error " & Uuid)
         Else
-            '错误变为非错误
+            
             AniStart({
                 AaOpacity(PathError, -PathError.Opacity, 100),
                 AaScaleTransform(PathError, 0.5 - CType(PathError.RenderTransform, ScaleTransform).ScaleX, 200),
@@ -237,7 +237,7 @@ Public Class MyLoading
     End Sub
     Private IsMouseDown As Boolean = False
     Private Sub Button_MouseDown(sender As Object, e As MouseButtonEventArgs) Handles Me.MouseLeftButtonDown
-        '鼠标点击判定（务必放在点击事件之后，以使得 Button_MouseUp 先于 Button_MouseLeave 执行）
+        
         IsMouseDown = True
     End Sub
     Private Sub Button_MouseLeave(sender As Object, e As Object) Handles Me.MouseLeave, Me.MouseLeftButtonUp

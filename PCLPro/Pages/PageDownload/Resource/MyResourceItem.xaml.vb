@@ -3,7 +3,7 @@ Public Class MyResourceItem
 #Region "基础属性"
     Public Uuid As Integer = GetUuid()
 
-    '标题
+    
     Public Property Title As String
         Get
             Return LabTitle.Text
@@ -14,7 +14,7 @@ Public Class MyResourceItem
         End Set
     End Property
 
-    '副标题
+    
     Public Property SubTitle As String
         Get
             Return If(LabTitleRaw?.Text, "")
@@ -26,7 +26,7 @@ Public Class MyResourceItem
         End Set
     End Property
 
-    '描述
+    
     Public Property Description As String
         Get
             Return LabInfo.Text
@@ -36,13 +36,13 @@ Public Class MyResourceItem
             LabInfo.Text = value
         End Set
     End Property
-    '指向时扩展描述
+    
     Private Sub LabInfo_MouseEnter(sender As Object, e As MouseEventArgs) Handles LabInfo.MouseEnter
         ToolTipInfo.Content = LabInfo.Text
         LabInfo.ToolTip = If(IsTextTrimmed(LabInfo), ToolTipInfo, Nothing)
     End Sub
 
-    'Tag
+    
     Public WriteOnly Property Tags As List(Of String)
         Set(Tags As List(Of String))
             PanTags.Children.Clear()
@@ -63,7 +63,7 @@ Public Class MyResourceItem
 
 #Region "点击"
 
-    '触发点击事件
+    
     Public Event Click(sender As Object, e As MouseButtonEventArgs)
     Private Sub Button_MouseUp(sender As Object, e As MouseButtonEventArgs) Handles Me.PreviewMouseLeftButtonUp
         If IsMouseDown Then
@@ -73,7 +73,7 @@ Public Class MyResourceItem
         End If
     End Sub
     Private Sub MyResourceItem_Click(sender As MyResourceItem, e As EventArgs) Handles Me.Click
-        '记录当前展开的卡片标题（#2712）
+        
         Dim Titles As New List(Of String)
         If FrmMain.PageCurrent.Page = FormMain.PageType.ResourceDetail Then
             For Each Card As MyCard In FrmDownloadResourceDetail.PanResults.Children
@@ -81,12 +81,12 @@ Public Class MyResourceItem
             Next
             Logger.Info($"记录当前已展开的卡片：{String.Join("、", Titles)}")
         End If
-        '打开详情页
+        
         Dim TargetType As ResourceTypes
         Dim TargetInstance As String = Nothing
         Dim TargetLoader As ModLoaders = ModLoaders.None
         If FrmMain.PageCurrent.Page = FormMain.PageType.Download Then
-            '从下载页进入
+            
             Select Case FrmMain.PageCurrentSub
                 Case FormMain.PageSubType.DownloadMod
                     TargetType = ResourceTypes.Mod
@@ -109,8 +109,8 @@ Public Class MyResourceItem
                     TargetInstance = FrmDownloadMap.Content.Loader.Input.GameVersion
             End Select
         Else
-            '从详情页进入（查看前置）
-            TargetType = ResourceTypes.Any '允许任意类别
+            
+            TargetType = ResourceTypes.Any 
             TargetInstance = FrmMain.PageCurrent.Additional(2)
             TargetLoader = FrmMain.PageCurrent.Additional(3)
         End If
@@ -118,7 +118,7 @@ Public Class MyResourceItem
                            .Additional = {sender.Tag, Titles, TargetInstance, TargetLoader, TargetType}})
     End Sub
 
-    '鼠标点击判定
+    
     Private IsMouseDown As Boolean = False
     Private Sub Button_MouseDown(sender As Object, e As MouseButtonEventArgs) Handles Me.PreviewMouseLeftButtonDown
         If IsMouseOver AndAlso CanInteraction Then IsMouseDown = True
@@ -151,9 +151,9 @@ Public Class MyResourceItem
                 SetRowSpan(Rect, 999)
                 Children.Insert(0, Rect)
                 _RectBack = Rect
-                '<!--<Border x:Name = "RectBack" CornerRadius="3" RenderTransformOrigin="0.5,0.5" SnapsToDevicePixels="True" 
-                'IsHitTestVisible = "False" Opacity="0" BorderThickness="1" 
-                'Grid.ColumnSpan = "4" Background="{DynamicResource ColorBrush7}" BorderBrush="{DynamicResource ColorBrush6}"/>-->
+                
+                
+                
             End If
             Return _RectBack
         End Get
@@ -162,13 +162,13 @@ Public Class MyResourceItem
 #End Region
 
     Private StateLast As String
-    ''' <summary>
-    ''' 是否允许交互。目前仅用于 PageDownloadResourceDetail 的顶部栏展示：若关闭碰撞检测，则无法展开 Tooltip。
-    ''' </summary>
+    
+    
+    
     Public Property CanInteraction As Boolean = True
     Public Sub RefreshColor(sender As Object, e As EventArgs) Handles Me.MouseEnter, Me.MouseLeave, Me.MouseLeftButtonDown, Me.MouseLeftButtonUp
         If Not CanInteraction Then Return
-        '判断当前颜色
+        
         Dim StateNew As String, Time As Integer
         If IsMouseOver Then
             If IsMouseDown Then
@@ -184,9 +184,9 @@ Public Class MyResourceItem
         End If
         If StateLast = StateNew Then Return
         StateLast = StateNew
-        '触发颜色动画
-        If IsLoaded AndAlso AniControlEnabled = 0 Then '防止默认属性变更触发动画
-            '有动画
+        
+        If IsLoaded AndAlso AniControlEnabled = 0 Then 
+            
             Dim Ani As New List(Of AniData)
             If IsMouseOver Then
                 Ani.AddRange({
@@ -208,7 +208,7 @@ Public Class MyResourceItem
             End If
             AniStart(Ani, "MyResourceItem Color " & Uuid)
         Else
-            '无动画
+            
             AniStop("MyResourceItem Color " & Uuid)
             If _RectBack IsNot Nothing Then RectBack.Opacity = 0
         End If
