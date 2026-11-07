@@ -490,7 +490,14 @@ Sleeper:
 
     Public Sub AniTimer(DeltaTick As Double)
         Try
-            If DeltaTick / AniSpeed > 100 Then Logger.Info($"两个动画帧间隔 {DeltaTick} ms")
+            If DeltaTick / AniSpeed > 100 Then
+                Dim VideoOn As String = "未知"
+                Try
+                    If FrmMain IsNot Nothing Then VideoOn = If(FrmMain.IsVideoBackgroundActive, "开启", "关闭")
+                Catch
+                End Try
+                Logger.Info($"两个动画帧间隔 {DeltaTick} ms（视频背景：{VideoOn}，动画组：{AniGroups.Count}）")
+            End If
             Dim i As Integer = -1
 
             Do While i + 1 < AniGroups.Count

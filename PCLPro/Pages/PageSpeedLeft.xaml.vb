@@ -42,7 +42,7 @@
                 Dim RawPercent As Double = If(Tasks.Any, Tasks.Select(Function(l) l.Progress).Average().Clamp(0, 1), 1)
                 Dim PredictText As String = Math.Floor(RawPercent * 100) & "." & Math.Floor((RawPercent * 100 - Math.Floor(RawPercent * 100)) * 100).ToString.EnsureLength("0", 2) & " %"
                 LabProgress.Text = If(RawPercent > 0.999999, "100 %", PredictText)
-                LabSpeed.Text = StringUtils.FormatByteSize(NetManager.Speed) & "/s"
+                LabSpeed.Text = If(NetManager.Speed = 0 AndAlso NetTaskThreadCount = 0 AndAlso Tasks.Any, "安装中…", StringUtils.FormatByteSize(NetManager.Speed) & "/s")
                 LabFile.Text = If(NetManager.FileRemain < 0, "0*", NetManager.FileRemain)
                 LabThread.Text = NetTaskThreadCount & " / " & NetTaskThreadLimit
             End If
@@ -71,11 +71,18 @@
                 Dim NewValue As Double = Loader.Progress + Loader.State
                 If Val(Card.Tag) = NewValue Then Return
                 Card.Tag = NewValue
-                If Card.Children.Count <= 3 Then
+                Dim Content As Grid = Nothing
+                For Each Child As UIElement In Card.Children
+                    If TypeOf Child Is Grid AndAlso CType(Child, Grid).RowDefinitions.Count > 0 Then
+                        Content = CType(Child, Grid)
+                        Exit For
+                    End If
+                Next
+                If Content Is Nothing Then
                     Logger.Warn($"元素不足的卡片：{Loader.Name}")
                     Return
                 End If
-                Card = Card.Children(3)
+                Card = Content
                 Try
                     Select Case Loader.State
                         Case LoadState.Failed
@@ -100,7 +107,9 @@
 #Region "进度不同，更新卡片"
                             Try
                                 If Card.Children.Count < LoaderList.Count * 2 Then
-                                    Logger.Warn($"刷新任务管理卡片 {Loader.Name} 失败：卡片中仅有 {Card.Children.Count} 个子项，要求至少有 {LoaderList.Count * 2} 个子项")
+                                    Logger.Info($"任务管理卡片子项数量不匹配（{Card.Children.Count} / {LoaderList.Count * 2}），重建卡片：{Loader.Name}")
+                                    FrmSpeedRight.PanMain.Children.Remove(RightCards(Loader.Name))
+                                    RightCards.Remove(Loader.Name)
                                     Exit Try
                                 End If
                                 Dim Row As Integer = 0

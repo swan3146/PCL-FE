@@ -58,7 +58,13 @@ Public Class MyComboBox
         IsMouseDown = False
     End Sub
 
-    Public Sub RefreshColor() Handles Me.IsEnabledChanged, Me.MouseEnter, Me.MouseLeave, Me.PreviewMouseLeftButtonDown, Me.PreviewMouseLeftButtonUp, Me.GotKeyboardFocus
+    Public Sub RefreshColor() Handles Me.IsEnabledChanged, Me.MouseEnter, Me.MouseLeave, Me.PreviewMouseLeftButtonDown, Me.PreviewMouseLeftButtonUp, Me.GotKeyboardFocus, Me.Loaded
+
+        
+        If Settings.Get(Of Integer)("UiUiStyle") = 1 Then
+            RefreshColorGlass()
+            Return
+        End If
 
         Dim ForeColorName As String
         Dim BackColorName As String
@@ -95,6 +101,33 @@ Public Class MyComboBox
             SetResourceReference(ForegroundProperty, ForeColorName)
             SetResourceReference(BackgroundProperty, BackColorName)
         End If
+    End Sub
+
+    
+    
+    
+    Private Sub RefreshColorGlass()
+        Dim Fore As MyColor
+        Dim Back As MyColor
+        If Not IsEnabled Then
+            Fore = New MyColor(130, 255, 255, 255)
+            Back = New MyColor(24, 0, 0, 0)
+        ElseIf IsMouseDown OrElse IsDropDownOpen OrElse (IsEditable AndAlso Template.FindName("PART_EditableTextBox", Me).IsFocused) Then
+            Fore = New MyColor(255, 255, 255, 255)
+            Back = New MyColor(88, 0, 0, 0)
+        ElseIf IsMouseOver Then
+            Fore = New MyColor(252, 255, 255, 255)
+            Back = New MyColor(64, 0, 0, 0)
+        Else
+            Fore = New MyColor(235, 255, 255, 255)
+            Back = New MyColor(44, 0, 0, 0)
+        End If
+
+        
+        
+        AniStop("MyComboBox Color " & Uuid)
+        Foreground = New SolidColorBrush(CType(Fore, Color))
+        Background = New SolidColorBrush(CType(Back, Color))
     End Sub
 
     Private RealWidth As Double

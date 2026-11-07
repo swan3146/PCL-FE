@@ -455,7 +455,7 @@ Public Class PageLinkMain
     End Function
 
     Private Sub Copy() Handles BtnFinishCopy.Click
-        Dim CodeText As String = $"在 Plain Craft Launcher Fork Enhanced 启动器中输入房间码【{GetInviteCode()}】，即可加入联机房间！"
+        Dim CodeText As String = $"在 PCL FE（Plain Craft Launcher Fork Enhanced）启动器中输入房间码【{GetInviteCode()}】，即可加入联机房间！"
         ClipboardSet(CodeText, False)
         Settings.Set("LinkLastAutoJoinInviteCode", CodeText)
         Hint("已复制房间码！", HintType.Green)

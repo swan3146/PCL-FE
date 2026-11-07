@@ -12,6 +12,9 @@ Public Class FormMain
         Dim FeatureList As New List(Of KeyValuePair(Of Integer, String))
 
         If BuildType = BuildTypes.Release Then
+            If LastVersion < 436 Then
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "(｡•̀ᴗ-)✧ 优化了下载功能"))
+            End If
             If LastVersion < 435 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "(｡•̀ᴗ-)✧ 修复 从毛玻璃模式切回简洁版时部分界面不立即生效 现在所有卡片与仍然打开的弹窗都会马上恢复平面样式"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "(๑•̀ㅂ•́)و✧ 新增 界面文字颜色可自定义 可随手挑颜色 也可以一键跟随主题 深色壁纸配浅色文字更清楚"))
@@ -339,7 +342,7 @@ Public Class FormMain
         End If
         Dim Content As String = "· " & ContentList.Join(vbCrLf & "· ")
 
-        Content &= vbCrLf & vbCrLf & "注意：PCL  FE 是第三方基于 PCL2 开发的非官方分支 并非 PCL2 官方发布 请注意辨别"
+        Content &= vbCrLf & vbCrLf & "注意：PCL FE 是第三方基于 PCL2 开发的非官方分支，并非 PCL2 官方发布，请注意辨别"
 
         Dim ShowLog As Action =
             Sub()
@@ -1358,6 +1361,15 @@ Public Class FormMain
             Logger.Error(ex, "切回窗口时出错")
         End Try
 
+        
+        Try
+            If WindowState <> WindowState.Minimized AndAlso _videoSrcPath <> "" AndAlso _videoReady Then
+                _videoPaused = False
+                VideoBack.Play()
+            End If
+        Catch
+        End Try
+
         If PageLinkMain.LinkState <> PageLinkMain.LinkStates.Waiting Then Return
         If PageCurrent = PageType.Link Then Return
         Dim Code = ClipboardGetText() : If Code Is Nothing Then Return
@@ -2369,6 +2381,16 @@ Public Class FormMain
         VideoBackgroundClear()
         Settings.Set("UiVideoBackground", "")
         Hint("该视频无法播放，已切回静态壁纸。请换用 mp4（H.264）格式的视频。", HintType.Red)
+    End Sub
+
+    Private Sub FormMain_Deactivated() Handles Me.Deactivated
+        Try
+            If _videoSrcPath <> "" AndAlso _videoReady Then
+                _videoPaused = True
+                VideoBack.Pause()
+            End If
+        Catch
+        End Try
     End Sub
 
     Private Sub FormMain_StateChanged(sender As Object, e As EventArgs) Handles Me.StateChanged

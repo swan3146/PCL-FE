@@ -982,34 +982,54 @@ Public Module ModDownload
 
 #Region "DlMod | Mod 镜像源请求"
 
+    
+    Private ReadOnly DlJsonCache As New Dictionary(Of String, (Time As Long, Json As JToken))
+    Private Const DlJsonCacheTtl As Long = 120000
+
     Public Function DlModRequest(Url As String, Optional Method As HttpMethod = Nothing,
                                  Optional Content As String = Nothing, Optional ContentType As String = Nothing) As JToken
+        Dim CacheKey As String = If(Method Is Nothing, Url & "|" & If(Content, ""), "")
+        If CacheKey <> "" Then
+            SyncLock DlJsonCache
+                Dim Cached As (Time As Long, Json As JToken) = (0, Nothing)
+                If DlJsonCache.TryGetValue(CacheKey, Cached) AndAlso Environment.TickCount - Cached.Time < DlJsonCacheTtl Then
+                    Return Cached.Json
+                End If
+            End SyncLock
+        End If
         Dim Urls As New List(Of (Url As String, Timeout As Integer))
         Dim McimUrl As String = DlSourceModGet(Url)
         If McimUrl <> Url Then
             Select Case Settings.Get(Of Integer)("ToolDownloadMod")
                 Case 0
-                    Urls.Add((McimUrl, 10))
-                    Urls.Add((McimUrl, 10))
-                    Urls.Add((Url, 30))
+                    Urls.Add((McimUrl, 5))
+                    Urls.Add((McimUrl, 5))
+                    Urls.Add((Url, 12))
                 Case 1
-                    Urls.Add((Url, If(Url.Contains("modrinth"), 20, 10)))
-                    Urls.Add((McimUrl, 10))
-                    Urls.Add((Url, 30))
-                    Urls.Add((McimUrl, 30))
+                    Urls.Add((Url, If(Url.Contains("modrinth"), 12, 6)))
+                    Urls.Add((McimUrl, 5))
+                    Urls.Add((Url, 12))
+                    Urls.Add((McimUrl, 12))
                 Case Else
-                    Urls.Add((Url, If(Url.Contains("modrinth"), 20, 10)))
-                    Urls.Add((Url, 30))
-                    Urls.Add((McimUrl, 30))
+                    Urls.Add((Url, If(Url.Contains("modrinth"), 12, 6)))
+                    Urls.Add((Url, 12))
+                    Urls.Add((McimUrl, 12))
             End Select
         Else
-            Urls.Add((Url, If(Url.Contains("modrinth"), 20, 10)))
-            Urls.Add((Url, 30))
+            Urls.Add((Url, If(Url.Contains("modrinth"), 12, 6)))
+            Urls.Add((Url, 12))
         End If
         Dim Errors As New List(Of Exception)
         For Each Source In Urls
             Try
-                Return NetRequestByClient(Source.Url, Method, Content, ContentType, Timeout:=Source.Timeout * 1000, Encoding:=Encoding.UTF8, RequireJson:=True).DeserializeJson()
+                Dim Result As JToken = NetRequestByClient(Source.Url, Method, Content, ContentType, Timeout:=Source.Timeout * 1000, Encoding:=Encoding.UTF8, RequireJson:=True).DeserializeJson()
+                If CacheKey <> "" Then
+                    SyncLock DlJsonCache
+                        If DlJsonCache.Count > 200 Then DlJsonCache.Clear()
+                        DlJsonCache(CacheKey) = (Environment.TickCount, Result)
+                    End SyncLock
+                End If
+                Return Result
             Catch ex As Exception
                 Errors.Add(ex)
             End Try

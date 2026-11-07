@@ -49,10 +49,18 @@ Public Module ModMedia
 
     Private Function EnsureFfmpeg(Reason As String) As Boolean
         If FfmpegReady() Then Return True
-        Dim Text As String = "播放" & Reason & "需要 FFmpeg 解码器。" & vbCrLf &
-                             "首次使用需要下载约 90 MB，下载一次之后所有格式都可以直接播放或转换。" & vbCrLf & vbCrLf &
-                             "是否现在下载？"
-        If MyMsgBox(Text, "需要 FFmpeg 解码器", "下载", "取消", IsWarn:=True) <> 1 Then Return False
+        
+        Dim Choice As Integer = MyMsgBox(
+            $"检测到{Reason}无法直接解码，需要下载 FFmpeg 解码器。" & vbCrLf &
+            "该解码器只需下载一次，之后视频背景和音乐的所有格式都可以直接使用。" & vbCrLf &
+            "现在下载吗？",
+            "需要下载解码器", "下载", "取消")
+        If Choice <> 1 Then
+            Logger.Info($"用户取消了 FFmpeg 解码器下载（{Reason}）")
+            Return False
+        End If
+        Logger.Info($"首次播放{Reason}，正在自动下载 FFmpeg 解码器")
+        Hint($"首次播放{Reason}，正在自动下载 FFmpeg 解码器…", HintType.Blue, False)
         Return DownloadFfmpeg()
     End Function
 

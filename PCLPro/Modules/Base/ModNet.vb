@@ -879,6 +879,8 @@ SourceBreak:
                ex.Message.Contains("(502)") OrElse ex.Message.Contains("(404)") OrElse
                ex.Message.Contains("未能解析") OrElse ex.Message.Contains("无返回数据") OrElse ex.Message.Contains("空间不足") OrElse
                ((ex.Message.Contains("(403)") OrElse ex.Message.Contains("(429)")) AndAlso Not Th.Source.Url.Contains("bmclapi")) OrElse
+               ((TypeOf ex Is TimeoutException OrElse TypeOf ex Is OperationCanceledException OrElse ex.Message.Contains("速度过慢")) AndAlso
+                Not IsNoSplit AndAlso HasAvailableSource(False)) OrElse
                (Th.Source.FailCount >= NetTaskThreadLimit.Clamp(5, 30) AndAlso DownloadDone < 1) OrElse Th.Source.FailCount > NetTaskThreadLimit + 2 Then
 
                 Dim IsThisFail As Boolean = False

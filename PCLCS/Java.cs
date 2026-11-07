@@ -117,6 +117,13 @@ public static class JavaUtils {
             Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Eclipse Adoptium\",
             Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Amazon Corretto\",
             Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Zulu\",
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\BellSoft\",
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Semeru\",
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\GraalVM\",
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Eclipse Foundation\",
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\JetBrains\",
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Programs\Eclipse Adoptium\",
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Programs\Android Studio\jbr\",
             ..DirectoryUtils.EnumerateDirectories(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Microsoft\", searchPattern: "jdk-*"),
 
             ..(Environment.GetEnvironmentVariable("JDK_HOME") + ";" + Environment.GetEnvironmentVariable("JAVA_HOME")).

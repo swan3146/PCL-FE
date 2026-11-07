@@ -300,22 +300,36 @@ Public Module ModJava
                         If(Target.Is(Of McInstance), GetJavaRequirement(Instance).Range, Target.As(Of ValueRange(Of Version)))
                     Dim RecommendedComponent As String =
                         If(Target.Is(Of McInstance), GetJavaRequirement(Instance).RecommendedComponent, Nothing)
-                    Logger.Info($"自动选择以下范围的 Java：{Range} {RecommendedComponent}")
+                    Dim PreferredMajor As Integer = 0
+                    If Instance IsNot Nothing Then
+                        PreferredMajor = If(Instance.JsonObject?("javaVersion")?("majorVersion")?.ToObject(Of Integer),
+                                            If(Instance.JsonVersion?("java_version")?.ToObject(Of Integer), 0))
+                        If PreferredMajor <= 0 AndAlso Not Range.IsEmpty Then PreferredMajor = Range.Lower.Major
+                    End If
+                    Logger.Info($"自动选择以下范围的 Java：{Range} {RecommendedComponent}（该版本需要 Java {PreferredMajor}）")
                     If Range.IsEmpty Then Throw New Exception("Java 版本需求存在冲突，导致没有任何可能适配的 Java，请查看 PCL 的日志了解详细信息！")
 
                     Dim SelectJavaFromJavaList =
                     Function() As Java
                         JavaListRefreshWorker.WaitIfRunning()
+                        Dim Fallback As Java = Nothing
                         For Each ChosenJava In Configs.JavaList.Get()
                             If Not ChosenJava.CheckAsync(c).Run() Then
                                 Logger.Warn($"Java 检查失败，将尝试列表中的下一个 Java：{ChosenJava}")
                                 Continue For
                             End If
                             If ChosenJava.Version Is Nothing OrElse Not Range.Contains(ChosenJava.Version) Then Continue For
-                            Logger.Info($"已选定 Java：{ChosenJava}")
+                            If PreferredMajor > 0 AndAlso ChosenJava.Version.Major <> PreferredMajor Then
+                                If Fallback Is Nothing Then Fallback = ChosenJava
+                                Continue For
+                            End If
+                            Logger.Info($"已选定 Java（匹配版本需求）：{ChosenJava}")
                             Return ChosenJava
                         Next
-                        Return Nothing
+                        If Fallback IsNot Nothing Then
+                            Logger.Info($"没有 Java {PreferredMajor}，退而使用列表中最接近的可用 Java：{Fallback}")
+                        End If
+                        Return Fallback
                     End Function
                     p?.Set(0.25)
                     Dim Result = SelectJavaFromJavaList()
