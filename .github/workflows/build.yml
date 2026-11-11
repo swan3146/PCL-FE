@@ -39,6 +39,9 @@ jobs:
     - name: Restore NuGet Packages
       run: msbuild PCLPro.sln -t:Restore -p:Configuration=${{ matrix.configuration }}
 
+    - name: Build Dependencies
+      run: msbuild PCLCS\PCLCS.csproj -p:Configuration=${{ matrix.configuration }}
+
     - name: Build
       run: msbuild PCLPro.sln -p:Configuration=${{ matrix.configuration }}
 
