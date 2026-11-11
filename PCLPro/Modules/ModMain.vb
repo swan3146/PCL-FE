@@ -240,7 +240,6 @@ EndHint:
     End Function
 
     Public Function MyMsgBoxSelect(Selections As IEnumerable(Of IMyRadio), Optional Title As String = "提示", Optional Button1 As String = "确定", Optional Button2 As String = "", Optional IsWarn As Boolean = False) As Integer?
-
         Dim Converter As New MyMsgBoxConverter With {.Type = MyMsgBoxType.Select, .Button1 = Button1, .Button2 = Button2, .Content = Selections, .IsWarn = IsWarn, .Title = Title}
         WaitingMyMsgBox.Enqueue(Converter)
 
@@ -309,6 +308,7 @@ EndHint:
     Public FrmDownloadShader As PageDownloadShader
     Public FrmDownloadResourcePack As PageDownloadResourcePack
     Public FrmDownloadMap As PageDownloadMap
+    Public FrmDownloadFavorite As PageDownloadFavorite
 
     Public FrmSetupLeft As PageSetupLeft
     Public FrmSetupLaunch As PageSetupLaunch

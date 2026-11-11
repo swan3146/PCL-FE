@@ -220,6 +220,7 @@
     <Compile Include="Modules\Base\ModFirewall.vb" />
     <Compile Include="Modules\Base\ModGlass.vb" />
     <Compile Include="Modules\Resource\LocalResourceFile.vb" />
+    <Compile Include="Modules\Resource\ModFavorite.vb" />
     <Compile Include="Modules\Resource\ResourceProject.vb" />
     <Compile Include="Modules\Resource\ResourceVersion.vb" />
     <Compile Include="Modules\Resource\ResourceSearcher.vb" />
@@ -275,6 +276,9 @@
     </Compile>
     <Compile Include="Pages\PageDownload\Resource\PageDownloadMap.xaml.vb">
       <DependentUpon>PageDownloadMap.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageDownload\Favorite\PageDownloadFavorite.xaml.vb">
+      <DependentUpon>PageDownloadFavorite.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\PageDownload\Resource\PageDownloadPack.xaml.vb">
       <DependentUpon>PageDownloadPack.xaml</DependentUpon>
@@ -523,6 +527,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Pages\PageDownload\Resource\PageDownloadMap.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PageDownload\Favorite\PageDownloadFavorite.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

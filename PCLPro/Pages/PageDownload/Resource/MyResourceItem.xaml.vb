@@ -57,11 +57,60 @@ Public Class MyResourceItem
 
 #End Region
 
+#Region "收藏"
+
+    Public FavoriteType As ResourceTypes = ResourceTypes.Mod
+
+    
+    
+    
+    Public WriteOnly Property ShowFavorite As Boolean
+        Set(value As Boolean)
+            BtnFavorite.Visibility = If(value, Visibility.Visible, Visibility.Collapsed)
+            If value Then RefreshFavorite()
+        End Set
+    End Property
+
+    Private Sub RefreshFavorite()
+        Dim Project = TryCast(Tag, ResourceProject)
+        Dim IsFav As Boolean = Project IsNot Nothing AndAlso ModFavorite.IsFavorite(Project, FavoriteType)
+        If Project IsNot Nothing AndAlso Not ModFavorite.SupportsFavorite(FavoriteType) Then IsFav = False
+        BtnFavorite.Logo = If(IsFav, Logo.IconButtonLikeFill, Logo.IconButtonLikeLine)
+        BtnFavorite.ToolTip = If(IsFav, "取消收藏", $"收藏该{ModFavorite.GetTypeName(FavoriteType)}")
+    End Sub
+
+    Private Sub BtnFavorite_Click(sender As Object, e As EventArgs) Handles BtnFavorite.Click
+        Dim Project = TryCast(Tag, ResourceProject)
+        If Project Is Nothing Then Return
+        Try
+            Logger.Info($"点击收藏按钮：{Project.RawName}（{Project.Platform}，{Project.Id}，{FavoriteType}）")
+            Dim IsFav As Boolean = ModFavorite.ToggleFavorite(Project, FavoriteType)
+            BtnFavorite.Logo = If(IsFav, Logo.IconButtonLikeFill, Logo.IconButtonLikeLine)
+            BtnFavorite.ToolTip = If(IsFav, "取消收藏", $"收藏该{ModFavorite.GetTypeName(FavoriteType)}")
+            Hint(If(IsFav, "已收藏：", "已取消收藏：") & Project.TranslatedName, HintType.Green)
+        Catch ex As Exception
+            Logger.Error(ex, "切换收藏状态失败")
+            Hint("切换收藏状态失败：" & ex.Message, HintType.Red)
+        End Try
+    End Sub
+
+    Private Function IsClickInFavorite(Source As Object) As Boolean
+        Dim Visual = TryCast(Source, DependencyObject)
+        If Visual Is Nothing OrElse BtnFavorite.Visibility <> Visibility.Visible Then Return False
+        Return BtnFavorite.IsAncestorOf(Visual) OrElse Visual Is BtnFavorite
+    End Function
+
+#End Region
+
 #Region "点击"
 
     Public Event Click(sender As Object, e As MouseButtonEventArgs)
     Private Sub Button_MouseUp(sender As Object, e As MouseButtonEventArgs) Handles Me.PreviewMouseLeftButtonUp
         If IsMouseDown Then
+            If IsClickInFavorite(e.OriginalSource) Then
+                IsMouseDown = False
+                Return
+            End If
             RaiseEvent Click(sender, e)
             If e.Handled Then Return
             Logger.Info($"按下资源工程列表项：{LabTitle.Text}")

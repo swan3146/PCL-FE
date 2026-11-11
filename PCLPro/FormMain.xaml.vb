@@ -12,6 +12,11 @@ Public Class FormMain
         Dim FeatureList As New List(Of KeyValuePair(Of Integer, String))
 
         If BuildType = BuildTypes.Release Then
+            If LastVersion < 437 Then
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "(๑˃̵ᴗ˂̵)و 新增 收藏资源功能 在 Mod 地图 资源包 光影包 数据包的下载列表里点右侧心形按钮就能收藏 再点一下取消"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "(｡•̀ᴗ-)✧ 新增 下载页左侧「收藏」页面 按类型查看收藏 点条目可直接打开详情 勾选后一键下载到指定版本"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "( •̀ ω •́ )✧ 优化 一键下载会自动寻找最新版本 自动匹配对应加载器的文件与前置依赖 没有加载器的原版版本不会出现在 Mod 的版本选择里"))
+            End If
             If LastVersion < 436 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "(｡•̀ᴗ-)✧ 优化了下载功能"))
             End If
@@ -1677,6 +1682,7 @@ Public Class FormMain
         DownloadResourcePack = 5
         DownloadShader = 6
         DownloadMap = 7
+        DownloadFavorite = 8
         SetupLaunch = 0
         SetupLink = 1
         SetupUI = 2

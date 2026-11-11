@@ -10,11 +10,12 @@ Public Class PageDownloadLeft
         If Not RestrictMcDownload Then Return
         ItemInstall.Visibility = Visibility.Collapsed
         LabResource.Visibility = Visibility.Collapsed
+        ItemFavorite.Visibility = Visibility.Collapsed
         PageID = FormMain.PageSubType.DownloadMod
         ItemMod.Checked = True
     End Sub
 
-    Private Sub PageCheck(sender As FrameworkElement, e As RouteEventArgs) Handles ItemInstall.Check, ItemMod.Check, ItemPack.Check, ItemResourcePack.Check, ItemShader.Check, ItemDataPack.Check, ItemMap.Check
+    Private Sub PageCheck(sender As FrameworkElement, e As RouteEventArgs) Handles ItemInstall.Check, ItemMod.Check, ItemPack.Check, ItemResourcePack.Check, ItemShader.Check, ItemDataPack.Check, ItemMap.Check, ItemFavorite.Check
 
         If sender.Tag IsNot Nothing Then PageChange(Val(sender.Tag))
     End Sub
@@ -43,6 +44,9 @@ Public Class PageDownloadLeft
             Case FormMain.PageSubType.DownloadMap
                 If FrmDownloadMap Is Nothing Then FrmDownloadMap = New PageDownloadMap
                 Return FrmDownloadMap
+            Case FormMain.PageSubType.DownloadFavorite
+                If FrmDownloadFavorite Is Nothing Then FrmDownloadFavorite = New PageDownloadFavorite
+                Return FrmDownloadFavorite
             Case Else
                 Throw New Exception("未知的下载子页面种类：" & ID)
         End Select
@@ -145,6 +149,9 @@ Public Class PageDownloadLeft
                     FrmDownloadMap.PageLoaderRestart()
                 End If
                 ItemMap.Checked = True
+            Case FormMain.PageSubType.DownloadFavorite
+                If PageID = FormMain.PageSubType.DownloadFavorite AndAlso FrmDownloadFavorite IsNot Nothing Then FrmDownloadFavorite.RefreshList()
+                ItemFavorite.Checked = True
         End Select
         Hint("正在刷新……", Log:=False)
     End Sub

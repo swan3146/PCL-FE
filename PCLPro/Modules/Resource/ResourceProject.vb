@@ -380,7 +380,7 @@ Public Class ResourceProject
         Return Json
     End Function
 
-    Public Function ToResourceItem(ShowMcVersionDesc As Boolean, ShowLoaderDesc As Boolean) As MyVirtualizingElement(Of MyResourceItem)
+    Public Function ToResourceItem(ShowMcVersionDesc As Boolean, ShowLoaderDesc As Boolean, Optional FavoriteType As ResourceTypes = ResourceTypes.Any) As MyVirtualizingElement(Of MyResourceItem)
 
         Dim GameVersionDescription As String
         If Drops Is Nothing OrElse Not Drops.Any() Then
@@ -458,6 +458,10 @@ Public Class ResourceProject
         Return New MyVirtualizingElement(Of MyResourceItem)(
         Function()
             Dim NewItem As New MyResourceItem With {.Tag = Me}
+            If ModFavorite.SupportsFavorite(FavoriteType) Then
+                NewItem.FavoriteType = FavoriteType
+                NewItem.ShowFavorite = True
+            End If
             ApplyLogoToMyImage(NewItem.PathLogo)
             Dim Titles = GetControlTitle(True)
             NewItem.Title = Titles.Title

@@ -5,12 +5,12 @@ Public Module ModBase
 
 #Region "声明"
 
-    Public Const VersionBaseName As String = "1.3.7"
+    Public Const VersionBaseName As String = "1.3.8"
     Public Const CommitHash As String = ""
 #If RELEASE Then
-    Public Const VersionCode As Integer = 436
+    Public Const VersionCode As Integer = 437
 #Else
-    Public Const VersionCode As Integer = 436
+    Public Const VersionCode As Integer = 437
 #End If
 
     Public Const VersionDisplay As String = BuildTypeDisplay & " " & VersionBaseName
