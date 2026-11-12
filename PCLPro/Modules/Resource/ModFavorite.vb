@@ -9,17 +9,20 @@ Public Module ModFavorite
 
         Public ProjectJson As JObject
         Public Type As ResourceTypes = ResourceTypes.Mod
+        Public Folder As String = ""
         Private CachedProject As ResourceProject = Nothing
 
-        Public Sub New(Source As ResourceProject, TargetType As ResourceTypes)
+        Public Sub New(Source As ResourceProject, TargetType As ResourceTypes, Optional TargetFolder As String = "")
             ProjectJson = Source.ToJson()
             Type = TargetType
+            Folder = If(TargetFolder, "")
             CachedProject = Source
         End Sub
 
         Public Sub New(Data As JObject)
             ProjectJson = CType(Data("Project"), JObject)
             If Data("Type") IsNot Nothing Then Type = Data("Type").ToObject(Of Integer)
+            If Data("Folder") IsNot Nothing Then Folder = Data("Folder").ToString
         End Sub
 
         
@@ -49,6 +52,7 @@ Public Module ModFavorite
             Dim Result As New JObject
             Result("Project") = ProjectJson
             Result("Type") = CInt(Type)
+            Result("Folder") = If(Folder, "")
             Return Result
         End Function
 
@@ -115,6 +119,7 @@ Public Module ModFavorite
 #End Region
 
     Public ReadOnly FavoriteList As New List(Of FavoriteResource)
+    Public ReadOnly FolderList As New List(Of String)
     Private ReadOnly FavoriteLock As New Object
     Private IsLoaded As Boolean = False
 
@@ -158,6 +163,16 @@ Public Module ModFavorite
 
     Private Sub ReadItemsFrom(Json As JObject)
         FavoriteList.Clear()
+        FolderList.Clear()
+        Dim Folders = TryCast(Json("Folders"), JArray)
+        If Folders IsNot Nothing Then
+            For Each Token As JToken In Folders
+                Dim Name As String = If(Token.ToString, "").Trim
+                If Name <> "" AndAlso Not FolderList.Any(Function(f) String.Equals(f, Name, StringComparison.OrdinalIgnoreCase)) Then
+                    FolderList.Add(Name)
+                End If
+            Next
+        End If
         Dim Items = TryCast(Json("Items"), JArray)
         If Items Is Nothing Then Return
         For Each Item As JToken In Items
@@ -181,6 +196,11 @@ Public Module ModFavorite
                     Items.Add(Favorite.ToJson())
                 Next
                 Json("Items") = Items
+                Dim Folders As New JArray
+                For Each Name In FolderList
+                    Folders.Add(Name)
+                Next
+                Json("Folders") = Folders
                 DirectoryUtils.Create(PathUtils.RemoveLastPart(FavoriteFilePath))
                 FileUtils.Write(FavoriteFilePath, Json.ToString(Newtonsoft.Json.Formatting.Indented))
             Catch ex As Exception
@@ -196,6 +216,78 @@ Public Module ModFavorite
             Return FavoriteList.Where(Function(f) f.Type = TargetType.Value).ToList()
         End SyncLock
     End Function
+
+#End Region
+
+#Region "自定义收藏夹"
+
+    Public Function GetFolders() As List(Of String)
+        LoadFavorites()
+        SyncLock FavoriteLock
+            Return FolderList.ToList()
+        End SyncLock
+    End Function
+
+    Public Function IsFolderNameValid(Name As String) As Boolean
+        Name = If(Name, "").Trim
+        If Name = "" Then Return False
+        If Name = "全部收藏" OrElse Name = "未分类" Then Return False
+        Return True
+    End Function
+
+    Public Function AddFolder(Name As String) As Integer
+        Name = If(Name, "").Trim
+        If Not IsFolderNameValid(Name) Then Return 0
+        LoadFavorites()
+        SyncLock FavoriteLock
+            If FolderList.Any(Function(f) String.Equals(f, Name, StringComparison.OrdinalIgnoreCase)) Then Return -1
+            FolderList.Add(Name)
+        End SyncLock
+        SaveFavorites()
+        Logger.Info($"新建收藏夹：{Name}")
+        Return 1
+    End Function
+
+    Public Function RenameFolder(OldName As String, NewName As String) As Integer
+        NewName = If(NewName, "").Trim
+        If Not IsFolderNameValid(NewName) Then Return 0
+        LoadFavorites()
+        SyncLock FavoriteLock
+            Dim Index As Integer = FolderList.FindIndex(Function(f) String.Equals(f, OldName, StringComparison.OrdinalIgnoreCase))
+            If Index < 0 Then Return 0
+            If Not String.Equals(OldName, NewName, StringComparison.OrdinalIgnoreCase) AndAlso
+               FolderList.Any(Function(f) String.Equals(f, NewName, StringComparison.OrdinalIgnoreCase)) Then Return -1
+            FolderList(Index) = NewName
+            For Each Item In FavoriteList
+                If String.Equals(Item.Folder, OldName, StringComparison.OrdinalIgnoreCase) Then Item.Folder = NewName
+            Next
+        End SyncLock
+        SaveFavorites()
+        Logger.Info($"重命名收藏夹：{OldName} → {NewName}")
+        Return 1
+    End Function
+
+    Public Sub DeleteFolder(Name As String)
+        LoadFavorites()
+        SyncLock FavoriteLock
+            FolderList.RemoveAll(Function(f) String.Equals(f, Name, StringComparison.OrdinalIgnoreCase))
+            For Each Item In FavoriteList
+                If String.Equals(Item.Folder, Name, StringComparison.OrdinalIgnoreCase) Then Item.Folder = ""
+            Next
+        End SyncLock
+        SaveFavorites()
+        Logger.Info($"删除收藏夹：{Name}，其中的收藏已移动到未分类")
+    End Sub
+
+    Public Sub MoveToFolder(Item As FavoriteResource, TargetFolder As String)
+        If Item Is Nothing Then Return
+        LoadFavorites()
+        SyncLock FavoriteLock
+            Item.Folder = If(TargetFolder, "")
+        End SyncLock
+        SaveFavorites()
+        Logger.Info($"移动收藏：{Item.DisplayName} → {If(String.IsNullOrEmpty(TargetFolder), "未分类", TargetFolder)}")
+    End Sub
 
 #End Region
 

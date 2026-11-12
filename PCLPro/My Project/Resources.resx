@@ -87,6 +87,15 @@
   <data name="libwebp64" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\libwebp64.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Microsoft.Web.WebView2.Core" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Microsoft.Web.WebView2.Core.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="Microsoft.Web.WebView2.Wpf" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Microsoft.Web.WebView2.Wpf.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="WebView2Loader" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\WebView2Loader.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="MeloongCore" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\PCLCS\bin\MeloongCore.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>

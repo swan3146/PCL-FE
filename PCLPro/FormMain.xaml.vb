@@ -1698,6 +1698,8 @@ Public Class FormMain
         InstanceMod = 3
         InstanceModDisabled = 4
         InstanceExport = 5
+        InstanceResource = 6
+        InstanceSave = 7
     End Enum
 
     Private Function PageNameGet(Stack As PageStackData) As String

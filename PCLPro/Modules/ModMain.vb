@@ -335,6 +335,8 @@ EndHint:
     Public FrmInstanceModDisabled As PageInstanceModDisabled
     Public FrmInstanceSetup As PageInstanceSetup
     Public FrmInstanceExport As PageInstanceExport
+    Public FrmInstanceResource As PageInstanceResource
+    Public FrmInstanceSave As PageInstanceSave
     Public FrmDownloadModify As PageDownloadModify
 
     Public FrmDownloadResourceDetail As PageDownloadResourceDetail

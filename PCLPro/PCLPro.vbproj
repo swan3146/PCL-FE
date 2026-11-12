@@ -168,6 +168,16 @@
       <HintPath>Resources\Ookii.Dialogs.Wpf.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Microsoft.Web.WebView2.Core">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\Microsoft.Web.WebView2.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.Web.WebView2.Wpf">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\Microsoft.Web.WebView2.Wpf.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -327,6 +337,14 @@
     <Compile Include="Pages\PageInstance\PageInstanceExport.xaml.vb">
       <DependentUpon>PageInstanceExport.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\PageInstance\PageInstanceResource.xaml.vb">
+      <DependentUpon>PageInstanceResource.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageInstance\PageInstanceSave.xaml.vb">
+      <DependentUpon>PageInstanceSave.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageInstance\SaveMapBrowserWindow.vb" />
+    <Compile Include="Pages\PageInstance\SaveMapWindow.vb" />
     <Compile Include="Pages\PageInstance\PageInstanceLeft.xaml.vb">
       <DependentUpon>PageInstanceLeft.xaml</DependentUpon>
     </Compile>
@@ -348,6 +366,8 @@
     <Compile Include="Modules\Base\ModValidate.vb" />
     <Compile Include="Modules\Minecraft\ModDownload.vb" />
     <Compile Include="Modules\Minecraft\ModLaunch.vb" />
+    <Compile Include="Modules\Minecraft\ModSave.vb" />
+    <Compile Include="Modules\Minecraft\ModSaveBlueMap.vb" />
     <Compile Include="Modules\Minecraft\ModMinecraft.vb" />
     <Compile Include="Pages\PageOther\PageOtherTest.xaml.vb">
       <DependentUpon>PageOtherTest.xaml</DependentUpon>
@@ -376,6 +396,7 @@
     <Compile Include="Pages\PageOther\PageOtherAbout.xaml.vb">
       <DependentUpon>PageOtherAbout.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\PageOther\ThirdPartyLicenseWindow.vb" />
     <Compile Include="Pages\PageOther\PageOtherFeedback.xaml.vb">
       <DependentUpon>PageOtherFeedback.xaml</DependentUpon>
     </Compile>
@@ -591,6 +612,14 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Pages\PageInstance\PageInstanceExport.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageInstance\PageInstanceResource.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageInstance\PageInstanceSave.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

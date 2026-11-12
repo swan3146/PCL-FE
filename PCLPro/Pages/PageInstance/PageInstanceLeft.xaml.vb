@@ -21,7 +21,7 @@ Public Class PageInstanceLeft
 
     Public PageID As FormMain.PageSubType = FormMain.PageSubType.Default
 
-    Private Sub PageCheck(sender As FrameworkElement, e As RouteEventArgs) Handles ItemOverall.Check, ItemMod.Check, ItemModDisabled.Check, ItemSetup.Check, ItemModify.Check, ItemExport.Check
+    Private Sub PageCheck(sender As FrameworkElement, e As RouteEventArgs) Handles ItemOverall.Check, ItemMod.Check, ItemModDisabled.Check, ItemSetup.Check, ItemModify.Check, ItemExport.Check, ItemResource.Check, ItemSave.Check
 
         If sender.Tag IsNot Nothing Then PageChange(Val(sender.Tag))
     End Sub
@@ -44,6 +44,12 @@ Public Class PageInstanceLeft
             Case FormMain.PageSubType.InstanceExport
                 If FrmInstanceExport Is Nothing Then FrmInstanceExport = New PageInstanceExport
                 Return FrmInstanceExport
+            Case FormMain.PageSubType.InstanceResource
+                If FrmInstanceResource Is Nothing Then FrmInstanceResource = New PageInstanceResource
+                Return FrmInstanceResource
+            Case FormMain.PageSubType.InstanceSave
+                If FrmInstanceSave Is Nothing Then FrmInstanceSave = New PageInstanceSave
+                Return FrmInstanceSave
             Case FormMain.PageSubType.InstanceModify
                 If FrmDownloadModify Is Nothing Then FrmDownloadModify = New PageDownloadModify
                 Return FrmDownloadModify

@@ -37,4 +37,10 @@ Public Class PageOtherAbout
         UpdateCheckByButton()
     End Sub
 
+    Private Sub BtnThirdPartyLicense_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnThirdPartyLicense.Click
+        Dim LicenseWindow As New ThirdPartyLicenseWindow()
+        LicenseWindow.Owner = Window.GetWindow(Me)
+        LicenseWindow.ShowDialog()
+    End Sub
+
 End Class

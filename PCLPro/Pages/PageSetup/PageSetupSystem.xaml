@@ -187,6 +187,43 @@
                     </Grid>
                 </StackPanel>
             </local:MyCard>
+            <local:MyCard Margin="0,0,0,15" Title="3D 地图渲染">
+                <StackPanel Margin="25,37,25,15">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="7" />
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="7" />
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="7" />
+                            <RowDefinition Height="28" />
+                        </Grid.RowDefinitions>
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="渲染范围" Margin="0,0,25,0" />
+                        <local:MyComboBox x:Name="ComboRenderRadius" Grid.ColumnSpan="2" Grid.Column="1" local:SettingService.Key="BlueMapRenderRadius"
+                                          ToolTip="以存档出生点为中心渲染的半径。范围越大越慢，默认 512 格。&#xa;已渲染过的区域会被缓存，之后只增量更新。">
+                            <local:MyComboBoxItem Content="256 格（更快）" local:SettingService.Value="256" />
+                            <local:MyComboBoxItem Content="512 格（推荐）" local:SettingService.Value="512" IsSelected="True" />
+                            <local:MyComboBoxItem Content="1024 格（更大范围）" local:SettingService.Value="1024" />
+                        </local:MyComboBox>
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="渲染画质" Grid.Row="2" Margin="0,0,25,0" />
+                        <local:MyComboBox x:Name="ComboRenderQuality" Grid.Row="2" Grid.ColumnSpan="2" Grid.Column="1" local:SettingService.Key="BlueMapQuality"
+                                          ToolTip="高清模式会渲染方块模型、材质和光照，效果与 BlueMap 官网一致，但速度较慢。">
+                            <local:MyComboBoxItem Content="高清（材质与光照，推荐）" local:SettingService.Value="0" IsSelected="True" />
+                            <local:MyComboBoxItem Content="快速（纯色，速度更快）" local:SettingService.Value="1" />
+                        </local:MyComboBox>
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="渲染线程数" Grid.Row="4" Margin="0,0,25,0" />
+                        <local:MySlider x:Name="SliderRenderThreads" Grid.Row="4" Grid.Column="1" local:SettingService.Key="BlueMapThreads" MaxValue="16" Value="2"
+                                        ToolTip="同时渲染的线程数。过高会明显占用 CPU、影响其他程序。" />
+                        <local:MyCheckBox x:Name="CheckRenderIncremental" Grid.Row="6" Grid.ColumnSpan="2" Text="仅渲染发生变更的存档" local:SettingService.Key="BlueMapIncremental" Height="22"
+                                          ToolTip="开启后，存档没有变化时直接打开上次渲染好的地图，不再重复渲染。" />
+                    </Grid>
+                </StackPanel>
+            </local:MyCard>
         </StackPanel>
     </local:MyScrollViewer>
 </local:MyPageRight>

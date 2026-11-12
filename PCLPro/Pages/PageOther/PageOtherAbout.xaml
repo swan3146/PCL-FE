@@ -62,6 +62,17 @@
                     </StackPanel>
                 </StackPanel>
             </local:MyCard>
+            <local:MyCard Margin="0,0,0,15" Title="第三方组件与许可证">
+                <StackPanel Margin="25,42,23,20">
+                    <TextBlock LineHeight="22" TextWrapping="Wrap"
+                               Text="• BlueMap：3D 地图渲染器（MIT License）&#xa;   Copyright (c) Blue and contributors&#xa;   https://github.com/BlueMap-Minecraft/BlueMap&#xa;&#xa;• Microsoft Edge WebView2 SDK：内嵌 3D 地图浏览器组件（Microsoft 许可证，BSD 3-Clause）&#xa;   Copyright (C) Microsoft Corporation. All rights reserved.&#xa;&#xa;以上组件按其原始许可证授权使用。BlueMap 渲染器在首次使用时从官方 GitHub 下载，启动器不修改其代码与网页资源；WebView2 SDK 的版权声明与许可证全文可点击下方按钮查看。" />
+                    <StackPanel Orientation="Horizontal" Height="35" HorizontalAlignment="Left" Margin="0,14,0,0">
+                        <local:MyButton Text="BlueMap 仓库" Width="140" Padding="13,0" Margin="0,0,15,0"
+                                        local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/BlueMap-Minecraft/BlueMap" />
+                        <local:MyButton Text="许可证全文" Width="140" Padding="13,0" x:Name="BtnThirdPartyLicense" />
+                    </StackPanel>
+                </StackPanel>
+            </local:MyCard>
         </StackPanel>
     </local:MyScrollViewer>
 </local:MyPageRight>
