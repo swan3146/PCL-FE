@@ -289,6 +289,22 @@ Public Module ModFavorite
         Logger.Info($"移动收藏：{Item.DisplayName} → {If(String.IsNullOrEmpty(TargetFolder), "未分类", TargetFolder)}")
     End Sub
 
+    Public Sub MoveToFolder(Items As IEnumerable(Of FavoriteResource), TargetFolder As String)
+        If Items Is Nothing Then Return
+        LoadFavorites()
+        Dim MovedCount As Integer = 0
+        SyncLock FavoriteLock
+            For Each Item In Items
+                If Item Is Nothing Then Continue For
+                Item.Folder = If(TargetFolder, "")
+                MovedCount += 1
+            Next
+        End SyncLock
+        If MovedCount = 0 Then Return
+        SaveFavorites()
+        Logger.Info($"批量移动收藏 {MovedCount} 项 → {If(String.IsNullOrEmpty(TargetFolder), "未分类", TargetFolder)}")
+    End Sub
+
 #End Region
 
 #Region "收藏状态"

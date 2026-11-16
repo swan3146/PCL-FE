@@ -420,6 +420,7 @@ Public Class PageLinkMain
             LineFinishPort.Visibility = Visibility.Collapsed
             BtnFinishIp.Visibility = Visibility.Collapsed
             LabFinishIp.Visibility = Visibility.Collapsed
+            BtnFinishShare.Visibility = Visibility.Visible
         Else
             LabFinishTitle.Text = "已加入房间"
             LabFinishDesc.Text = $"在多人游戏页面的最下方就能找到联机房间！{vbCrLf}注意：使用离线登录时不要手动输入 IP！"
@@ -433,12 +434,64 @@ Public Class PageLinkMain
             LabFinishIp.Visibility = Visibility.Visible
             LabFinishIp.Text = ClientAddress
             BtnFinishIp.Visibility = Visibility.Visible
+            BtnFinishShare.Visibility = Visibility.Collapsed
         End If
         Update()
     End Sub
 
     Private Sub BtnFinishExit_Click() Handles BtnFinishExit.Click
         TryExit(False, False)
+    End Sub
+
+    Private Sub BtnFinishShare_Click() Handles BtnFinishShare.Click
+        If String.IsNullOrEmpty(GetCurrentRoomCode()) Then
+            MyMsgBox("请先在联机页创建房间并检测到游戏端口，再生成邀请文件。" & vbCrLf &
+                     "邀请文件必须包含房间码，否则朋友无法加入。", "分享邀请文件", IsWarn:=True)
+            Return
+        End If
+        Dim Port As Integer = GetCurrentHostPort()
+        If Port <= 0 Then
+            MyMsgBox("还没有检测到游戏端口。" & vbCrLf &
+                     "请先进入存档，在游戏里选择「对局域网开放」，等联机引导显示端口后再生成邀请文件。",
+                     "分享邀请文件", IsWarn:=True)
+            Return
+        End If
+        If McInstanceSelected Is Nothing Then
+            MyMsgBox("请先在启动页选择一个版本，再生成邀请文件。", "分享邀请文件", IsWarn:=True)
+            Return
+        End If
+        Dim RoomText As String = GetCurrentRoomCode().Replace("U/", "")
+        For Each InvalidChar In IO.Path.GetInvalidFileNameChars()
+            RoomText = RoomText.Replace(InvalidChar, "_"c)
+        Next
+        If String.IsNullOrEmpty(RoomText) Then RoomText = "房间"
+        Dim Dialog As New Microsoft.Win32.SaveFileDialog With {
+            .Title = "保存联机邀请文件",
+            .Filter = "PCL FE 联机邀请|*.pclinvite",
+            .FileName = "联机邀请-" & RoomText
+        }
+        If Dialog.ShowDialog() <> True Then Return
+        Dim TargetPath As String = Dialog.FileName
+        Dim TargetInstance As McInstance = McInstanceSelected
+        Hint("正在生成邀请文件，正在整理模组清单…")
+        RunInNewThread(
+        Sub()
+            Try
+                Dim Invite As LinkInviteInfo = LinkInviteCreate(TargetInstance, GetCurrentRoomCode(), Port)
+                LinkInviteSave(Invite, TargetPath)
+                RunInUi(
+                Sub()
+                    Hint($"邀请文件已生成（{Invite.Mods.Count} 个模组），发给朋友拖进启动器即可。", HintType.Green)
+                    Try
+                        Process.Start("explorer.exe", "/select,""" & TargetPath & """")
+                    Catch
+                    End Try
+                End Sub)
+            Catch ex As Exception
+                Logger.Warn(ex, "生成联机邀请文件失败")
+                RunInUi(Sub() Hint("生成邀请文件失败：" & ex.Message, HintType.Red))
+            End Try
+        End Sub)
     End Sub
 
     Public Function TryExit(Silent As Boolean, Closing As Boolean) As Boolean
@@ -573,9 +626,9 @@ Public Class PageLinkMain
 
     Private IsServerSide As Boolean
 
-    Private ClientAddress As String = Nothing
+    Friend ClientAddress As String = Nothing
 
-    Private HostPort As Integer = 0
+    Friend HostPort As Integer = 0
 
     Private ManualPort As Integer = 0
 
@@ -583,7 +636,15 @@ Public Class PageLinkMain
 
     Private Shared HostGuideToken As Integer = 0
 
-    Private RoomCode As String
+    Friend RoomCode As String
+
+    Public Shared Function GetCurrentRoomCode() As String
+        Return If(FrmLinkMain Is Nothing, "", If(FrmLinkMain.RoomCode, ""))
+    End Function
+
+    Public Shared Function GetCurrentHostPort() As Integer
+        Return If(FrmLinkMain Is Nothing, 0, FrmLinkMain.HostPort)
+    End Function
 
     Private NetworkName As String, NetworkSecret As String
 

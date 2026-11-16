@@ -64,8 +64,12 @@
                                              Padding="8,0" HintText="搜索收藏的资源名称、简介或来源 ID" />
                             <Grid Grid.Row="1" Height="32" Margin="6,4,6,0">
                                 <local:MyCheckBox x:Name="CheckAll" Text="全选" VerticalAlignment="Center" HorizontalAlignment="Left" />
-                                <TextBlock x:Name="LabSummary" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="12"
-                                           Foreground="{StaticResource ColorBrushGray3}" Text="已选 0 项" />
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <TextBlock x:Name="LabSummary" VerticalAlignment="Center" FontSize="12" Margin="0,0,10,0"
+                                               Foreground="{StaticResource ColorBrushGray3}" Text="已选 0 项" />
+                                    <local:MyButton x:Name="BtnBatchMove" Text="批量移动" Padding="10,0" Height="24" VerticalAlignment="Center"
+                                                    ToolTip="把勾选的收藏一起移动到其他收藏夹" />
+                                </StackPanel>
                             </Grid>
                             <local:MyHint x:Name="HintEmpty" Theme="Blue" HasBorder="True" Visibility="Collapsed" Margin="6,8,6,8" Grid.Row="2"
                                           Text="还没有收藏的 Mod。在 Mod 下载列表里点击右侧的心形按钮即可收藏，收藏后会出现在这里，可以一键下载到任意版本。" />

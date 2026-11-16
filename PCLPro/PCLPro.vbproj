@@ -334,6 +334,7 @@
     <Compile Include="Pages\PageLink\PageLinkMain.xaml.vb">
       <DependentUpon>PageLinkMain.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\PageLink\LinkInviteWindow.vb" />
     <Compile Include="Pages\PageInstance\PageInstanceExport.xaml.vb">
       <DependentUpon>PageInstanceExport.xaml</DependentUpon>
     </Compile>
@@ -364,8 +365,10 @@
     <Compile Include="Modules\Base\ModLoader.vb" />
     <Compile Include="Modules\Base\ModNet.vb" />
     <Compile Include="Modules\Base\ModValidate.vb" />
+    <Compile Include="Modules\Base\ModWebView2.vb" />
     <Compile Include="Modules\Minecraft\ModDownload.vb" />
     <Compile Include="Modules\Minecraft\ModLaunch.vb" />
+    <Compile Include="Modules\Minecraft\ModLinkInvite.vb" />
     <Compile Include="Modules\Minecraft\ModSave.vb" />
     <Compile Include="Modules\Minecraft\ModSaveBlueMap.vb" />
     <Compile Include="Modules\Minecraft\ModMinecraft.vb" />

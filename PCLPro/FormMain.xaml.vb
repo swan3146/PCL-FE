@@ -12,6 +12,18 @@ Public Class FormMain
         Dim FeatureList As New List(Of KeyValuePair(Of Integer, String))
 
         If BuildType = BuildTypes.Release Then
+            If LastVersion < 439 Then
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "(๑˃̵ᴗ˂̵)و 新增 联机邀请文件 联机页建房后点分享邀请文件 朋友拖进启动器即可自动同步模组 安装版本并加入房间"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "(｡•̀ᴗ-)✧ 新增 邀请文件完整性校验 内容被修改过会拒绝加载 房间关闭时也会明确提示"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "(｡•̀ᴗ-)✧ 新增 导入窗口可最小化圆形悬浮球 可拖动 点一下从原位展开"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "( •̀ ω •́ )✧ 优化 3D 地图预览自动安装 WebView2 运行时 不再跳转外部浏览器"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "( •̀ ω •́ )✧ 优化 安装与下载显示百分比 实时速度 当前步骤和剩余数量"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "(๑•̀ㅂ•́)و✧ 改进 收藏夹支持勾选多项后批量移动到其他收藏夹"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "(´･ω･`) 修复 版本列表未加载完时邀请窗口看不到本机版本"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "(´･ω･`) 修复 版本还没安装完成就同步模组并连接房间"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "(´･ω･`) 修复 自动匹配版本过于宽松 可能选到不匹配的版本"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "( •̀ ω •́ )✧ 调整 不再支持 Windows 7 与 8.1 需要 Windows 10 及以上"))
+            End If
             If LastVersion < 437 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "(๑˃̵ᴗ˂̵)و 新增 收藏资源功能 在 Mod 地图 资源包 光影包 数据包的下载列表里点右侧心形按钮就能收藏 再点一下取消"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "(｡•̀ᴗ-)✧ 新增 下载页左侧「收藏」页面 按类型查看收藏 点条目可直接打开详情 勾选后一键下载到指定版本"))
@@ -1517,6 +1529,11 @@ Public Class FormMain
             End If
 
             Dim PathList As List(Of String) = FilePathList.ToList()
+            If PathUtils.GetExtension(FilePath) = InviteExtension Then
+                Logger.Info($"识别为联机邀请文件：{FilePath}")
+                RunInUi(Sub() LinkInviteWindow.Import(FilePath))
+                Return
+            End If
             If FilePathList.Count > 1 Then
 
                 For Each File In PathList

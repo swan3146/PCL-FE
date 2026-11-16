@@ -150,9 +150,6 @@ RetryCacheCheck:
             ServicePointManager.UseNagleAlgorithm = False
             ServicePointManager.EnableDnsRoundRobin = True
             ServicePointManager.ReusePort = True
-            If Environment.OSVersion.Version < New Version(6, 2) Then
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 Or SecurityProtocolType.Tls Or SecurityProtocolType.Tls11 Or SecurityProtocolType.Tls12
-            End If
 
             Logger.Info($"程序版本：{VersionDisplay} ({VersionCode}{If(CommitHash = "", "", $"，#{CommitHash}")})")
             If BuildType = BuildTypes.Snapshot Then
@@ -170,6 +167,11 @@ RetryCacheCheck:
             End If
             If Not Environment.Is64BitOperatingSystem Then
                 MyMsgBox("PCL 和新版 Minecraft 均不再支持 32 位系统，请重装为 64 位系统后再进行游戏！", "环境警告", "我知道了", IsWarn:=True, ForceWait:=True)
+                FormMain.EndProgramForce(ProcessReturnValues.Cancel)
+            End If
+            If Environment.OSVersion.Version.Major < 10 Then
+                MyMsgBox("PCL FE 不再支持 Windows 7 / 8.1，请升级到 Windows 10 或更高版本后再使用。" & vbCrLf &
+                         "（内置 3D 地图等功能依赖新版 WebView2 运行时）", "系统版本过低", "我知道了", IsWarn:=True, ForceWait:=True)
                 FormMain.EndProgramForce(ProcessReturnValues.Cancel)
             End If
 

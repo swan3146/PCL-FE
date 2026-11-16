@@ -1,4 +1,4 @@
-Public Class PageDownloadFavorite
+﻿Public Class PageDownloadFavorite
 
     Private ReadOnly FavoriteChecks As New List(Of (Check As MyCheckBox, Item As ModFavorite.FavoriteResource))
     Private ReadOnly UncheckedKeys As New HashSet(Of String)
@@ -393,20 +393,27 @@ Public Class PageDownloadFavorite
         End Try
     End Sub
 
+    Private Function GetFolderTargets() As List(Of String)
+        Dim Targets As New List(Of String) From {""}
+        Targets.AddRange(ModFavorite.GetFolders())
+        Return Targets
+    End Function
+
+    Private Function BuildFolderChoices(Targets As List(Of String), CurrentFolder As String) As List(Of IMyRadio)
+        Dim Choices As New List(Of IMyRadio)
+        For Each Target In Targets
+            Choices.Add(New MyRadioBox With {
+                .Text = If(Target = "", "未分类", Target),
+                .Checked = String.Equals(If(CurrentFolder, ""), Target, StringComparison.OrdinalIgnoreCase)
+            })
+        Next
+        Return Choices
+    End Function
+
     Private Sub MoveItemToFolder(Item As ModFavorite.FavoriteResource, Title As String)
         Try
-            Dim Folders = ModFavorite.GetFolders()
-            Dim Targets As New List(Of String) From {""}
-            Targets.AddRange(Folders)
-            Dim Choices As New List(Of IMyRadio)
-            For Each Target In Targets
-                Dim DisplayName As String = If(Target = "", "未分类", Target)
-                Choices.Add(New MyRadioBox With {
-                    .Text = DisplayName,
-                    .Checked = String.Equals(Item.Folder, Target, StringComparison.OrdinalIgnoreCase)
-                })
-            Next
-            Dim Result As Integer? = MyMsgBoxSelect(Choices, $"移动「{Title}」到", "移动", "取消")
+            Dim Targets = GetFolderTargets()
+            Dim Result As Integer? = MyMsgBoxSelect(BuildFolderChoices(Targets, Item.Folder), $"移动「{Title}」到", "移动", "取消")
             If Result Is Nothing Then Return
             If Result.Value < 0 OrElse Result.Value >= Targets.Count Then Return
             ModFavorite.MoveToFolder(Item, Targets(Result.Value))
@@ -416,6 +423,28 @@ Public Class PageDownloadFavorite
         Catch ex As Exception
             Logger.Error(ex, "移动收藏到收藏夹失败")
             Hint("移动收藏失败：" & ex.Message, HintType.Red)
+        End Try
+    End Sub
+
+    Private Sub BtnBatchMove_Click(sender As Object, e As EventArgs) Handles BtnBatchMove.Click
+        Dim Selected = FavoriteChecks.Where(Function(p) p.Check.Checked).Select(Function(p) p.Item).ToList()
+        If Not Selected.Any() Then
+            Hint("请先勾选要移动的收藏", HintType.Blue)
+            Return
+        End If
+        Try
+            Dim Targets = GetFolderTargets()
+            Dim Result As Integer? = MyMsgBoxSelect(BuildFolderChoices(Targets, Nothing), $"把选中的 {Selected.Count} 项移动到", "移动", "取消")
+            If Result Is Nothing Then Return
+            If Result.Value < 0 OrElse Result.Value >= Targets.Count Then Return
+            Dim Target As String = Targets(Result.Value)
+            ModFavorite.MoveToFolder(Selected, Target)
+            Hint($"已把 {Selected.Count} 项收藏移动到{If(Target = "", "未分类", $"「{Target}」")}", HintType.Green)
+            BuildFolders()
+            BuildItems()
+        Catch ex As Exception
+            Logger.Error(ex, "批量移动收藏失败")
+            Hint("批量移动失败：" & ex.Message, HintType.Red)
         End Try
     End Sub
 
@@ -579,6 +608,7 @@ Public Class PageDownloadFavorite
         Dim SelectedCount As Integer = FavoriteChecks.Where(Function(p) p.Check.Checked).Count()
         LabSummary.Text = $"已选 {SelectedCount} / {FavoriteChecks.Count} 项"
         BtnDownload.IsEnabled = SelectedCount > 0 AndAlso SelectedInstance IsNot Nothing
+        BtnBatchMove.IsEnabled = SelectedCount > 0
     End Sub
 
     Private Sub BtnDownload_Click(sender As Object, e As EventArgs) Handles BtnDownload.Click

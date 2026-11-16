@@ -191,8 +191,11 @@
                         <TextBlock x:Name="LabFinishDesc" Grid.Column="3" Grid.ColumnSpan="3" Grid.Row="2" Margin="1,9,10,10"
                                    Text="描述文本。"
                                    FontSize="14" LineHeight="19" MaxWidth="400" TextWrapping="Wrap" Foreground="{StaticResource ColorBrushGray2}" />
-                        <local:MyButton x:Name="BtnFinishCopy" Grid.Column="4" Grid.Row="3" Margin="0,0,15,0" Text="复制房间码" Padding="13,8" ColorType="Highlight" />
-                        <local:MyButton x:Name="BtnFinishExit" Grid.Column="5" Grid.Row="3" Text="退出" Padding="13,8" />
+                        <StackPanel Grid.Column="4" Grid.ColumnSpan="2" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <local:MyButton x:Name="BtnFinishShare" Margin="0,0,15,0" Text="分享邀请文件" Padding="13,8" />
+                            <local:MyButton x:Name="BtnFinishCopy" Margin="0,0,15,0" Text="复制房间码" Padding="13,8" ColorType="Highlight" />
+                            <local:MyButton x:Name="BtnFinishExit" Text="退出" Padding="13,8" />
+                        </StackPanel>
                     </Grid>
                 </local:MyCard>
                 <local:MyCard x:Name="CardFinishInfo" Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Center" CornerRadius="8">

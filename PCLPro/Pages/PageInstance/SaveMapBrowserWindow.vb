@@ -1,13 +1,17 @@
-Imports Microsoft.Web.WebView2.Core
+﻿Imports Microsoft.Web.WebView2.Core
 Imports Microsoft.Web.WebView2.Wpf
 
-''' <summary>
-''' 在启动器内部用 WebView2 显示 BlueMap 3D 地图。
-''' </summary>
 Public Class SaveMapBrowserWindow
     Inherits Window
 
     Private ReadOnly View As New WebView2()
+    Private ReadOnly LabStatus As New TextBlock With {
+        .Foreground = Brushes.White,
+        .FontSize = 15,
+        .HorizontalAlignment = HorizontalAlignment.Center,
+        .VerticalAlignment = VerticalAlignment.Center,
+        .Text = "正在启动地图…"
+    }
 
     Public Sub New(Url As String, SaveName As String)
         Title = $"3D 地图预览 - {SaveName}"
@@ -22,11 +26,15 @@ Public Class SaveMapBrowserWindow
         View.CreationProperties = New CoreWebView2CreationProperties With {
             .UserDataFolder = Paths.Base & "PCL\Cache\BlueMap\WebView2"
         }
-        Content = View
+        Dim Root As New Grid()
+        Root.Children.Add(View)
+        Root.Children.Add(LabStatus)
+        Content = Root
+
         AddHandler Loaded, Async Sub() Await LoadPageAsync(Url)
+        AddHandler View.NavigationCompleted, Sub() LabStatus.Visibility = Visibility.Collapsed
         AddHandler Closed,
         Sub()
-            ' 关闭窗口时释放 WebView2，避免后台进程继续占用内存
             Try
                 View.Dispose()
             Catch ex As Exception
@@ -37,15 +45,28 @@ Public Class SaveMapBrowserWindow
 
     Private Async Function LoadPageAsync(Url As String) As Task
         Try
+            If String.IsNullOrEmpty(ModWebView2.GetRuntimeVersion()) Then
+                LabStatus.Text = "首次使用需要安装 WebView2 运行时，正在准备…"
+                Dim Installed As Boolean = Await Task.Run(Function() ModWebView2.EnsureRuntime(Sub(Text As String) RunInUi(Sub() LabStatus.Text = Text)))
+                If Not Installed Then
+                    LabStatus.Text = "WebView2 运行时安装失败"
+                    Logger.Error("WebView2 运行时自动安装失败")
+                    MyMsgBox("3D 地图预览需要 Microsoft Edge WebView2 运行时，自动下载安装失败。" & vbCrLf & vbCrLf &
+                             "请手动下载安装后重试：" & vbCrLf &
+                             "https://developer.microsoft.com/microsoft-edge/webview2/", "WebView2 运行时缺失", IsWarn:=True)
+                    Return
+                End If
+            End If
+
+            LabStatus.Text = "正在启动地图…"
             Await View.EnsureCoreWebView2Async()
             View.CoreWebView2.Settings.AreDevToolsEnabled = False
             View.CoreWebView2.Settings.IsStatusBarEnabled = False
             View.Source = New Uri(Url)
         Catch ex As Exception
-            Logger.Error(ex, "WebView2 初始化失败，改用系统浏览器")
-            Close()
-            OpenWebsite(Url)
-            Hint("内置浏览器不可用，已改用系统浏览器打开。", HintType.Red)
+            Logger.Error(ex, "WebView2 初始化失败")
+            LabStatus.Text = "内置浏览器初始化失败：" & ex.Message
+            MyMsgBox("内置浏览器初始化失败：" & vbCrLf & ex.Message, "3D 地图预览", IsWarn:=True)
         End Try
     End Function
 End Class
