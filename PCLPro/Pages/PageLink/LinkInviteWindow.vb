@@ -433,7 +433,12 @@
         Next
         Options = Options.OrderByDescending(Function(o) o.Compatible).ToList()
 
+        Dim PlannedName As String = LinkInvitePlanInstanceName(Info)
+        Dim AutoName As String = LinkInviteGetAvailableName(PlannedName)
         Dim AutoText As String = $"自动下载安装：{Info.McVersion} / {If(String.IsNullOrEmpty(Info.LoaderText), "原版", Info.LoaderText)}"
+        If Not String.Equals(AutoName, PlannedName, StringComparison.OrdinalIgnoreCase) Then
+            AutoText &= $"（将安装为 {AutoName}）"
+        End If
         Dim AutoOption As New TargetOption With {
             .Text = AutoText,
             .IsAuto = True
@@ -450,12 +455,12 @@
             Dim Matched = Options.Where(Function(o) o.Compatible).ToList()
             If Matched.Any Then
                 CmbTarget.SelectedIndex = Options.IndexOf(Matched.First())
-                LabTargetHint.Text = $"本机共有 {Options.Count} 个版本，其中 {Matched.Count} 个与邀请完全匹配，已自动选中。"
+                LabTargetHint.Text = $"本机共有 {Options.Count} 个版本，其中 {Matched.Count} 个与邀请完全匹配，已自动选中。只有匹配的版本会被同步模组。"
             Else
                 CmbTarget.SelectedIndex = Options.Count
                 LabTargetHint.Text = If(Options.Count = 0,
                     "本机还没有任何版本，已选择自动下载安装。",
-                    $"本机共有 {Options.Count} 个版本，但没有完全匹配的版本，已选择自动下载安装。")
+                    $"本机共有 {Options.Count} 个版本，但没有完全匹配的版本，已选择自动下载安装。不匹配的版本不会被同步模组。")
             End If
             CmbTarget.IsEnabled = True
             Logger.Info($"联机邀请：本机版本 {Options.Count} 个，匹配 {Matched.Count} 个")
@@ -483,6 +488,11 @@
                     If String.IsNullOrEmpty(JsonUrl) Then Throw New Exception("无法获取该 MC 版本的下载地址，请检查网络。")
                     Dim Request As McInstallRequest = LinkInviteBuildInstallRequest(Info, JsonUrl)
                     Dim Name As String = Request.NewInstanceName
+                    Dim PlannedName As String = LinkInvitePlanInstanceName(Info)
+                    If Not String.Equals(Name, PlannedName, StringComparison.OrdinalIgnoreCase) Then
+                        SetStatus($"版本 {PlannedName} 已存在，本次将安装为 {Name} …")
+                        RunInUi(Sub() Hint($"版本 {PlannedName} 已存在，本次安装为 {Name}", HintType.Blue))
+                    End If
                     Dim Started As Boolean = False
                     RunInUiWait(Sub() Started = McInstallStart(Request))
                     If Not Started Then Throw New Exception("启动版本安装失败，请查看任务管理器中的安装日志。")
@@ -521,17 +531,14 @@
                     Logger.Info($"联机邀请：自动安装完成 {Name}")
                 Else
                     If Not LinkInviteIsCompatible(Info, Target) Then
-                        Dim Choice As Integer = 0
-                        RunInUiWait(Sub() Choice = MyMsgBox(
-                            $"所选版本与本邀请不完全匹配：" & vbCrLf & vbCrLf &
+                        RunInUi(Sub() MyMsgBox(
+                            $"所选版本与本邀请不匹配，不会向它同步模组，也无法保证能进入房间。" & vbCrLf & vbCrLf &
                             $"邀请要求：{Info.McVersion} / {If(String.IsNullOrEmpty(Info.LoaderText), "原版", Info.LoaderText)}" & vbCrLf &
                             $"已选版本：{Target.Name}" & vbCrLf & vbCrLf &
-                            "继续可能会因为版本或加载器不一致而无法进入服务器，是否仍然继续？",
-                            "版本不匹配", "仍然继续", "取消", IsWarn:=True))
-                        If Choice <> 1 Then
-                            SetStatus("已取消。")
-                            Return
-                        End If
+                            "请改选标记为「匹配」的版本，或选择「自动下载安装」由启动器安装正确的版本。",
+                            "版本不匹配", "我知道了", IsWarn:=True))
+                        SetStatus("所选版本与邀请不匹配，已停止。")
+                        Return
                     End If
                 End If
 

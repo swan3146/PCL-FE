@@ -152,7 +152,7 @@ Public Module ModLinkInvite
         }
     End Function
 
-    Private Function LinkInviteGetAvailableName(BaseName As String) As String
+    Public Function LinkInviteGetAvailableName(BaseName As String) As String
         Dim Candidate As String = BaseName
         Dim Index As Integer = 2
         Do While IO.Directory.Exists($"{McFolderSelected}versions\{Candidate}")
