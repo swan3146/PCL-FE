@@ -131,7 +131,7 @@ Public Module ModLinkInvite
     End Function
 
     Public Function LinkInviteBuildInstallRequest(Info As LinkInviteInfo, JsonUrl As String) As McInstallRequest
-        Dim Name As String = LinkInvitePlanInstanceName(Info)
+        Dim Name As String = LinkInviteGetAvailableName(LinkInvitePlanInstanceName(Info))
         Dim Loaders As New Dictionary(Of ModLoaders, String)
         Select Case Info.LoaderType
             Case "fabric"
@@ -150,6 +150,16 @@ Public Module ModLinkInvite
             .Components = Components,
             .MinecraftJson = JsonUrl
         }
+    End Function
+
+    Private Function LinkInviteGetAvailableName(BaseName As String) As String
+        Dim Candidate As String = BaseName
+        Dim Index As Integer = 2
+        Do While IO.Directory.Exists($"{McFolderSelected}versions\{Candidate}")
+            Candidate = $"{BaseName} ({Index})"
+            Index += 1
+        Loop
+        Return Candidate
     End Function
 
     Private Sub LinkInviteFillUrls(Info As LinkInviteInfo)

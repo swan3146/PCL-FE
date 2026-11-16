@@ -478,11 +478,11 @@
                 Dim Target As McInstance = Selected.Instance
 
                 If Selected.IsAuto Then
-                    Dim Name As String = LinkInvitePlanInstanceName(Info)
                     SetStatus("正在获取版本下载地址…")
                     Dim JsonUrl As String = DlClientListGet(Info.McVersion)
                     If String.IsNullOrEmpty(JsonUrl) Then Throw New Exception("无法获取该 MC 版本的下载地址，请检查网络。")
                     Dim Request As McInstallRequest = LinkInviteBuildInstallRequest(Info, JsonUrl)
+                    Dim Name As String = Request.NewInstanceName
                     Dim Started As Boolean = False
                     RunInUiWait(Sub() Started = McInstallStart(Request))
                     If Not Started Then Throw New Exception("启动版本安装失败，请查看任务管理器中的安装日志。")
@@ -1024,7 +1024,27 @@
                 PanLiveStatus.Visibility = Visibility.Collapsed
                 StatusTimer.Stop()
             End If
+            FitCardHeight(Not Busy)
         End Sub)
+    End Sub
+
+    Private Sub FitCardHeight(AllowShrink As Boolean)
+        Try
+            If ContentPanel Is Nothing OrElse Not IsLoaded OrElse CardFullHeight <= 0 Then Return
+            ContentPanel.Measure(New Size(CardFullWidth, Double.PositiveInfinity))
+            Dim Needed As Double = Math.Ceiling(ContentPanel.DesiredSize.Height) + 6
+            Needed = Math.Max(52, Needed)
+            If Needed <= CardFullHeight + 1 Then
+                If Not AllowShrink OrElse Needed >= CardFullHeight - 1 Then Return
+            End If
+            Dim Delta As Double = Needed - CardFullHeight
+            CardFullHeight = Needed
+            MainBorder.Height = Needed
+            Height = Needed + 60
+            Top -= Delta / 2
+        Catch ex As Exception
+            Logger.Warn(ex, "联机邀请：调整窗口高度失败")
+        End Try
     End Sub
 
     Private Sub RefreshLiveStatus()
@@ -1063,6 +1083,7 @@
             BarProgress.Visibility = Visibility.Visible
             BarProgress.Value = Math.Max(0, Math.Min(1, Percent))
             Logger.Info("[联机邀请] " & Text)
+            FitCardHeight(False)
         End Sub)
     End Sub
 
@@ -1073,6 +1094,7 @@
             LabStatus.Text = Text
             Loading.Text = Text
             Logger.Info("[联机邀请] " & Text)
+            FitCardHeight(False)
         End Sub)
     End Sub
 End Class

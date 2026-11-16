@@ -363,9 +363,7 @@ Public Class FormMain
 
         Dim ShowLog As Action =
             Sub()
-                If MyMsgBox(Content, "PCL  FE 已更新至 " & VersionBaseName, "确定", "完整更新日志") = 2 Then
-                    OpenWebsite("https://meloong.com/afd/a/LTCat?tab=feed")
-                End If
+                MyMsgBox(Content, "PCL  FE 已更新至 " & VersionBaseName, "确定")
             End Sub
         RunInUi(
         Sub()
